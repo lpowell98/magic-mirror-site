@@ -137,27 +137,6 @@ if (wall && window.WALL_POOL && !reduceMotion) {
   start();
 }
 
-// Showcase: one frame, three moments, switched as the reader scrolls
-const showcase = document.querySelector('.showcase');
-if (showcase && 'IntersectionObserver' in window) {
-  const imgs = showcase.querySelectorAll('.sc-frame img');
-  const caps = showcase.querySelectorAll('.sc-caption');
-  const setStage = (n) => {
-    showcase.dataset.stage = n;
-    imgs.forEach((im, i) => im.classList.toggle('on', i === n - 1));
-    caps.forEach((c, i) => c.classList.toggle('on', i === n - 1));
-  };
-  const markers = showcase.querySelectorAll('.sc-markers span');
-  const mo = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      const n = Number(e.target.dataset.stage);
-      if (e.isIntersecting) setStage(n);
-      else if (e.boundingClientRect.top > 0 && n > 1) setStage(n - 1);
-    });
-  }, { rootMargin: '-50% 0px -50% 0px' });
-  markers.forEach((m) => mo.observe(m));
-}
-
 // Event picker: pick an event type, see real prints made for that kind of event
 const pickData = document.getElementById('picker-data');
 if (pickData) {
