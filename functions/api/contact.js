@@ -25,17 +25,20 @@ export async function onRequestPost({ request, env }) {
   if (!env.RESEND_API_KEY) return new Response('Email is not configured', { status: 503 });
 
   const text = Object.entries(FIELDS).map(([k, label]) => `${label}: ${values[k]}`).join('\n');
-  const res = await fetch('https://api.resend.com/emails', {
+  const send = (from) => fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env.CONTACT_FROM || 'Magic Mirror website <website@magicmirrorrentalservices.com>',
+      from,
       to: [env.CONTACT_TO || 'inquiries@magicmirrorrentalservices.com'],
       reply_to: values.email,
       subject: `Website inquiry: ${values.event_type} on ${values.event_date}`,
       text,
     }),
   });
+  let res = await send(env.CONTACT_FROM || 'Magic Mirror website <website@magicmirrorrentalservices.com>');
+  // Until the domain is verified in Resend, fall back to Resend's shared test sender.
+  if (res.status === 403) res = await send('Magic Mirror website <onboarding@resend.dev>');
   if (!res.ok) return new Response('Could not send', { status: 502 });
   return new Response('ok');
 }
