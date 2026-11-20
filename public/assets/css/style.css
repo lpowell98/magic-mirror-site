@@ -421,3 +421,8 @@ p { margin: 0 0 1em; }
 .package-silver .hours { color: #f1e6f5; }
 .package-gold { background: var(--purple-deep); }
 .package-bronze li::before { border-color: var(--paper-ink); }
+/* FAQ page: questions beside the mirror */
+.faq { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 48px; align-items: start; }
+.faq-pic { position: sticky; top: calc(var(--header-h) + 32px); }
+.faq-pic img { width: 100%; height: auto; }
+@media (max-width: 760px) { .faq { grid-template-columns: 1fr; gap: 24px; } .faq-pic { position: static; order: -1; justify-self: center; } .faq-pic img { width: 150px; } }
