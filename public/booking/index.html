@@ -31,13 +31,22 @@
 .bk .req{color:var(--accent)}
 .bk input[type=text],.bk input[type=email],.bk input[type=tel],.bk select{font:16px var(--body);padding:10px 14px;border:2px solid transparent;border-radius:0;background:var(--surface);color:var(--ink);width:100%;min-height:50px}
 .bk .home input,.bk .home select,.bk .fs input,.bk .fs select{background:var(--bg)}
-.bk input:focus,.bk select:focus{outline:none;border-color:var(--accent)}
+.bk input:focus-visible,.bk select:focus-visible{outline:none;border-color:var(--accent)}
+.bk [aria-invalid="true"]{border-color:#e5484d!important}
+.bk .field-err{color:#ff8a8f;font-size:13px;font-weight:600;margin-top:6px}
+.bk .home .field-err{color:#c4262d}
+.bk .q{font-weight:600;font-size:15px;margin:18px 0 0}
+.bk .linkbtn{background:none;border:0;padding:0;font:600 16px var(--body);color:var(--accent);text-decoration:underline;text-underline-offset:4px;cursor:pointer;margin-left:8px}
+.bk .payfs{border:0;margin:24px 0 0;padding:0}
+.bk .payfs legend{font-weight:600;font-size:15px;padding:0}
+.bk .price,.bk .summary td,.bk .paytile span,.sticky,.bk .kv span,.bk #vFee,.bk #payAmt{font-variant-numeric:tabular-nums}
+.bk .section-title,.bk h2,.bk h3{text-wrap:balance}
 .bk input[readonly]{color:var(--muted)}
 .bk input[type=file]{font:15px var(--body);color:var(--muted)}
 .bk .help{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5}
 .bk h2{font-size:clamp(24px,2.4vw,34px);margin-bottom:22px}
 .bk h3{font-size:20px;margin-bottom:6px}
-.bk h4{font:700 13px/1.2 var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.bk h4,.bk .kicker{font:700 13px/1.2 var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .bk .msg{margin-top:14px;color:var(--accent);font-weight:600;min-height:22px}
 .bk .btn[disabled]{opacity:.6;cursor:default;transform:none}
 
@@ -147,7 +156,7 @@
 .bk .kv b{font-weight:700}
 .bk .kv span{color:var(--muted);text-align:right}
 .bk .paytiles{display:flex;justify-content:center;gap:12px;margin:20px 0;flex-wrap:wrap}
-.bk .paytile{background:var(--bg);padding:14px 22px;text-align:center;cursor:pointer;min-width:170px;border:2px solid transparent;transition:border-color .2s}
+.bk .paytile{font:inherit;color:var(--ink);background:var(--bg);padding:14px 22px;text-align:center;cursor:pointer;min-width:170px;border:2px solid transparent;transition:border-color .2s}
 .bk .paytile:hover{border-color:var(--purple-light)}
 .bk .paytile.on{background:var(--purple);border-color:var(--purple)}
 .bk .paytile small{display:block;font-size:11px;letter-spacing:.12em;color:var(--muted)}
@@ -204,44 +213,44 @@
           <label for="et">Event Type <span class="req">*</span></label>
           <select id="et"><option value="">- Select -</option></select>
           <label for="lma">Email Address <span class="req">*</span></label>
-          <input type="email" id="lma">
+          <input type="email" id="lma" name="email" autocomplete="email" spellcheck="false" required>
         </div>
         <button class="btn" id="checkBtn" style="margin-top:24px">Check availability</button>
-        <div class="msg" id="homeMsg"></div>
+        <div class="msg" id="homeMsg" role="status" aria-live="polite"></div>
       </div>
       <div>
         <h2>Manage booking</h2>
         <p>To view your booking details, please enter your Booking ID Number and the surname of the person who submitted the booking form.</p>
         <div class="field">
           <label for="mId">Booking ID number</label>
-          <input type="text" id="mId">
+          <input type="text" id="mId" name="booking-id" inputmode="numeric" autocomplete="off">
           <label for="mSur">Last name</label>
-          <input type="text" id="mSur">
+          <input type="text" id="mSur" name="last-name" autocomplete="family-name">
         </div>
         <button class="btn" id="searchBtn" style="margin-top:24px">Search</button>
-        <div class="msg" id="manageMsg"></div>
+        <div class="msg" id="manageMsg" role="status" aria-live="polite"></div>
       </div>
     </div>
   </section>
 
   <!-- ================= BOOKING FORM ================= -->
   <section id="v-book" class="hidden">
-    <div class="banner">Success: We have the following services available for your date...</div>
-    <div class="datebar">You are placing a booking for the <b id="bDate"></b> <a href="#" id="changeDate">Change date</a></div>
+    <div class="banner">Success: We have the following services available for your date.</div>
+    <div class="datebar">You are placing a booking for the <b id="bDate"></b> <button type="button" class="linkbtn" id="changeDate">Change date</button></div>
 
-    <div class="section-title">Choose a service <span class="req">*</span></div>
-    <div class="service" id="svc"><img src="/booking/img/booth.png" alt="Mirror Me Booth"><div class="tick" id="svcTick">&#10003;</div><div class="cap">Mirror Me Booth</div></div>
+    <h2 class="section-title">Choose a service <span class="req">*</span></h2>
+    <div class="service" id="svc"><img src="/booking/img/booth.png" alt="Mirror Me Booth" width="280" height="280"><div class="tick" id="svcTick" aria-hidden="true">&#10003;</div><div class="cap">Mirror Me Booth</div></div>
 
-    <div class="warnbar" id="pkgWarn">You have selected 1 services and 0 Packages. You must choose one package for every selected service.</div>
-    <div class="section-title">Choose a package <span class="req">*</span></div>
+    <div class="warnbar" id="pkgWarn" role="status" aria-live="polite">You have selected 1 services and 0 Packages. You must choose one package for every selected service.</div>
+    <h2 class="section-title">Choose a package <span class="req">*</span></h2>
     <div class="pkgs" id="pkgs"></div>
 
-    <div class="section-title" style="margin-top:34px">Choose extras</div>
+    <h2 class="section-title">Choose extras</h2>
     <div class="xgroup hidden" id="printGroup">
       <h3>Design print-out <span class="req">*</span></h3>
       <p>Choose your design print-out preference:</p>
       <div class="xrow" id="printRow"></div>
-      <div class="err" id="printErr">The field <em>Design Print-out</em> is required, Please choose an option.</div>
+      <div class="err" id="printErr" role="status" aria-live="polite">Please choose a print-out to continue.</div>
     </div>
     <div class="xgroup">
       <h3>Additional rental time</h3>
@@ -250,66 +259,66 @@
     </div>
 
     <div class="fs" style="margin-top:20px">
-      <h4>Account Details</h4>
+      <h3 class="kicker">Account Details</h3>
       <div class="cols2">
-        <div><label for="email">Email <span class="req">*</span></label><input type="email" id="email" data-req>
+        <div><label for="email">Email <span class="req">*</span></label><input type="email" id="email" name="email" autocomplete="email" spellcheck="false" required data-req>
           <div class="help">Please enter your email address and check spelling. If you enter the wrong email address here, you will not receive your booking confirmation.</div></div>
-        <div><label for="phone">Mobile Phone Number <span class="req">*</span></label><input type="tel" id="phone" data-req>
+        <div><label for="phone">Mobile Phone Number <span class="req">*</span></label><input type="tel" id="phone" name="tel" autocomplete="tel" required data-req>
           <div class="help">Enter a valid Mobile Phone Number to receive SMS order updates and notifications.</div></div>
       </div>
     </div>
 
     <div class="cols3">
       <div class="fs">
-        <h4>Tell us about your event</h4>
-        <label for="evName">Event Name <span class="req">*</span></label><input type="text" id="evName" data-req>
+        <h3 class="kicker">Tell us about your event</h3>
+        <label for="evName">Event Name <span class="req">*</span></label><input type="text" id="evName" name="event-name" autocomplete="off" required data-req>
         <div class="help">Eg. Adam and Eve's Wedding</div>
-        <label style="margin-top:14px">What time would you like us to be there?</label>
+        <p class="q">What time would you like us to be there?</p>
         <div class="help" style="margin-top:0">If you are booking multiple services, please specify the time information in the additional notes.</div>
         <div class="times">
-          <div><label for="tStart">Start Time <span class="req">*</span></label><select id="tStart" data-req></select></div>
-          <div><label for="tEnd">End Time</label><select id="tEnd"></select></div>
+          <div><label for="tStart">Start Time <span class="req">*</span></label><select id="tStart" name="start-time" required data-req></select></div>
+          <div><label for="tEnd">End Time</label><select id="tEnd" name="end-time"></select></div>
         </div>
       </div>
       <div class="fs">
-        <h4>Tell us about your venue</h4>
-        <label for="vName">Venue Name <span class="req">*</span></label><input type="text" id="vName" placeholder="Enter a location" data-req>
-        <label for="vAddr">Venue Address <span class="req">*</span></label><input type="text" id="vAddr" data-req>
-        <label for="vZip">Venue Postcode <span class="req">*</span></label><input type="text" id="vZip" data-req>
+        <h3 class="kicker">Tell us about your venue</h3>
+        <label for="vName">Venue Name <span class="req">*</span></label><input type="text" id="vName" name="venue-name" placeholder="e.g. The Langham, Boston…" autocomplete="off" required data-req>
+        <label for="vAddr">Venue Address <span class="req">*</span></label><input type="text" id="vAddr" name="venue-address" autocomplete="off" required data-req>
+        <label for="vZip">Venue Postcode <span class="req">*</span></label><input type="text" id="vZip" name="venue-postcode" inputmode="numeric" autocomplete="off" required data-req>
         <div class="help">Magic Mirror Rental Services offers free travel for up to 20 miles, and $.85 for each additional mile.</div>
-        <label for="vMiles">Round-trip Miles</label><input type="text" id="vMiles" inputmode="decimal" placeholder="Auto-calculated once maps are connected">
-        <label>Travel Fee</label><div class="fee">$ <input type="text" id="vFee" value="0.00" readonly></div>
+        <label for="vMiles">Round-trip miles (if known)</label><input type="text" id="vMiles" name="miles" inputmode="decimal" autocomplete="off" placeholder="e.g. 30…">
+        <label for="vFee">Travel Fee</label><div class="fee">$ <input type="text" id="vFee" value="0.00" readonly></div>
       </div>
       <div class="fs">
-        <h4>Tell us about you</h4>
+        <h3 class="kicker">Tell us about you</h3>
         <div class="cols2" style="gap:8px">
-          <div><label for="fn">First Name <span class="req">*</span></label><input type="text" id="fn" data-req></div>
-          <div><label for="ln">Last Name <span class="req">*</span></label><input type="text" id="ln" data-req></div>
+          <div><label for="fn">First Name <span class="req">*</span></label><input type="text" id="fn" name="given-name" autocomplete="given-name" required data-req></div>
+          <div><label for="ln">Last Name <span class="req">*</span></label><input type="text" id="ln" name="family-name" autocomplete="family-name" required data-req></div>
         </div>
-        <label for="street">Street Address</label><input type="text" id="street">
-        <label for="zip">Postcode</label><input type="text" id="zip">
+        <label for="street">Street Address</label><input type="text" id="street" name="street-address" autocomplete="street-address">
+        <label for="zip">Postcode</label><input type="text" id="zip" name="postal-code" inputmode="numeric" autocomplete="postal-code">
       </div>
     </div>
 
-    <div class="check"><input type="checkbox" id="terms"><label for="terms" style="font-weight:400;margin:0">I accept the terms &amp; conditions <span class="req">*</span></label></div>
+    <div class="check"><input type="checkbox" id="terms" name="terms" required><label for="terms" style="font-weight:400;margin:0">I accept the terms &amp; conditions <span class="req">*</span></label></div>
 
     <div class="fs">
-      <h4>Additional Details</h4>
-      <label for="ref">Service Referral</label><input type="text" id="ref">
+      <h3 class="kicker">Additional Details</h3>
+      <label for="ref">Service Referral</label><input type="text" id="ref" name="referral" autocomplete="off">
       <div class="help">Were you referred to our service by a specific individual? If so, please list their name and phone number in the field above. (Ex. Jane Doe - 1234567890)</div>
-      <h4 style="margin-top:26px">Event Flyer/Invitation</h4>
+      <h3 class="kicker" style="margin-top:26px">Event Flyer/Invitation</h3>
       <div style="font-size:13px">Please attach the flyer or invitation for your event! For bigger files, please email us at inquiries@magicmirrorrentalservices.com</div>
-      <label style="font-weight:400">Add a new file</label>
-      <input type="file" id="flyer" accept=".jpg,.jpeg,.png,.pdf,.psd">
-      <div class="help">Files must be less than <b>2 MB</b>.<br>Allowed file types: <b>jpg jpeg png pdf psd</b>.</div>
+      <label for="flyer" style="font-weight:400">Add a new file</label>
+      <input type="file" id="flyer" name="flyer" accept=".jpg,.jpeg,.png,.pdf,.psd">
+      <div class="help">Files must be less than <b>2&nbsp;MB</b>.<br>Allowed file types: <b>jpg jpeg png pdf psd</b>.</div>
     </div>
 
     <label for="coupon" style="margin-top:20px">Add a coupon</label>
-    <input type="text" id="coupon" style="max-width:300px">
+    <input type="text" id="coupon" name="coupon" autocomplete="off" spellcheck="false" style="max-width:300px">
     <div class="help">If you have a coupon, add it here to validate it.</div>
 
-    <label style="margin-top:16px">Payment Options</label>
-    <div class="pay" id="pay"></div>
+    <fieldset class="payfs"><legend>Payment options</legend>
+    <div class="pay" id="pay"></div></fieldset>
     <div class="help" style="margin:16px 0">Please choose whether to pay the deposit or the full balance now in order to secure your booking. Please check your details before continuing to the next step.</div>
 
     <div id="sumWrap" class="hidden">
@@ -317,7 +326,7 @@
       <button class="btn bigbtn" id="bookBtn">Book now</button>
     </div>
     <button class="btn bigbtn" id="sumBtn">View summary</button>
-    <div class="warnbar" id="bottomWarn"></div>
+    <div class="warnbar" id="bottomWarn" role="status" aria-live="polite"></div>
   </section>
 
   <!-- ================= PORTAL ================= -->
@@ -335,16 +344,16 @@
     </div>
     <div class="card" style="margin-top:20px;text-align:center">
       <h3>Make a payment</h3>
-      <div>Enter the amount you would like to pay off your booking below...</div>
+      <div>Enter the amount you would like to pay off your booking below:</div>
       <div class="paytiles" id="payTiles"></div>
-      <div>$ <input type="text" id="payAmt" style="width:100px"></div>
+      <div>$ <label for="payAmt" class="visually-hidden">Payment amount</label><input type="text" id="payAmt" name="amount" inputmode="decimal" autocomplete="off" style="width:120px"></div>
       <button class="btn" style="margin-top:16px" id="payBtn">Make payment</button>
-      <div class="note" id="payNote"></div>
+      <div class="note" id="payNote" role="status" aria-live="polite"></div>
     </div>
   </section>
 
   </div>
-<div class="sticky hidden" id="sticky">&#128722; <b id="stickyTotal">$0.00</b></div>
+<div class="sticky hidden" id="sticky" aria-live="polite"><span aria-hidden="true">&#128722;</span><span class="visually-hidden">Total</span> <b id="stickyTotal">$0.00</b></div>
 </main>
 <footer class="site-footer">
   <div class="wrap foot-top">
@@ -382,7 +391,10 @@ const CFG = {
 
 /* ===== Helpers ===== */
 const $ = id => document.getElementById(id);
-const money = n => "$" + n.toFixed(2);
+const USD = new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"});
+const money = n => USD.format(n);
+const LONGDATE = new Intl.DateTimeFormat("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+const SMOOTH = matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
 const fmtDate = d => `${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()}`;
 const store = {
   get(){ try{ return JSON.parse(localStorage.getItem("mmrs_bookings")||"[]"); }catch(e){ return []; } },
@@ -411,9 +423,12 @@ function drawCal(){
   for(let i=0;i<first;i++) g.insertAdjacentHTML("beforeend","<div></div>");
   for(let d=1; d<=days; d++){
     const dt=new Date(v.getFullYear(),v.getMonth(),d);
-    const b=document.createElement("button"); b.className="day"; b.textContent=d;
+    const b=document.createElement("button"); b.type="button"; b.className="day"; b.textContent=d;
+    let lbl=LONGDATE.format(dt);
     if(dt<today){ b.classList.add("past"); b.disabled=true; }
-    else if(isBooked(dt)){ b.classList.add("past","taken"); b.disabled=true; b.title="Fully booked"; }
+    else if(isBooked(dt)){ b.classList.add("past","taken"); b.disabled=true; b.title="Fully booked"; lbl+=", fully booked"; }
+    b.setAttribute("aria-label",lbl);
+    b.setAttribute("aria-pressed", +dt===+S.date ? "true" : "false");
     if(+dt===+S.date) b.classList.add("sel");
     b.onclick=()=>{ S.date=dt; drawCal(); };
     g.appendChild(b);
@@ -448,14 +463,14 @@ $("checkBtn").onclick=()=>{
   if(!$("et").value || !/^\S+@\S+\.\S+$/.test($("lma").value)){ msg.textContent="Please choose an event type and enter a valid email."; return; }
   if(isBooked(S.date)){ msg.textContent="Sorry, we're fully booked on that date. Please choose another."; return; }
   msg.textContent=""; S.eventType=$("et").value; $("email").value=$("lma").value;
-  $("bDate").textContent=fmtDate(S.date); show("book"); refresh();
+  $("bDate").textContent=LONGDATE.format(S.date); show("book"); refresh();
 };
-$("changeDate").onclick=e=>{ e.preventDefault(); show("home"); };
+$("changeDate").onclick=()=>show("home");
 
 /* ===== Manage booking ===== */
 $("searchBtn").onclick=async()=>{
   if(API_URL){
-    $("manageMsg").textContent="Searching...";
+    $("manageMsg").textContent="Searching…";
     try{ const r=await api({action:"lookup",id:$("mId").value.trim(),ln:$("mSur").value.trim()});
       if(!r.ok){ $("manageMsg").textContent="No booking found. Check your Booking ID and last name."; return; }
       $("manageMsg").textContent=""; renderPortal(r.booking,false);
@@ -468,7 +483,7 @@ $("searchBtn").onclick=async()=>{
 };
 
 /* ===== Packages & extras ===== */
-function cartBtn(on,onclick){ const w=document.createElement("div"); w.className="cart"+(on?" on":""); const b=document.createElement("button"); b.textContent=on?"Added":"Add to cart"; b.onclick=onclick; w.append(b,document.createElement("span")); return w; }
+function cartBtn(on,onclick,name){ const w=document.createElement("div"); w.className="cart"+(on?" on":""); const b=document.createElement("button"); b.type="button"; b.textContent=on?"Added":"Add to cart"; b.setAttribute("aria-label",(on?"Remove ":"Add ")+name); b.setAttribute("aria-pressed",on?"true":"false"); b.onclick=onclick; w.append(b,document.createElement("span")); return w; }
 function drawPkgs(){
   const box=$("pkgs"); box.innerHTML="";
   CFG.packages.forEach(p=>{
@@ -477,14 +492,14 @@ function drawPkgs(){
       <div class="body"><strong>${p.hours} hours</strong>${p.lines.join("<br>")}</div>
       <div class="extras"><em>Included Extras:</em>${p.extras.map(x=>`<b>${x}</b>`).join("<br>")}</div>
       <div class="foot"><div class="price"><small>$</small>${p.price.toFixed(2)}</div></div>`;
-    el.querySelector(".foot").appendChild(cartBtn(S.pkg===p.id,()=>{ S.pkg = S.pkg===p.id?null:p.id; refresh(); }));
+    el.querySelector(".foot").appendChild(cartBtn(S.pkg===p.id,()=>{ S.pkg = S.pkg===p.id?null:p.id; refresh(); },p.name));
     box.appendChild(el);
   });
 }
 function xcard(x,on,onclick){
   const el=document.createElement("div"); el.className="xcard";
-  el.innerHTML=`<img src="${x.img}" alt=""><div class="t">${x.name}</div><div class="d">${x.desc}</div><div class="row"><div class="price">${x.price?`<small>$</small>${x.price.toFixed(2)}`:""}</div></div>`;
-  el.querySelector(".row").appendChild(cartBtn(on,onclick)); return el;
+  el.innerHTML=`<img src="${x.img}" alt="" width="280" height="280" loading="lazy"><div class="t">${x.name}</div><div class="d">${x.desc}</div><div class="row"><div class="price">${x.price?`<small>$</small>${x.price.toFixed(2)}`:""}</div></div>`;
+  el.querySelector(".row").appendChild(cartBtn(on,onclick,x.name)); return el;
 }
 function drawExtras(){
   $("printGroup").classList.toggle("hidden",!S.pkg);
@@ -503,7 +518,7 @@ function drawExtras(){
 
 /* ===== Travel fee ===== */
 function travelFee(){ const mi=parseFloat($("vMiles").value); if(!(mi>0)) return 0; return Math.max(0,mi-CFG.freeMiles)*CFG.perMile; }
-$("vMiles").oninput=()=>{ $("vFee").value=travelFee().toFixed(2); refresh(); };
+$("vMiles").oninput=()=>{ $("vFee").value=travelFee().toFixed(2); drawPay(); };
 
 /* ===== Totals ===== */
 function lineItems(){
@@ -527,29 +542,39 @@ function missing(){
   if(!$("terms").checked) m.push("terms");
   return m;
 }
-function refresh(){
-  drawPkgs(); drawExtras(); drawPay();
-  const nPk=S.pkg?1:0, warn=`You have selected 1 services and ${nPk} Packages. You must choose one package for every selected service.`;
+function refresh(){ drawPkgs(); drawExtras(); drawPay(); refreshLight(); }
+// cheap update while typing: totals and warnings only, no card redraw
+function refreshLight(){
+  const warn = S.pkg ? "" : "You have selected 1 service and 0 packages. Please choose a package to continue.";
   $("pkgWarn").textContent=warn; $("pkgWarn").classList.toggle("hidden",!!S.pkg);
+  document.querySelectorAll("#v-book [data-req]").forEach(el=>{ if(el.value.trim()) clearErr(el); });
+  if($("terms").checked) clearErr($("terms"));
   $("stickyTotal").textContent=money(total());
   if(S.summaryShown){
-    $("sumBody").innerHTML=lineItems().map(([n,p])=>`<tr><td>${n}</td><td>${p.toFixed(2)}</td></tr>`).join("")+`<tr class="total"><td></td><td>${money(total())}</td></tr>`;
+    $("sumBody").innerHTML=lineItems().map(([n,p])=>`<tr><td>${n}</td><td>${money(p)}</td></tr>`).join("")+`<tr class="total"><td></td><td>${money(total())}</td></tr>`;
   }
   const m=missing();
-  $("bottomWarn").textContent = !S.pkg ? warn : (m.length ? "You have not completed all required fields" : "");
+  $("bottomWarn").textContent = !S.pkg ? warn : (S.tried && m.length ? `Please complete the ${m.length} highlighted field${m.length>1?"s":""} to book.` : "");
   $("bottomWarn").classList.toggle("hidden",!$("bottomWarn").textContent);
 }
-document.querySelectorAll("#v-book input, #v-book select").forEach(el=>el.addEventListener("input",refresh));
-$("terms").onchange=refresh;
+document.querySelectorAll("#v-book [data-req], #v-book #terms").forEach(el=>el.addEventListener(el.type==="checkbox"?"change":"input",refreshLight));
+function setErr(el,msg){ el.setAttribute("aria-invalid","true"); let e=$(el.id+"-err"); if(!e){ e=document.createElement("div"); e.id=el.id+"-err"; e.className="field-err"; (el.type==="checkbox"?el.parentElement:el).insertAdjacentElement("afterend",e); el.setAttribute("aria-describedby",e.id); } e.textContent=msg; }
+function clearErr(el){ el.removeAttribute("aria-invalid"); const e=$(el.id+"-err"); if(e) e.remove(); }
 $("flyer").onchange=e=>{ const f=e.target.files[0]; if(f && f.size>2*1024*1024){ e.target.value=""; $("bottomWarn").textContent="That file is over 2 MB. Please email it to us instead."; $("bottomWarn").classList.remove("hidden"); } };
 
 $("sumBtn").onclick=()=>{
   S.summaryShown=true; $("sumWrap").classList.remove("hidden"); $("sumBtn").classList.add("hidden"); refresh();
-  $("sumWrap").scrollIntoView({behavior:"smooth",block:"center"});
+  $("sumWrap").scrollIntoView({behavior:SMOOTH,block:"center"});
 };
 $("bookBtn").onclick=async()=>{
   const m=missing();
-  if(m.length){ refresh(); const first=$(m[0]==="pkg"?"pkgs":m[0]==="print"?"printGroup":m[0]); if(first) first.scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  if(m.length){
+    S.tried=true; refresh();
+    m.forEach(id=>{ const el=$(id); if(el && id!=="pkg" && id!=="print") setErr(el, id==="terms" ? "Please accept the terms to book." : "This field is required."); });
+    const first = m[0]==="pkg" ? document.querySelector("#pkgs .cart button") : m[0]==="print" ? document.querySelector("#printRow .cart button") : $(m[0]);
+    if(first){ first.scrollIntoView({behavior:SMOOTH,block:"center"}); first.focus({preventScroll:true}); }
+    return;
+  }
   const id = (memBookings.reduce((mx,b)=>Math.max(mx,b.id),150))+1;
   const toMin=s=>{ const [t,ap]=s.split(" "); let [h,mm]=t.split(":").map(Number); if(ap==="pm"&&h!==12)h+=12; if(ap==="am"&&h===12)h=0; return h*60+mm; };
   const fromMin=n=>{ n=(n+1440)%1440; const h=Math.floor(n/60),mm=n%60; return `${((h+11)%12)+1}:${String(mm).padStart(2,"0")} ${h<12?"am":"pm"}`; };
@@ -560,7 +585,7 @@ $("bookBtn").onclick=async()=>{
     fn:$("fn").value, ln:$("ln").value, email:$("email").value, phone:$("phone").value,
     items:lineItems().filter(i=>i[0]!=="Travel"||i[1]>0), total:total(), paid:0, payOpt:S.payOpt };
   if(API_URL){
-    const btn=$("bookBtn"); btn.disabled=true; btn.textContent="Booking...";
+    const btn=$("bookBtn"); btn.disabled=true; btn.textContent="Booking…";
     const payload={ action:"book", date:b.date, eventType:b.eventType, pkg:S.pkg, print:S.print, times:[...S.times],
       miles:$("vMiles").value, email:b.email, phone:b.phone, evName:b.evName, start:b.start, end:b.end,
       arrive:b.arrive, depart:b.depart, vName:b.vName, vAddr:b.vAddr, vZip:b.vZip, fn:b.fn, ln:b.ln,
@@ -605,9 +630,9 @@ function renderPortal(b,isNew){
   const due=b.total-b.paid;
   $("pTotals").innerHTML=kv("Sub Total",money(b.total))+kv("Order Total",money(b.total))+kv("Balance Due",money(due));
   const tiles=[["DEPOSIT",Math.min(CFG.deposit,due)],["50% REMAINING",due/2],["100% REMAINING",due]];
-  $("payTiles").innerHTML=tiles.map(([l,v],i)=>`<div class="paytile${i===2?" on":""}" data-v="${v}"><small>${l}</small><span>${money(v)}</span></div>`).join("");
+  $("payTiles").innerHTML=tiles.map(([l,v],i)=>`<button type="button" class="paytile${i===2?" on":""}" data-v="${v}" aria-pressed="${i===2}"><small>${l}</small><span>${money(v)}</span></button>`).join("");
   $("payAmt").value=due.toFixed(2);
-  $("payTiles").querySelectorAll(".paytile").forEach(t=>t.onclick=()=>{ $("payTiles").querySelectorAll(".paytile").forEach(x=>x.classList.remove("on")); t.classList.add("on"); $("payAmt").value=(+t.dataset.v).toFixed(2); });
+  $("payTiles").querySelectorAll(".paytile").forEach(t=>t.onclick=()=>{ $("payTiles").querySelectorAll(".paytile").forEach(x=>{ x.classList.remove("on"); x.setAttribute("aria-pressed","false"); }); t.classList.add("on"); t.setAttribute("aria-pressed","true"); $("payAmt").value=(+t.dataset.v).toFixed(2); });
   $("payNote").textContent="";
   $("payBtn").onclick=()=>{ $("payNote").textContent="Online payments (Square) connect in the next build phase."; };
   show("portal");
