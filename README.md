@@ -48,7 +48,7 @@ The Book Now page embeds the existing BoothBook widgets from `booking.magicmirro
 
 - `public/booking/` is the booking page, portal and confirmation. It saves to the Google Sheet "MMRS Bookings" through an Apps Script web app.
 - `apps-script/Code.gs` is that web app's code (paste into the sheet's Extensions > Apps Script, deploy as a Web app, Execute as Me, access Anyone).
-- Set `API_URL` near the top of the script in `public/booking/index.html` to the web app URL. While it is blank, the page shows an "email us" notice on the live domain.
+- `API_URL` near the top of the script in `public/booking/index.html` is the deployed web app URL ("Booking v1"). To update the back end, use Deploy > Manage deployments > edit > New version so the URL stays the same.
 - When leaving BoothBook, point `booking.magicmirrorrentalservices.com` at this Pages project (Custom domains tab). `functions/_middleware.js` serves `/booking/` on that subdomain.
 
 ## Local preview
