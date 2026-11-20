@@ -101,8 +101,10 @@ p { margin: 0 0 1em; }
 .hero-side .actions { margin-top: 20px; }
 
 /* intro statement */
-.statement { padding-block: var(--gap-section) 0; }
-.statement p { font: 400 var(--t-statement)/1.3 var(--head); letter-spacing: -.01em; max-width: 44ch; margin: 0 0 0 auto; margin-right: 8%; }
+.statement { padding-block: clamp(56px, 7vw, 96px) 0; }
+.statement p { font: 700 clamp(26px, 2.8vw, 40px)/1.2 var(--head); letter-spacing: -.01em; max-width: 34ch; margin: 0 auto; text-align: center; text-wrap: balance; }
+.statement em { font-style: normal; color: var(--accent); }
+.statement .statement-note { font: 500 17px/1.5 var(--body); color: var(--muted); margin-top: 16px; max-width: 60ch; }
 
 
 /* live thing: pick your event, see a real print */
