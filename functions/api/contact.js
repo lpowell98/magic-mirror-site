@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env }) {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env.CONTACT_FROM || 'Magic Mirror website <onboarding@resend.dev>',
+      from: env.CONTACT_FROM || 'Magic Mirror website <website@magicmirrorrentalservices.com>',
       to: [env.CONTACT_TO || 'inquiries@magicmirrorrentalservices.com'],
       reply_to: values.email,
       subject: `Website inquiry: ${values.event_type} on ${values.event_date}`,
