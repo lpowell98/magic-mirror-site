@@ -400,4 +400,3 @@ p { margin: 0 0 1em; }
 @media (max-width: 1000px) { .foot-top { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .foot-top { gap: 28px 20px; } .foot-brand, .foot-contact { grid-column: 1 / -1; } .foot-contact li { white-space: normal; overflow-wrap: anywhere; } }
 .ask-actions { margin-top: 20px; }
-.sc-steps img.fit { object-fit: contain; background: #000; }
