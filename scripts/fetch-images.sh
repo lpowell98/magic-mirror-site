@@ -9,6 +9,6 @@ while read -r url path; do
   [ -z "$url" ] && continue
   [ -s "$path" ] && continue
   mkdir -p "$(dirname "$path")"
-  if curl -fsSL --retry 3 -o "$path" "$url"; then echo "ok   $path"; else echo "FAIL $url"; rm -f "$path"; fail=$((fail+1)); fi
+  if curl -fsSL --retry 3 -H "Accept: image/jpeg,image/png,image/x-icon,*/*;q=0.1" -o "$path" "$url"; then echo "ok   $path"; else echo "FAIL $url"; rm -f "$path"; fail=$((fail+1)); fi
 done < scripts/images.txt
 echo "Done. $fail failed."
