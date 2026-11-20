@@ -47,15 +47,17 @@
 .bk h2{font-size:clamp(24px,2.4vw,34px);margin-bottom:22px}
 .bk h3{font-size:20px;margin-bottom:6px}
 .bk h4,.bk .kicker{font:700 13px/1.2 var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
-.bk .msg{margin-top:14px;color:var(--accent);font-weight:600;min-height:22px}
+.bk .msg{margin-top:14px;color:var(--accent);font-weight:600}
+.bk .msg:empty{display:none}
 .bk .btn[disabled]{opacity:.6;cursor:default;transform:none}
 
 /* step 1: date + manage */
-.bk .home{display:grid;grid-template-columns:1.1fr 1fr;gap:24px}
-.bk .home>div{background:var(--surface);padding:clamp(24px,3vw,40px)}
-.bk .home .field{max-width:360px}
+.bk .home{display:grid;grid-template-columns:repeat(2,minmax(0,440px));gap:24px;align-items:start}
+.bk .home>div{background:var(--surface);padding:32px}
+.bk .home .field{max-width:none}
+.bk .home .btn{width:100%}
 .bk .home p{color:var(--muted);max-width:46ch}
-.bk .cal{max-width:360px}
+.bk .cal{max-width:none}
 .bk .cal-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
 .bk .cal-head select{width:auto;flex:1;min-height:44px}
 .bk .cal-nav{width:44px;height:44px;border:0;background:var(--bg);color:var(--ink);cursor:pointer;font-size:14px}
