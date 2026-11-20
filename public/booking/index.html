@@ -52,8 +52,10 @@
 .bk .btn[disabled]{opacity:.6;cursor:default;transform:none}
 
 /* step 1: date + manage */
-.bk .home{display:grid;grid-template-columns:repeat(2,minmax(0,440px));gap:24px;align-items:start}
-.bk .home>div{background:var(--surface);padding:32px}
+.bk .home{display:grid;grid-template-columns:repeat(2,minmax(0,440px));gap:24px;align-items:stretch}
+.bk .home>div{background:var(--surface);padding:32px;display:flex;flex-direction:column}
+.bk .home>div>.btn{margin-top:auto!important}
+.bk .home>div>.field{margin-bottom:24px}
 .bk .home .field{max-width:none}
 .bk .home .btn{width:100%}
 .bk .home p{color:var(--muted);max-width:46ch}
