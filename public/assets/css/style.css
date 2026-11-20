@@ -14,8 +14,8 @@
   --paper: #eeece9;
   --paper-ink: #17121b;
   --paper-muted: #4a4150;
-  --head: "Jost", "Futura", "Century Gothic", sans-serif;
-  --body: "Figtree", "Helvetica Neue", Arial, sans-serif;
+  --head: "Montserrat", "Helvetica Neue", Arial, sans-serif;   /* brand guide: Montserrat Heavy for headlines */
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;   /* brand guide: Montserrat Medium for body */
   --margin: clamp(16px, 3vw, 40px);
   --gap-section: clamp(96px, 12vw, 180px);
   /* five type steps */
@@ -29,10 +29,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 400 var(--t-body)/1.55 var(--body); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 500 var(--t-body)/1.6 var(--body); }
 img { max-width: 100%; height: auto; display: block; }
 a { color: inherit; }
-h1, h2, h3 { font-family: var(--head); font-weight: 500; line-height: 1.02; letter-spacing: -.02em; margin: 0; }
+h1, h2, h3 { font-family: var(--head); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; margin: 0; }
 p { margin: 0 0 1em; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
