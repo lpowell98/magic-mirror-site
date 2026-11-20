@@ -34,11 +34,21 @@ if (links.length) {
   const box = document.createElement('div');
   box.className = 'lightbox';
   box.hidden = true;
-  box.innerHTML = '<button class="lb-close" aria-label="Close">×</button><button class="lb-prev" aria-label="Previous">‹</button><img alt=""><button class="lb-next" aria-label="Next">›</button>';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-modal', 'true');
+  box.setAttribute('aria-label', 'Photo viewer');
+  box.innerHTML = '<button class="lb-close" type="button" aria-label="Close">×</button><button class="lb-prev" type="button" aria-label="Previous photo">‹</button><img alt=""><button class="lb-next" type="button" aria-label="Next photo">›</button>';
   document.body.append(box);
   const img = box.querySelector('img');
-  const show = (n) => { i = (n + links.length) % links.length; img.src = links[i].href; box.hidden = false; };
-  const close = () => { box.hidden = true; img.removeAttribute('src'); };
+  const buttons = [...box.querySelectorAll('button')];
+  let opener = null;
+  const show = (n) => {
+    i = (n + links.length) % links.length;
+    img.src = links[i].href;
+    img.alt = links[i].querySelector('img')?.alt || '';
+    if (box.hidden) { opener = document.activeElement; box.hidden = false; buttons[0].focus(); }
+  };
+  const close = () => { box.hidden = true; img.removeAttribute('src'); opener?.focus(); };
   links.forEach((a, n) => a.addEventListener('click', (e) => { e.preventDefault(); show(n); }));
   box.querySelector('.lb-close').onclick = close;
   box.querySelector('.lb-prev').onclick = () => show(i - 1);
@@ -49,6 +59,11 @@ if (links.length) {
     if (e.key === 'Escape') close();
     if (e.key === 'ArrowLeft') show(i - 1);
     if (e.key === 'ArrowRight') show(i + 1);
+    if (e.key === 'Tab') { // keep focus inside the viewer
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
   });
 }
 
@@ -105,7 +120,21 @@ if (wall && window.WALL_POOL && !reduceMotion) {
       }, 1700);
     };
   };
-  timer = setInterval(swap, 2600);
+  // Visitors can pause the moving wall; it also pauses while hovered
+  let paused = false, hover = false;
+  const start = () => { clearInterval(timer); timer = setInterval(() => { if (!paused && !hover) swap(); }, 2600); };
+  const toggle = document.createElement('button');
+  toggle.type = 'button'; toggle.className = 'wall-toggle';
+  toggle.setAttribute('aria-pressed', 'false'); toggle.textContent = 'Pause photos';
+  toggle.addEventListener('click', () => {
+    paused = !paused;
+    toggle.setAttribute('aria-pressed', String(paused));
+    toggle.textContent = paused ? 'Play photos' : 'Pause photos';
+  });
+  wall.parentElement.append(toggle);
+  wall.parentElement.addEventListener('mouseenter', () => { hover = true; });
+  wall.parentElement.addEventListener('mouseleave', () => { hover = false; });
+  start();
 }
 
 // Showcase: one frame, three moments, switched as the reader scrolls
