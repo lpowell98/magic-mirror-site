@@ -437,3 +437,5 @@ p { margin: 0 0 1em; }
 @media (max-width: 1000px) { .grid-port { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 760px) { .grid-land { grid-template-columns: repeat(2, 1fr); } .grid-port { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 480px) { .grid-port { grid-template-columns: repeat(2, 1fr); } }
+.foot-contact a.foot-email { color: var(--accent); font-weight: 600; }
+.foot-contact a.foot-email:hover { text-decoration: underline; }
