@@ -17,14 +17,19 @@ The images are not in the repo yet. From the repo root on any machine with inter
     git add public/images && git commit -m "Add site images" && git push
 
 Do this before cancelling Squarespace, because the CDN copies may disappear afterwards.
-Until then, the Cloudflare build command below pulls them in on every deploy.
+The deploy workflow below does this automatically on its first run.
 
-## Cloudflare Pages settings
+## Deploying
 
-- Framework preset: None
-- Build command: `bash scripts/fetch-images.sh` (can be left empty once images are committed)
-- Build output directory: `public`
-- Custom domains: `www.magicmirrorrentalservices.com` and `magicmirrorrentalservices.com`
+`.github/workflows/deploy.yml` deploys `public/` to the Cloudflare Pages project `magic-mirror-site` on every push to `main`
+(and from the Actions tab via "Run workflow"). It needs two repository secrets
+(GitHub > Settings > Secrets and variables > Actions):
+
+- `CLOUDFLARE_API_TOKEN`: a Cloudflare API token from the "Edit Cloudflare Workers" template
+- `CLOUDFLARE_ACCOUNT_ID`: your Cloudflare account ID
+
+The first run also downloads the images from the old Squarespace CDN and commits them to the repo.
+Custom domains (`www.magicmirrorrentalservices.com`, `magicmirrorrentalservices.com`) are added in the Pages project's Custom domains tab.
 
 ## Contact form
 
