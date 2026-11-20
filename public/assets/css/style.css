@@ -286,8 +286,8 @@ p { margin: 0 0 1em; }
 
 /* booking */
 .booking { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-bottom: var(--gap-section); }
-.booking-card { background: #fff; min-height: 560px; }
-.booking-card iframe { width: 100%; min-height: 560px; border: 0; display: block; }
+.booking-card { background: #fff; min-height: 600px; padding: 32px 24px; display: flex; flex-direction: column; justify-content: center; }
+.booking-card iframe { width: 100%; height: 520px; border: 0; display: block; }
 
 .center { text-align: center; }
 .nowrap { white-space: nowrap; }
@@ -348,7 +348,6 @@ p { margin: 0 0 1em; }
 }
 
 /* gallery page quotes */
-.gallery-quotes { margin: 0 0 var(--gap-section); }
 .link-plain { text-decoration: none; }
 .link-plain:hover { color: var(--accent); }
 
@@ -400,3 +399,30 @@ p { margin: 0 0 1em; }
 @media (max-width: 1000px) { .foot-top { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 560px) { .foot-top { gap: 28px 20px; } .foot-brand, .foot-contact { grid-column: 1 / -1; } .foot-contact li { white-space: normal; overflow-wrap: anywhere; } }
 .ask-actions { margin-top: 20px; }
+
+/* review carousel */
+.quote-carousel { margin-bottom: var(--gap-section); text-align: center; }
+.quote-slides { list-style: none; margin: 0 auto; padding: 0; max-width: 72ch; display: grid; align-items: center; }
+.js .quote-slides > li { grid-area: 1 / 1; }
+.no-js .quote-slides { gap: 32px; }
+.no-js .quote-nav { display: none; }
+.js .quote-slides > li { visibility: hidden; opacity: 0; transition: opacity .3s; }
+.js .quote-slides > li.on { visibility: visible; opacity: 1; }
+.quote-slides blockquote { margin: 0; font: 600 clamp(20px, 2.2vw, 28px)/1.35 var(--head); }
+.quote-slides footer { margin-top: 14px; font: 500 var(--t-small)/1.4 var(--body); color: var(--accent); }
+.quote-nav { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; }
+.quote-nav button { width: 44px; height: 44px; border: 1px solid var(--accent); background: none; color: var(--accent); font-size: 22px; cursor: pointer; }
+.quote-nav button:hover { background: var(--accent); color: var(--accent-ink); }
+.q-count { font-size: var(--t-small); color: var(--muted); min-width: 4ch; font-variant-numeric: tabular-nums; }
+/* pricing: packages from light to dark purple */
+.package-bronze { background: #b088c4; color: var(--paper-ink); }
+.package-bronze .hours { color: #3a2242; }
+.package-silver { background: var(--purple-light); }
+.package-silver .hours { color: #f1e6f5; }
+.package-gold { background: var(--purple-deep); }
+.package-bronze li::before { border-color: var(--paper-ink); }
+/* FAQ page: questions beside the mirror */
+.faq { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 48px; align-items: start; }
+.faq-pic { position: sticky; top: calc(var(--header-h) + 32px); }
+.faq-pic img { width: 100%; height: auto; }
+@media (max-width: 760px) { .faq { grid-template-columns: 1fr; gap: 24px; } .faq-pic { position: static; order: -1; justify-self: center; } .faq-pic img { width: 150px; } }
