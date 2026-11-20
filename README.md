@@ -7,28 +7,27 @@ Static copy of www.magicmirrorrentalservices.com (previously on Squarespace), re
 - `public/` is the site. Each page is `public/<page>/index.html`; shared styles and scripts are in `public/assets/`.
 - `public/_redirects` sends the old `/our-photobooth` URL to `/magic-mirror/`.
 - `functions/api/contact.js` handles the contact form (Cloudflare Pages Function).
-- `scripts/fetch-images.sh` downloads all 148 images from the old Squarespace CDN into `public/images/`.
+- `src-images/` holds the original full-size photos. They are not deployed.
+- `public/images/` holds the web versions (WebP, resized, with small `-thumb` versions for the gallery grids).
 
-## Images (do this once)
+## Images
 
-The images are not in the repo yet. From the repo root on any machine with internet:
+To add or change a photo, put the original in `src-images/<folder>/`, then from the repo root run:
 
-    bash scripts/fetch-images.sh
-    git add public/images && git commit -m "Add site images" && git push
+    python3 scripts/optimize-images.py
 
-Do this before cancelling Squarespace, because the CDN copies may disappear afterwards.
-The deploy workflow below does this automatically on its first run.
+and point the page at `/images/<folder>/<name>.webp`. The script needs Pillow (`pip install pillow`).
 
 ## Deploying
 
-`.github/workflows/deploy.yml` deploys `public/` to the Cloudflare Pages project `magic-mirror-site` on every push to `main`
-(and from the Actions tab via "Run workflow"). It needs two repository secrets
+`.github/workflows/deploy.yml` deploys `public/` to the Cloudflare Pages project `magic-mirror-site`.
+A push to `main` updates the live site. A push to any other branch makes a preview at
+`https://<branch-name>.magic-mirror-site-gna.pages.dev` (slashes become dashes) without touching the live site. It needs two repository secrets
 (GitHub > Settings > Secrets and variables > Actions):
 
 - `CLOUDFLARE_API_TOKEN`: a Cloudflare API token from the "Edit Cloudflare Workers" template
 - `CLOUDFLARE_ACCOUNT_ID`: your Cloudflare account ID
 
-The first run also downloads the images from the old Squarespace CDN and commits them to the repo.
 Custom domains (`www.magicmirrorrentalservices.com`, `magicmirrorrentalservices.com`) are added in the Pages project's Custom domains tab.
 
 ## Contact form
