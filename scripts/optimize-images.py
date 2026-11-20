@@ -23,9 +23,9 @@ SIZES = {
     "pricing": (900, None),
     "magic-mirror": (1000, None),
     "magic-mirror/icons": (184, None),
-    "brand": (320, None),
+    "brand": (640, None),            # logo is shown up to 320px wide
 }
-KEEP_AS_IS = {"favicon.ico", "og-image.png"}  # social sites and old browsers need these formats
+KEEP_AS_IS = {"favicon.ico", "og-image.png", "apple-touch-icon.png"}  # social sites and old browsers need these formats
 
 
 def save(im, dest, width):
