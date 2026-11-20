@@ -6,15 +6,16 @@
   --surface: #1a1420;
   --ink: #f3f1ee;
   --muted: #c4bacb;
-  --accent: #e8b923;
+  --accent: #fba924;      /* brand guide gold */
   --accent-ink: #0e0b11;
-  --purple: #662d91;
-  --purple-deep: #4b1f6d;
+  --purple: #6e266c;      /* brand guide purple */
+  --purple-light: #884c9e;
+  --purple-deep: #4f1a4d;
   --paper: #eeece9;
   --paper-ink: #17121b;
   --paper-muted: #4a4150;
-  --head: "Jost", "Futura", "Century Gothic", sans-serif;
-  --body: "Figtree", "Helvetica Neue", Arial, sans-serif;
+  --head: "Montserrat", "Helvetica Neue", Arial, sans-serif;   /* brand guide: Montserrat Heavy for headlines */
+  --body: "Montserrat", "Helvetica Neue", Arial, sans-serif;   /* brand guide: Montserrat Medium for body */
   --margin: clamp(16px, 3vw, 40px);
   --gap-section: clamp(96px, 12vw, 180px);
   /* five type steps */
@@ -28,10 +29,10 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 400 var(--t-body)/1.55 var(--body); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 500 var(--t-body)/1.6 var(--body); }
 img { max-width: 100%; height: auto; display: block; }
 a { color: inherit; }
-h1, h2, h3 { font-family: var(--head); font-weight: 500; line-height: 1.02; letter-spacing: -.02em; margin: 0; }
+h1, h2, h3 { font-family: var(--head); font-weight: 800; line-height: 1.05; letter-spacing: -.02em; margin: 0; }
 p { margin: 0 0 1em; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 ::selection { background: var(--accent); color: var(--accent-ink); }
@@ -227,18 +228,19 @@ p { margin: 0 0 1em; }
 /* =========================================================
    FOOTER
    ========================================================= */
-.site-footer { background: var(--paper); color: var(--paper-ink); min-height: 80svh; display: grid; grid-template-rows: auto 1fr auto; padding-top: 48px; }
+.site-footer { background: #000; color: var(--ink); display: grid; grid-template-rows: auto auto auto; padding-top: 48px; border-top: 1px solid var(--surface); }
 .foot-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
 .foot-cols a { overflow-wrap: anywhere; }
 .foot-cols h2 { font: 600 17px/1.4 var(--body); letter-spacing: 0; margin-bottom: 10px; }
 .foot-cols ul { list-style: none; margin: 0; padding: 0; }
-.foot-cols li, .foot-cols p { font-size: 17px; color: var(--paper-muted); margin: 0 0 6px; }
+.foot-cols li, .foot-cols p { font-size: 17px; color: var(--muted); margin: 0 0 6px; }
 .foot-cols a { text-decoration: none; transition: color .2s; }
-.foot-cols a:hover { color: var(--purple); text-decoration: underline; }
-.wordmark { display: block; width: 100%; margin-top: 64px; }
+.foot-cols a:hover { color: var(--accent); text-decoration: underline; }
+.foot-brand { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px 32px; margin-top: 72px; padding-bottom: 24px; }
+.foot-brand img { width: clamp(200px, 26vw, 320px); }
+.foot-brand p { margin: 0; font: 600 var(--t-statement)/1.2 var(--head); color: var(--purple-light); max-width: 22ch; text-align: right; }
 .site-footer > .wrap:nth-child(2) { align-self: end; }
-.wordmark text { font-family: var(--head); font-weight: 500; letter-spacing: -.04em; fill: var(--paper-ink); }
-.legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-block: 16px 24px; font-size: 15px; color: var(--paper-muted); }
+.legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; padding-block: 16px 24px; font-size: 15px; color: var(--muted); border-top: 1px solid var(--surface); }
 
 /* =========================================================
    INNER PAGES
@@ -398,6 +400,7 @@ p { margin: 0 0 1em; }
   .closing-text p { color: var(--paper-muted); }
   .closing .btn { width: 100%; background: var(--paper-ink); color: var(--paper); }
   .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
+  .foot-brand p { text-align: left; }
   .split, .band-grid, .contact-wrap, .booking, .notes { grid-template-columns: 1fr; }
   .band-grid.reverse > figure { order: 0; }
   .feature-list { grid-template-columns: 1fr; }
