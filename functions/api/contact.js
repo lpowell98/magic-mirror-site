@@ -3,8 +3,10 @@
 // Set these in Cloudflare Pages > Settings > Environment variables:
 //   RESEND_API_KEY  (secret)  your Resend API key
 //   CONTACT_TO      optional, defaults to inquiries@magicmirrorrentalservices.com
-//   CONTACT_FROM    optional, a sender on a domain verified in Resend,
-//                   defaults to "Website <website@magicmirrorrentalservices.com>"
+//   CONTACT_FROM    optional, a sender on a domain verified in Resend, e.g.
+//                   "Website <website@magicmirrorrentalservices.com>". Until the
+//                   domain is verified, Resend's test sender is used, which can
+//                   only deliver to the email address the Resend account uses.
 const FIELDS = {
   first_name: 'First name', last_name: 'Last name', email: 'Email', phone: 'Mobile phone',
   event_date: 'Event date', event_type: 'Event type', message: 'Message',
@@ -27,7 +29,7 @@ export async function onRequestPost({ request, env }) {
     method: 'POST',
     headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      from: env.CONTACT_FROM || 'Website <website@magicmirrorrentalservices.com>',
+      from: env.CONTACT_FROM || 'Magic Mirror website <onboarding@resend.dev>',
       to: [env.CONTACT_TO || 'inquiries@magicmirrorrentalservices.com'],
       reply_to: values.email,
       subject: `Website inquiry: ${values.event_type} on ${values.event_date}`,
