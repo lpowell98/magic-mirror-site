@@ -1,0 +1,29 @@
+name: DNS audit (old vs new nameservers)
+
+on:
+  workflow_dispatch:
+    inputs:
+      names:
+        description: "Space-separated subdomain labels to check (@ = apex)"
+        default: "@ www gallery booking mail email webmail shop store blog photos pics app admin portal client clients book events forms pay invoice calendar _dmarc google._domainkey s1._domainkey s2._domainkey k1._domainkey selector1._domainkey selector2._domainkey em _acme-challenge autodiscover"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Compare records
+        run: |
+          D=magicmirrorrentalservices.com
+          OLD=ns-cloud-d1.googledomains.com
+          NEW=julian.ns.cloudflare.com
+          for n in ${{ github.event.inputs.names }}; do
+            [ "$n" = "@" ] && f=$D || f=$n.$D
+            for t in A AAAA CNAME MX TXT; do
+              o=$(dig +short @$OLD $f $t | sort | tr '\n' ' ')
+              w=$(dig +short @$NEW $f $t | sort | tr '\n' ' ')
+              [ -z "$o$w" ] && continue
+              flag=""; [ "$o" != "$w" ] && flag="  <-- DIFFERENT"
+              echo "$f $t | old: ${o:-none} | new: ${w:-none}$flag" | tee -a $GITHUB_STEP_SUMMARY
+            done
+          done
+          echo "wildcard check:" ; dig +short @$OLD zz-nonexistent-test.$D A; dig +short @$OLD zz-nonexistent-test.$D CNAME
