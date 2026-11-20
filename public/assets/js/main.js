@@ -199,3 +199,18 @@ if (row) {
   window.addEventListener('pointermove', (e) => { if (down) row.scrollLeft = startLeft - (e.clientX - startX); });
   window.addEventListener('pointerup', () => { if (down) { down = false; row.style.scrollSnapType = ''; } });
 }
+
+// Review carousel: one quote at a time, click through
+document.querySelectorAll('[data-carousel]').forEach((box) => {
+  const slides = [...box.querySelectorAll('.quote-slides > li')];
+  const count = box.querySelector('.q-count');
+  let i = 0;
+  const show = (n) => {
+    i = (n + slides.length) % slides.length;
+    slides.forEach((s, k) => { s.classList.toggle('on', k === i); s.setAttribute('aria-hidden', String(k !== i)); });
+    if (count) count.textContent = `${i + 1} / ${slides.length}`;
+  };
+  box.querySelector('.q-prev')?.addEventListener('click', () => show(i - 1));
+  box.querySelector('.q-next')?.addEventListener('click', () => show(i + 1));
+  show(0);
+});
