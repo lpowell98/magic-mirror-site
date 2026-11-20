@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,40 +22,33 @@
 <body>
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
-  <div class="top wrap">
-    <a class="logo" href="/"><img src="/images/brand/logo-png-copy-3.webp" alt="Magic Mirror Rental Services" width="160" height="100"></a>
-    <div class="top-actions">
-      <a class="ig" href="https://www.instagram.com/magicmirrorrentalservices/" target="_blank" rel="noopener" aria-label="Instagram"><svg viewBox="0 0 24 24" width="34" height="34" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="5.5" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="17.6" cy="6.4" r="1.4" fill="currentColor"/></svg></a>
-      <a class="btn-outline" href="/book-now/">Book Now</a>
-      <a class="btn-outline" href="/contact-us/">Contact Us</a>
-    </div>
-    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><span></span><span></span><span></span></button>
-  </div>
-  <nav class="main-nav" id="site-nav" aria-label="Main">
-    <ul>
+  <div class="wrap bar">
+    <a class="logo" href="/"><img src="/images/brand/logo-png-copy-3.webp" alt="Magic Mirror Rental Services, home" width="104" height="81"></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <nav class="main-nav" id="site-nav" aria-label="Main">
+      <ul>
 <li><a href="/">Home</a></li>
-<li><a href="/about-us/">About us</a></li>
-<li class="has-sub"><button type="button" class="sub-toggle" aria-expanded="false">Our photobooth</button><ul class="sub"><li><a href="/magic-mirror/">Magic Mirror</a></li><li><a href="/template-gallery/">Template Gallery</a></li></ul></li>
+<li><a href="/about-us/">About</a></li>
+<li class="has-sub"><button type="button" class="sub-toggle" aria-expanded="false">The mirror</button><ul class="sub"><li><a href="/magic-mirror/">Magic Mirror</a></li><li><a href="/template-gallery/">Print templates</a></li></ul></li>
 <li><a href="/pricing/">Pricing</a></li>
-<li><a href="/gallery/">Event Gallery</a></li>
+<li><a href="/gallery/">Gallery</a></li>
 <li><a href="/faq/">FAQ</a></li>
-      <li class="mobile-only"><a href="/book-now/">Book Now</a></li>
-      <li class="mobile-only"><a href="/contact-us/">Contact Us</a></li>
-    </ul>
-  </nav>
+<li><a href="/contact-us/" aria-current="page">Contact</a></li>
+<li class="mobile-only"><a href="/book-now/">Check availability</a></li>
+      </ul>
+    </nav>
+    <a class="btn" href="/book-now/">Check availability</a>
+  </div>
 </header>
 <main id="main">
 
-<section class="wrap contact-head">
-  <div class="center">
-    <h1>Have More Questions?</h1>
-    <p>Please contact us via E-mail or by filling out the contact form below if you have any questions about the Magic Mirror and our offered services.</p>
-    <p><strong>Email: <a href="mailto:inquiries@magicmirrorrentalservices.com">inquiries@magicmirrorrentalservices.com</a></strong></p>
+<header class="page-head wrap"><h1>Have a question?</h1><p>Ask about dates, packages or custom prints.</p></header>
+<section class="wrap contact-wrap" id="contact-us1">
+  <div class="contact-aside">
+    <p>Email us directly at<br><a class="link-plain" href="mailto:inquiries@magicmirrorrentalservices.com"><strong>inquiries@magicmirrorrentalservices.com</strong></a></p>
+    <p>Ready to book? You can see open dates and reserve online.</p>
+    <a class="btn" href="/book-now/">Check availability</a>
   </div>
-  <img width="320" height="399" class="contact-logo" src="/images/brand/logo.webp" alt="" loading="lazy">
-</section>
-<section class="wrap" id="contact-us1">
-  <h2 class="section-title">Send a Message</h2>
   <form class="contact-form" action="/api/contact" method="post">
     <label>First Name *<input name="first_name" required autocomplete="given-name"></label>
     <label>Last Name *<input name="last_name" required autocomplete="family-name"></label>
@@ -65,25 +58,19 @@
     <label>Event Type *<select name="event_type" required><option value="">- Select -</option><option>Wedding</option><option>Baby Shower</option><option>Graduation</option><option>Corporate Event</option><option>Holiday &amp; Theme Party</option><option>Restaurant, Nightclub or Bar Event</option><option>University or Member Event</option><option>Family Event</option><option>Other</option></select></label>
     <label class="full">Message *<textarea name="message" rows="5" required></textarea></label>
     <input type="text" name="company" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-    <div class="full form-foot"><button type="submit">Submit</button><p class="form-status" role="status"></p></div>
+    <div class="full form-foot"><button class="btn" type="submit">Send message</button><p class="form-status" role="status"></p></div>
   </form>
 </section>
 </main>
 <footer class="site-footer">
-  <div class="wrap footer-grid">
-    <div>
-      <p><strong>Servicing the Greater Boston Area</strong></p>
-      <p>The Latest Interactive Photo Experience, Perfect for Weddings, Birthdays, Special Occasions, Baby Showers &amp; Corporate Events.</p>
-    </div>
-    <div class="footer-ctas">
-      <a class="btn-ghost" href="/pricing/">View Packages</a>
-      <a class="btn-ghost" href="/book-now/">Book Now</a>
-    </div>
+  <div class="wrap foot-cols">
+    <div><h2>Where we work</h2><p>Greater Boston and surrounding areas.</p><p>No travel fee inside the City of Boston.</p></div>
+    <div><h2>Explore</h2><ul><li><a href="/magic-mirror/">The Magic Mirror</a></li><li><a href="/pricing/">Packages and prices</a></li><li><a href="/template-gallery/">Print templates</a></li><li><a href="/gallery/">Event gallery</a></li><li><a href="/faq/">FAQ</a></li></ul></div>
+    <div><h2>Follow</h2><ul><li><a href="https://www.instagram.com/magicmirrorrentalservices/" target="_blank" rel="noopener">Instagram</a></li></ul></div>
+    <div><h2>Book or ask</h2><ul><li><a href="/book-now/">Check availability</a></li><li><a href="/contact-us/">Send a message</a></li><li><a href="mailto:inquiries@magicmirrorrentalservices.com">inquiries@magicmirrorrentalservices.com</a></li></ul></div>
   </div>
-  <div class="wrap footer-bottom">
-    <p><a href="mailto:inquiries@magicmirrorrentalservices.com"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M2 5h20v2.2l-10 6.3L2 7.2zm0 4.6 10 6.3 10-6.3V19H2z"/></svg> inquiries@magicmirrorrentalservices.com</a></p>
-    <p>All rights reserved © <span data-year>2021</span> By Magic Mirror Rental Services</p>
-  </div>
+  <div class="wrap"><svg class="wordmark" viewBox="0 0 1000 172" role="img" aria-label="Magic Mirror"><text x="-6" y="128" font-size="182" textLength="1008" lengthAdjust="spacingAndGlyphs">Magic Mirror</text></svg></div>
+  <div class="wrap legal"><p>© <span data-year>2026</span> Magic Mirror Rental Services. Established 2019.</p><p>Photo booth rentals for weddings, birthdays, graduations, campus and corporate events.</p></div>
 </footer>
 <script src="/assets/js/main.js" defer></script>
 </body>

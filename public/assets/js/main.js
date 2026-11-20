@@ -1,9 +1,13 @@
+document.documentElement.classList.replace('no-js', 'js');
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 // Mobile menu
 const toggle = document.querySelector('.menu-toggle');
 const nav = document.getElementById('site-nav');
 toggle?.addEventListener('click', () => {
   const open = nav.classList.toggle('open');
   toggle.setAttribute('aria-expanded', open);
+  toggle.textContent = open ? 'Close' : 'Menu';
 });
 
 // "Our photobooth" submenu (tap to open on touch / mobile)
@@ -67,3 +71,123 @@ form?.addEventListener('submit', async (e) => {
     button.disabled = false;
   }
 });
+
+// Sections rise in as they arrive (content stays visible without script)
+const reveals = document.querySelectorAll('.reveal');
+if ('IntersectionObserver' in window && !reduceMotion) {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { rootMargin: '0px 0px -10% 0px' });
+  reveals.forEach((el) => io.observe(el));
+} else {
+  reveals.forEach((el) => el.classList.add('in'));
+}
+
+// Hero wall: one print at a time slowly crossfades to another
+const wall = document.querySelector('.wall');
+if (wall && window.WALL_POOL && !reduceMotion) {
+  const tiles = [...wall.querySelectorAll('figure')];
+  const pool = [...window.WALL_POOL];
+  let timer;
+  const swap = () => {
+    if (document.hidden || !pool.length) return;
+    const fig = tiles[Math.floor(Math.random() * tiles.length)];
+    if (fig.classList.contains('busy')) return;
+    const cur = fig.querySelector('img.cur');
+    const next = document.createElement('img');
+    next.className = 'next'; next.alt = ''; next.src = pool.shift();
+    next.onload = () => {
+      fig.classList.add('busy'); fig.append(next);
+      requestAnimationFrame(() => fig.classList.add('swap'));
+      setTimeout(() => {
+        pool.push(cur.getAttribute('src')); cur.remove();
+        next.className = 'cur'; fig.classList.remove('swap', 'busy');
+      }, 1700);
+    };
+  };
+  timer = setInterval(swap, 2600);
+}
+
+// Showcase: one frame, three moments, switched as the reader scrolls
+const showcase = document.querySelector('.showcase');
+if (showcase && 'IntersectionObserver' in window) {
+  const imgs = showcase.querySelectorAll('.sc-frame img');
+  const caps = showcase.querySelectorAll('.sc-caption');
+  const setStage = (n) => {
+    showcase.dataset.stage = n;
+    imgs.forEach((im, i) => im.classList.toggle('on', i === n - 1));
+    caps.forEach((c, i) => c.classList.toggle('on', i === n - 1));
+  };
+  const markers = showcase.querySelectorAll('.sc-markers span');
+  const mo = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      const n = Number(e.target.dataset.stage);
+      if (e.isIntersecting) setStage(n);
+      else if (e.boundingClientRect.top > 0 && n > 1) setStage(n - 1);
+    });
+  }, { rootMargin: '-50% 0px -50% 0px' });
+  markers.forEach((m) => mo.observe(m));
+}
+
+// Event picker: pick an event type, see real prints made for that kind of event
+const pickData = document.getElementById('picker-data');
+if (pickData) {
+  const data = JSON.parse(pickData.textContent);
+  const fig = document.querySelector('.picker-print');
+  const im = fig.querySelector('img');
+  const typeEl = document.querySelector('.picker-type');
+  const capEl = document.querySelector('.picker-cap');
+  const countEl = document.querySelector('.picker-count');
+  const tabs = document.querySelectorAll('.picker-tabs button');
+  let type = 'Weddings', i = 0;
+  const show = () => {
+    const list = data[type];
+    i = (i + list.length) % list.length;
+    const item = list[i];
+    fig.classList.add('fading');
+    const pre = new Image();
+    pre.onload = pre.onerror = () => {
+      im.src = item.src; im.alt = 'Photo booth print from ' + item.cap;
+      im.width = pre.naturalWidth || im.width; im.height = pre.naturalHeight || im.height;
+      requestAnimationFrame(() => fig.classList.remove('fading'));
+    };
+    pre.src = item.src;
+    typeEl.textContent = type; capEl.textContent = item.cap;
+    countEl.textContent = `${i + 1} / ${list.length}`;
+    document.querySelector('.pk-prev').hidden = document.querySelector('.pk-next').hidden = list.length < 2;
+  };
+  tabs.forEach((b) => b.addEventListener('click', () => {
+    tabs.forEach((t) => t.setAttribute('aria-pressed', t === b));
+    type = b.dataset.type; i = 0; show();
+  }));
+  document.querySelector('.pk-prev').addEventListener('click', () => { i -= 1; show(); });
+  document.querySelector('.pk-next').addEventListener('click', () => { i += 1; show(); });
+  let sx = null;
+  fig.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; }, { passive: true });
+  fig.addEventListener('touchend', (e) => {
+    if (sx === null) return;
+    const dx = e.changedTouches[0].clientX - sx; sx = null;
+    if (Math.abs(dx) > 40) { i += dx < 0 ? 1 : -1; show(); }
+  });
+}
+
+// Row of moments: buttons, drag and a progress bar
+const row = document.querySelector('.row');
+if (row) {
+  const bar = document.querySelector('.row-progress span');
+  const update = () => {
+    const max = row.scrollWidth - row.clientWidth;
+    const seen = row.clientWidth / row.scrollWidth;
+    bar.style.width = `${Math.min(100, (seen + (max ? row.scrollLeft / max : 0) * (1 - seen)) * 100)}%`;
+  };
+  row.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+  const step = () => (row.querySelector('li')?.offsetWidth || 300) + 32;
+  document.querySelector('.row-prev')?.addEventListener('click', () => row.scrollBy({ left: -step(), behavior: 'smooth' }));
+  document.querySelector('.row-next')?.addEventListener('click', () => row.scrollBy({ left: step(), behavior: 'smooth' }));
+  let down = false, startX = 0, startLeft = 0;
+  row.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; down = true; startX = e.clientX; startLeft = row.scrollLeft; row.style.scrollSnapType = 'none'; });
+  window.addEventListener('pointermove', (e) => { if (down) row.scrollLeft = startLeft - (e.clientX - startX); });
+  window.addEventListener('pointerup', () => { if (down) { down = false; row.style.scrollSnapType = ''; } });
+}
