@@ -183,12 +183,6 @@ p { margin: 0 0 1em; }
 .ask-pics .tall { width: 100%; aspect-ratio: 3 / 4; object-fit: contain; background: var(--purple-deep); margin-top: -48px; padding: 32px; }
 .ask-pics .square { position: absolute; left: -40px; bottom: -40px; width: 38%; aspect-ratio: 1; object-fit: cover; }
 
-/* closing photograph, text beside */
-.closing { position: relative; min-height: 90svh; background: #000; display: grid; grid-template-columns: 7fr 5fr; margin-top: var(--gap-section); }
-.closing img { width: 100%; height: 100%; object-fit: cover; }
-.closing-text { display: flex; align-items: flex-end; padding: clamp(40px, 6vw, 96px) var(--margin); }
-.closing-text p { color: var(--muted); max-width: 36ch; }
-.closing h2 { font-size: var(--t-head); margin-bottom: 20px; }
 
 /* =========================================================
    FOOTER
@@ -346,12 +340,7 @@ p { margin: 0 0 1em; }
   .ask-pics .tall { margin-top: 0; aspect-ratio: 4 / 5; }
   .ask-pics .square { left: auto; right: 0; bottom: -24px; }
   .ask .btn { width: 100%; }
-  .closing { grid-template-columns: 1fr; min-height: 0; background: var(--paper); color: var(--paper-ink); }
-  .closing img { height: 70svh; }
-  .closing-text { padding-top: 32px; }
-  .closing-text p { color: var(--paper-muted); }
-  .closing .btn { width: 100%; background: var(--paper-ink); color: var(--paper); }
-  .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
+            .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; }
   .foot-brand p { text-align: left; }
   .split, .band-grid, .contact-wrap, .booking, .notes { grid-template-columns: 1fr; }
   .band-grid.reverse > figure { order: 0; }
@@ -401,3 +390,10 @@ p { margin: 0 0 1em; }
 .pk-extra .menu-group { margin-bottom: 0; }
 @media (max-width: 900px) { .pk-tiers, .pk-extra { grid-template-columns: 1fr; } .pk-tiers { margin-bottom: 40px; } .pk-extra { gap: 32px; } }
 @media (max-width: 560px) { .pk-included { grid-template-columns: 1fr; } }
+/* closing: compact call-to-action band */
+.closing { margin-top: var(--gap-section); }
+.closing-band { display: grid; grid-template-columns: 220px 1fr auto; align-items: center; gap: 32px; background: var(--purple); padding: 20px 32px 20px 20px; }
+.closing-band img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+.closing h2 { font-size: clamp(26px, 2.6vw, 36px); margin-bottom: 6px; }
+.closing-text p { margin: 0; color: #eadcec; max-width: 48ch; }
+@media (max-width: 760px) { .closing-band { grid-template-columns: 1fr; gap: 16px; padding: 24px 20px; } .closing-band img { display: none; } .closing-band .btn { width: 100%; } }
