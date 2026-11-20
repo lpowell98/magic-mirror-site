@@ -44,6 +44,13 @@ Without these the form shows visitors the email address instead.
 
 The Book Now page embeds the existing BoothBook widgets from `booking.magicmirrorrentalservices.com`, so bookings keep flowing to BoothBook unchanged. Keep that subdomain's DNS record pointing at BoothBook when moving DNS to Cloudflare.
 
+### Own booking system (replacing BoothBook)
+
+- `public/booking/` is the booking page, portal and confirmation. It saves to the Google Sheet "MMRS Bookings" through an Apps Script web app.
+- `apps-script/Code.gs` is that web app's code (paste into the sheet's Extensions > Apps Script, deploy as a Web app, Execute as Me, access Anyone).
+- Set `API_URL` near the top of the script in `public/booking/index.html` to the web app URL. While it is blank, the page shows an "email us" notice on the live domain.
+- When leaving BoothBook, point `booking.magicmirrorrentalservices.com` at this Pages project (Custom domains tab). `functions/_middleware.js` serves `/booking/` on that subdomain.
+
 ## Local preview
 
     cd public && python3 -m http.server 8000
