@@ -286,8 +286,8 @@ p { margin: 0 0 1em; }
 
 /* booking */
 .booking { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding-bottom: var(--gap-section); }
-.booking-card { background: #fff; min-height: 560px; }
-.booking-card iframe { width: 100%; min-height: 560px; border: 0; display: block; }
+.booking-card { background: #fff; min-height: 600px; padding: 32px 24px; display: flex; flex-direction: column; justify-content: center; }
+.booking-card iframe { width: 100%; height: 520px; border: 0; display: block; }
 
 .center { text-align: center; }
 .nowrap { white-space: nowrap; }
@@ -402,7 +402,7 @@ p { margin: 0 0 1em; }
 
 /* review carousel */
 .quote-carousel { margin-bottom: var(--gap-section); text-align: center; }
-.quote-slides { list-style: none; margin: 0 auto; padding: 0; max-width: 46ch; display: grid; align-items: center; }
+.quote-slides { list-style: none; margin: 0 auto; padding: 0; max-width: 72ch; display: grid; align-items: center; }
 .js .quote-slides > li { grid-area: 1 / 1; }
 .no-js .quote-slides { gap: 32px; }
 .no-js .quote-nav { display: none; }
