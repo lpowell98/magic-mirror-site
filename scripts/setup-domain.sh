@@ -56,6 +56,7 @@ add MX @ alt4.aspmx.l.google.com 10
 add TXT @ "v=spf1 include:_spf.google.com ~all"
 add TXT google._domainkey "$DKIM"
 add A booking 77.68.123.80 "" false
+add A gallery 194.164.94.179 "" false   # BoothGallery client galleries
 add CNAME @ "$PROJECT-gna.pages.dev" "" true
 add CNAME www "$PROJECT-gna.pages.dev" "" true
 
