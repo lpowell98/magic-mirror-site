@@ -426,3 +426,14 @@ p { margin: 0 0 1em; }
 .faq-pic { position: sticky; top: calc(var(--header-h) + 32px); }
 .faq-pic img { width: 100%; height: auto; }
 @media (max-width: 760px) { .faq { grid-template-columns: 1fr; gap: 24px; } .faq-pic { position: static; order: -1; justify-self: center; } .faq-pic img { width: 150px; } }
+
+/* landscape / portrait sections (gallery + templates) */
+.grid-sec h2 { font: 700 clamp(20px, 2vw, 26px)/1.2 var(--head); margin: 0 0 16px; }
+.grid-sec + .grid-sec { margin-top: calc(var(--gap-section) * -0.5); }
+.grid-land { grid-template-columns: repeat(3, 1fr); }
+.grid-land img { aspect-ratio: 3 / 2; }
+.grid-port { grid-template-columns: repeat(5, 1fr); }
+.grid-port img { aspect-ratio: 2 / 3; }
+@media (max-width: 1000px) { .grid-port { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 760px) { .grid-land { grid-template-columns: repeat(2, 1fr); } .grid-port { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 480px) { .grid-port { grid-template-columns: repeat(2, 1fr); } }
