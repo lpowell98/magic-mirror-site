@@ -446,7 +446,7 @@
     <div class="pane hidden" id="pane-contract" role="tabpanel" aria-labelledby="tab-contract">
       <div class="doc" id="contractDoc" tabindex="0" aria-label="Contract text">Loading contract…</div>
       <div class="signed hidden" id="signedNote" role="status"></div>
-    <form class="signbox" id="signForm" novalidate>
+    <form class="signbox hidden" id="signForm" novalidate>
       <div class="chk"><input type="checkbox" id="modelRelease" name="model-release"><label for="modelRelease"><b>Model release (section 9):</b> I confirm.</label></div>
       <p class="q">Signature <span class="req">*</span></p>
       <div class="sigmodes" role="group" aria-label="Signature method">
@@ -922,6 +922,7 @@ async function openContract(){
   const b=S.cur;
   if(!live()){ $("contractDoc").textContent="Your contract is available once your booking is saved online."; $("signForm").classList.add("hidden"); return; }
   $("contractDoc").textContent="Loading contract…"; $("signMsg").textContent="";
+  $("signForm").classList.add("hidden"); $("signedNote").classList.add("hidden");
   try{
     const r=await api({action:"contract",id:b.id,ln:b.ln});
     if(!r.ok){ $("contractDoc").textContent="We couldn't load your contract. Please email inquiries@magicmirrorrentalservices.com."; return; }
