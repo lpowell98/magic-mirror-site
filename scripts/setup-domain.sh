@@ -28,7 +28,9 @@ if [ -z "$ZONE" ]; then
   if ok "$r"; then ZONE=$(jq -r .result.id <<<"$r"); note "- Created zone"; else note "- ❌ Could not create zone: $(err "$r")"; exit 1; fi
 else note "- Zone already exists"; fi
 r=$(cf GET "/zones/$ZONE")
-note "- Zone status: **$(jq -r .result.status <<<"$r")**"
+STATUS=$(jq -r .result.status <<<"$r")
+note "- Zone status: **$STATUS**"
+if [ "$STATUS" = pending ]; then cf PUT "/zones/$ZONE/activation_check" >/dev/null && note "- Asked Cloudflare to re-check the nameservers now"; fi
 note "- **Nameservers to set at Squarespace:** $(jq -r '.result.name_servers | join(", ")' <<<"$r")"
 
 # 2. DNS records
