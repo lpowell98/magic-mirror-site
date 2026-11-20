@@ -22,6 +22,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/style.css?v=review20">
 <style>
 /* Booking flow, styled with the site's tokens (assets/css/style.css) */
@@ -167,7 +168,87 @@
 .bk #payAmt{max-width:140px;display:inline-block}
 .bk .note{color:var(--accent);margin-top:12px;font-weight:600}
 
+/* portal: next-step prompt + clickable tab */
+.bk .nextstep{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--purple);padding:16px 20px;margin-top:20px;font-weight:600}
+.bk .tab.done .badge{background:#3fb76b;color:#fff}
+
+/* portal tabs + panes */
+.bk .tab{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:6px 0 10px;border-bottom:3px solid transparent}
+.bk .tab:hover .ic{outline:2px solid var(--accent)}
+.bk .tab[aria-selected="true"]{border-bottom-color:var(--accent)}
+.bk .tab .badge.cnt{background:var(--purple-light);color:#fff}
+.bk .pane{margin-top:20px}
+.bk .paper{background:#fff;color:var(--paper-ink);padding:clamp(20px,3vw,44px)}
+.bk .paper h3{color:var(--paper-ink);font-size:24px;margin-bottom:6px}
+.bk .paper .sub{color:var(--paper-muted);margin:0 0 18px}
+.bk .paper label{color:var(--paper-ink)}
+.bk .paper .help{color:var(--paper-muted)}
+.bk .paper input[type=text],.bk .paper input[type=tel],.bk textarea{background:var(--paper);color:var(--paper-ink);color-scheme:light;border:2px solid transparent;border-radius:0;font:16px var(--body);padding:10px 14px;width:100%;max-width:760px}
+.bk textarea:focus-visible{outline:none;border-color:var(--accent)}
+.bk .paper .msg{color:var(--purple)}
+.bk .paper .msg.err{color:#c4262d}
+/* invoice */
+.bk .inv-head{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:flex-start;border-bottom:2px solid var(--paper);padding-bottom:18px}
+.bk .inv-head img{width:120px;height:auto;background:#000;padding:8px}
+.bk .inv-head h3{font-size:32px;margin:0}
+.bk .inv-meta{text-align:right;font-size:15px;color:var(--paper-muted)}
+.bk .inv-meta b{color:var(--paper-ink)}
+.bk .inv-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:20px 0;font-size:15px}
+.bk .inv-cols h4{font:700 12px var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--paper-muted);margin:0 0 6px}
+.bk .paper .summary th{color:var(--paper-muted);border-bottom-color:#ddd}
+.bk .paper .summary td{border-bottom-color:#eee}
+.bk .inv-tot{max-width:340px;margin:18px 0 0 auto}
+.bk .inv-tot .kv{border-bottom-color:#eee}
+.bk .inv-tot .kv span{color:var(--paper-ink)}
+.bk .inv-tot .kv.big b,.bk .inv-tot .kv.big span{font:800 20px var(--head)}
+.bk .inv-note{margin-top:20px;font-size:14px;color:var(--paper-muted)}
+/* templates */
+.bk .tplgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin:6px 0 22px}
+.bk .tplopt{background:var(--paper);border:3px solid transparent;padding:6px;cursor:pointer;text-align:left;font:600 13px var(--body);color:var(--paper-ink)}
+.bk .tplopt img{width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;background:#ddd}
+.bk .tplopt span{display:block;padding:6px 2px 2px}
+.bk .tplopt[aria-checked="true"]{border-color:var(--accent)}
+.bk .tplopt[aria-checked="true"] span::before{content:"✓ ";color:var(--purple)}
+/* messages */
+.bk .thread{display:flex;flex-direction:column;gap:10px;margin:0 0 18px;max-width:760px}
+.bk .bubble{padding:12px 16px;max-width:85%;background:var(--paper);font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bk .bubble.me{align-self:flex-end;background:#efe6f6}
+.bk .bubble small{display:block;color:var(--paper-muted);font-size:12px;margin-bottom:4px}
+.bk .thread .empty{color:var(--paper-muted)}
+/* details summary */
+.bk .dsum{background:var(--paper);padding:14px 18px;margin-bottom:8px;max-width:760px}
+.bk .dsum .kv{border-bottom-color:#e2ded8}
+.bk .dsum .kv span{color:var(--paper-ink)}
+@media print{
+  .site-header,.site-footer,.page-head,.bk .tabs,.bk .nextstep,.bk #printInvoice,.bk #thanks,.skip{display:none!important}
+  body{background:#fff}.bk .paper{padding:0}
+}
+
+/* contract view */
+.bk .backlink{margin:0 0 18px}
+.bk .doc{background:#fff;color:var(--paper-ink);padding:clamp(20px,3vw,44px);max-height:62vh;overflow:auto;font-size:15px;line-height:1.6;overscroll-behavior:contain}
+.bk .doc h1{font-size:26px;margin-bottom:14px;color:var(--paper-ink)}
+.bk .doc h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase;margin:22px 0 6px;color:var(--paper-ink)}
+.bk .doc p{margin:0 0 10px}
+.bk .signbox{background:#fff;color:var(--paper-ink);padding:clamp(20px,3vw,44px);margin-top:16px}
+.bk .signbox label,.bk .signbox .q{color:var(--paper-ink)}
+.bk .signbox input[type=text]{background:var(--paper);color:var(--paper-ink);color-scheme:light;max-width:420px}
+.bk .signbox .help{color:var(--paper-muted)}
+.bk .sigmodes{display:flex;gap:8px;margin:6px 0 10px}
+.bk .sigmodes button{font:600 14px var(--body);padding:8px 14px;border:2px solid var(--paper);background:#fff;color:var(--paper-ink);cursor:pointer}
+.bk .sigmodes button[aria-pressed="true"]{background:var(--paper-ink);border-color:var(--paper-ink);color:#fff}
+.bk #sigPad{display:block;width:100%;max-width:640px;height:180px;background:#fffbea;border:2px dashed #d8cf9e;touch-action:none;cursor:crosshair}
+.bk .sigtools{display:flex;gap:16px;align-items:center;max-width:640px;margin-top:6px}
+.bk .sigtools .linkbtn{margin:0;color:var(--purple)}
+.bk .chk{display:flex;gap:12px;align-items:flex-start;margin:16px 0;max-width:760px}
+.bk .chk input{width:22px;height:22px;flex:none;margin-top:2px;accent-color:var(--purple)}
+.bk .chk label{margin:0;font-weight:500;font-size:15px;color:var(--paper-ink)}
+.bk .signed{background:#e9f7ee;color:#14532d;border-left:4px solid #3fb76b;padding:14px 18px;font-weight:600;margin-top:16px}
+.bk .signbox .msg{color:#c4262d}
+
 @media (max-width:900px){
+  .bk .inv-cols{grid-template-columns:1fr}
+  .bk .inv-meta{text-align:left}
   .bk .home,.bk .pkgs,.bk .cols3,.bk .cols2,.bk .grid2{grid-template-columns:1fr}
 }
 </style>
@@ -334,23 +415,96 @@
   <!-- ================= PORTAL ================= -->
   <section id="v-portal" class="hidden">
     <div class="banner" id="thanks">Thank you for booking. Please find your details below.</div>
-    <div class="tabs" id="tabs"></div>
-    <div class="grid2">
-      <div class="card"><h3>Order details</h3><div id="pOrder"></div></div>
-      <div class="card"><h3>Your details</h3><div id="pYou"></div></div>
+    <div class="tabs" id="tabs" role="tablist" aria-label="Your booking"></div>
+    <div class="nextstep hidden" id="nextStep"><span id="nextText"></span><button type="button" class="btn" id="nextBtn"></button></div>
+
+    <div class="pane" id="pane-bookings" role="tabpanel" aria-labelledby="tab-bookings">
+      <div class="grid2">
+        <div class="card"><h3>Order details</h3><div id="pOrder"></div></div>
+        <div class="card"><h3>Your details</h3><div id="pYou"></div></div>
+      </div>
+      <div class="card" style="margin-top:20px">
+        <h3>Payment summary</h3>
+        <table class="summary" style="margin-top:0"><thead><tr><th>DESCRIPTION</th><th>AMOUNT</th></tr></thead><tbody id="pLines"></tbody></table>
+        <div style="max-width:340px;margin:30px 0 0 auto" id="pTotals"></div>
+      </div>
+      <div class="card" style="margin-top:20px;text-align:center">
+        <h3>Make a payment</h3>
+        <div>Enter the amount you would like to pay off your booking below:</div>
+        <div class="paytiles" id="payTiles"></div>
+        <div>$ <label for="payAmt" class="visually-hidden">Payment amount</label><input type="text" id="payAmt" name="amount" inputmode="decimal" autocomplete="off" style="width:120px"></div>
+        <button class="btn" style="margin-top:16px" id="payBtn">Make payment</button>
+        <div class="note" id="payNote" role="status" aria-live="polite"></div>
+      </div>
     </div>
-    <div class="card" style="margin-top:20px">
-      <h3>Payment summary</h3>
-      <table class="summary" style="margin-top:0"><thead><tr><th>DESCRIPTION</th><th>AMOUNT</th></tr></thead><tbody id="pLines"></tbody></table>
-      <div style="max-width:340px;margin:30px 0 0 auto" id="pTotals"></div>
+
+    <div class="pane hidden" id="pane-invoice" role="tabpanel" aria-labelledby="tab-invoice">
+      <div class="paper" id="invoiceDoc"></div>
+      <p style="margin-top:16px"><button type="button" class="btn" id="printInvoice">Print or save as PDF</button></p>
     </div>
-    <div class="card" style="margin-top:20px;text-align:center">
-      <h3>Make a payment</h3>
-      <div>Enter the amount you would like to pay off your booking below:</div>
-      <div class="paytiles" id="payTiles"></div>
-      <div>$ <label for="payAmt" class="visually-hidden">Payment amount</label><input type="text" id="payAmt" name="amount" inputmode="decimal" autocomplete="off" style="width:120px"></div>
-      <button class="btn" style="margin-top:16px" id="payBtn">Make payment</button>
-      <div class="note" id="payNote" role="status" aria-live="polite"></div>
+
+    <div class="pane hidden" id="pane-contract" role="tabpanel" aria-labelledby="tab-contract">
+      <div class="doc" id="contractDoc" tabindex="0" aria-label="Contract text">Loading contract…</div>
+      <div class="signed hidden" id="signedNote" role="status"></div>
+    <form class="signbox" id="signForm" novalidate>
+      <div class="chk"><input type="checkbox" id="modelRelease" name="model-release"><label for="modelRelease"><b>Model release (section 9):</b> I confirm.</label></div>
+      <p class="q">Signature <span class="req">*</span></p>
+      <div class="sigmodes" role="group" aria-label="Signature method">
+        <button type="button" id="modeDraw" aria-pressed="true">Draw</button>
+        <button type="button" id="modeType" aria-pressed="false">Type</button>
+      </div>
+      <canvas id="sigPad" aria-label="Signature pad. Draw your signature with a mouse or finger, or choose Type."></canvas>
+      <div class="sigtools"><span class="help" id="sigHelp" style="margin:0">Click and drag with your mouse, or sign with your finger on a phone or tablet.</span><button type="button" class="linkbtn" id="sigClear">Clear signature</button></div>
+      <div id="typeWrap" class="hidden"><label for="sigTyped">Type your full name to sign</label><input type="text" id="sigTyped" name="typed-signature" autocomplete="name"></div>
+      <label for="signerName">Signer name <span class="req">*</span></label><input type="text" id="signerName" name="name" autocomplete="name" required>
+      <label for="signerTitle">Signer title <span class="req">*</span></label><input type="text" id="signerTitle" name="title" autocomplete="off" required placeholder="e.g. Client, Bride, Event Planner…">
+      <div class="chk"><input type="checkbox" id="esignConsent" name="consent" required><label for="esignConsent" id="consentText">I agree to sign electronically.</label></div>
+      <button type="submit" class="btn" id="signBtn">Accept &amp; sign</button>
+      <div class="msg" id="signMsg" role="status" aria-live="polite"></div>
+    </form>
+    </div>
+
+    <div class="pane hidden" id="pane-template" role="tabpanel" aria-labelledby="tab-template">
+      <div class="paper">
+        <h3>Choose your print template</h3>
+        <p class="sub" id="tplIntro">Pick the design for your photo prints. We'll add your text and send you a proof before the event.</p>
+        <div class="tplgrid" id="tplGrid" role="radiogroup" aria-label="Print templates"></div>
+        <label for="tplText">Text on your print</label>
+        <input type="text" id="tplText" name="template-text" maxlength="300" autocomplete="off" placeholder="e.g. Jane &amp; Sam · 06.14.2027…">
+        <div class="help">Names, a date or a short message. Leave blank for no text.</div>
+        <p style="margin-top:20px"><button type="button" class="btn" id="tplSave">Save template</button></p>
+        <div class="msg" id="tplMsg" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="pane hidden" id="pane-messages" role="tabpanel" aria-labelledby="tab-messages">
+      <div class="paper">
+        <h3>Messages</h3>
+        <p class="sub">Questions about your event? Send us a message and we'll reply by email and here.</p>
+        <div class="thread" id="thread" aria-live="polite"></div>
+        <label for="msgText">Your message</label>
+        <textarea id="msgText" name="message" rows="4" maxlength="2000"></textarea>
+        <p style="margin-top:16px"><button type="button" class="btn" id="msgSend">Send message</button></p>
+        <div class="msg" id="msgStatus" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="pane hidden" id="pane-details" role="tabpanel" aria-labelledby="tab-details">
+      <form class="paper" id="detailsForm" novalidate>
+        <h3>Confirm your event details</h3>
+        <p class="sub">Check your booking below and tell us who to contact on the day.</p>
+        <div id="detailsSummary" class="dsum"></div>
+        <div class="cols2" style="max-width:760px">
+          <div><label for="dName">On-site contact name <span class="req">*</span></label><input type="text" id="dName" name="onsite-name" autocomplete="off" required></div>
+          <div><label for="dPhone">On-site contact phone <span class="req">*</span></label><input type="tel" id="dPhone" name="onsite-phone" autocomplete="off" required></div>
+        </div>
+        <label for="dGuests">Estimated guest count</label><input type="text" id="dGuests" name="guests" inputmode="numeric" autocomplete="off" style="max-width:200px">
+        <label for="dNotes">Setup notes</label>
+        <textarea id="dNotes" name="setup-notes" rows="4" maxlength="2000" placeholder="e.g. Load in through the side door, booth goes by the dance floor…"></textarea>
+        <div class="chk"><input type="checkbox" id="dConfirm" name="confirm" required><label for="dConfirm">I confirm the event date, times and venue above are correct.</label></div>
+        <button type="submit" class="btn" id="dSave">Confirm details</button>
+        <div class="msg" id="dMsg" role="status" aria-live="polite"></div>
+      </form>
     </div>
   </section>
 
@@ -623,8 +777,6 @@ const ICONS={
 };
 function renderPortal(b,isNew){
   $("thanks").classList.toggle("hidden",!isNew);
-  $("tabs").innerHTML=[["cal","Bookings"],["inv","Invoice"],["con","Contract","!"],["tpl","Choose Template","!"],["msg","Send Message"],["ok","Confirm Details"]]
-    .map(([i,l,bd])=>`<div class="tab">${bd?`<div class="badge">${bd}</div>`:""}<div class="ic">${ICONS[i]}</div>${l}</div>`).join("");
   const kv=(k,v)=>`<div class="kv"><b>${k}</b><span>${v||""}</span></div>`;
   $("pOrder").innerHTML=kv("Booking ID",b.id)+kv("Event Date",b.date)+kv("Event Time",b.start+(b.end?" - "+b.end:""))+kv("Arrival Time",b.arrive)+kv("Departure Time",b.depart)+kv("Event Name",b.evName)+kv("Venue Name",b.vName)+kv("Venue Address",b.vAddr)+kv("Venue Postcode",b.vZip)+kv("Status",b.status);
   $("pYou").innerHTML=kv("First Name",b.fn)+kv("Last Name",b.ln)+kv("Company","")+kv("E-mail",b.email)+kv("Telephone","")+kv("Mobile Phone",b.phone)+kv("Additional Notes","");
@@ -636,9 +788,202 @@ function renderPortal(b,isNew){
   $("payAmt").value=due.toFixed(2);
   $("payTiles").querySelectorAll(".paytile").forEach(t=>t.onclick=()=>{ $("payTiles").querySelectorAll(".paytile").forEach(x=>{ x.classList.remove("on"); x.setAttribute("aria-pressed","false"); }); t.classList.add("on"); t.setAttribute("aria-pressed","true"); $("payAmt").value=(+t.dataset.v).toFixed(2); });
   $("payNote").textContent="";
-  $("payBtn").onclick=()=>{ $("payNote").textContent="Online payments (Square) connect in the next build phase."; };
-  show("portal");
+  $("payBtn").onclick=()=>{ $("payNote").textContent="Online payments are coming soon. For now we'll send you a payment link."; };
+  S.cur=b;
+  renderTabs(); selectTab("bookings"); show("portal");
 }
+
+/* ===== Portal tabs ===== */
+const TABS=[["bookings","cal","Bookings"],["invoice","inv","Invoice"],["contract","con","Contract"],["template","tpl","Choose Template"],["messages","msg","Send Message"],["details","ok","Confirm Details"]];
+const live=()=>!!API_URL && S.cur && S.cur.ln && S.cur.status!=="Cancelled";
+function tabState(t){
+  const b=S.cur;
+  if(t==="contract") return b.signedAt?["✓","signed"]:["!","needs signature"];
+  if(t==="template") return b.template?["✓","chosen"]:["!","not chosen yet"];
+  if(t==="details") return b.detailsAt?["✓","confirmed"]:["!","needs confirming"];
+  if(t==="messages" && S.msgCount) return [String(S.msgCount), S.msgCount+" message"+(S.msgCount>1?"s":"")];
+  return null;
+}
+function renderTabs(){
+  const cur=S.tab||"bookings";
+  $("tabs").innerHTML=TABS.map(([id,ic,label])=>{
+    const st=tabState(id), done=st&&st[0]==="✓", cnt=st&&/^\d+$/.test(st[0]);
+    return `<button type="button" role="tab" class="tab${done?" done":""}" id="tab-${id}" data-tab="${id}" aria-controls="pane-${id}" aria-selected="${id===cur}" tabindex="${id===cur?0:-1}" aria-label="${label}${st?", "+st[1]:""}">${st?`<div class="badge${cnt?" cnt":""}" aria-hidden="true">${st[0]}</div>`:""}<div class="ic">${ICONS[ic]}</div>${label}</button>`;
+  }).join("");
+  $("tabs").querySelectorAll(".tab").forEach(t=>t.onclick=()=>selectTab(t.dataset.tab));
+  $("tabs").onkeydown=e=>{ const ids=TABS.map(t=>t[0]); let k=ids.indexOf(S.tab);
+    if(e.key==="ArrowRight") k=(k+1)%ids.length; else if(e.key==="ArrowLeft") k=(k-1+ids.length)%ids.length; else return;
+    e.preventDefault(); selectTab(ids[k]); $("tab-"+ids[k]).focus(); };
+  const next = !live() ? null : !S.cur.signedAt ? ["contract","Next step: review and sign your contract to secure your date.","Sign contract"]
+    : !S.cur.template ? ["template","Next step: choose the design for your photo prints.","Choose template"]
+    : !S.cur.detailsAt ? ["details","Next step: confirm your event details and on-site contact.","Confirm details"] : null;
+  $("nextStep").classList.toggle("hidden",!next);
+  if(next){ $("nextText").textContent=next[1]; $("nextBtn").textContent=next[2]; $("nextBtn").onclick=()=>selectTab(next[0]); }
+}
+function selectTab(id){
+  S.tab=id;
+  TABS.forEach(([t])=>{ $("pane-"+t).classList.toggle("hidden",t!==id); const b=$("tab-"+t); if(b){ b.setAttribute("aria-selected",t===id); b.tabIndex=t===id?0:-1; } });
+  if(id==="invoice") drawInvoice();
+  if(id==="contract") openContract();
+  if(id==="template") drawTemplates();
+  if(id==="messages") loadMessages();
+  if(id==="details") fillDetails();
+}
+const needLive=(el)=>{ if(live()) return true; $(el).innerHTML='<p class="sub">This is available once your booking is saved online. Please email inquiries@magicmirrorrentalservices.com.</p>'; return false; };
+
+/* Invoice */
+function drawInvoice(){
+  const b=S.cur, due=b.total-b.paid, ev=new Date(b.date), dueBy=new Date(ev); dueBy.setDate(dueBy.getDate()-14);
+  const kv=(k,v,c)=>`<div class="kv${c?" "+c:""}"><b>${k}</b><span>${v}</span></div>`;
+  $("invoiceDoc").innerHTML=`<div class="inv-head"><div><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services" width="116" height="71"><p style="margin:10px 0 0">Magic Mirror Rental Services<br>inquiries@magicmirrorrentalservices.com</p></div>
+    <div class="inv-meta"><h3 style="color:var(--paper-ink)">Invoice</h3><div>Invoice <b>#${b.id}</b></div><div>Issued <b>${b.created||LONGDATE.format(new Date())}</b></div><div>Status <b>${b.status}</b></div></div></div>
+    <div class="inv-cols"><div><h4>Bill to</h4>${b.fn} ${b.ln}<br>${b.email||""}<br>${b.phone||""}${b.street?"<br>"+b.street:""}</div>
+    <div><h4>Event</h4>${b.evName}<br>${isNaN(ev)?b.date:LONGDATE.format(ev)}, ${b.start}${b.end?" – "+b.end:""}<br>${b.vName}<br>${b.vAddr} ${b.vZip||""}</div></div>
+    <table class="summary"><thead><tr><th>DESCRIPTION</th><th>AMOUNT</th></tr></thead><tbody>${b.items.map(([n,p])=>`<tr><td>${n}</td><td>${money(p)}</td></tr>`).join("")}</tbody></table>
+    <div class="inv-tot">${kv("Subtotal",money(b.total))}${kv("Paid",money(b.paid))}${kv("Balance due",money(due),"big")}</div>
+    <p class="inv-note">A non-refundable ${money(CFG.deposit)} reservation fee is due when you sign your contract. The remaining balance is due by <b>${isNaN(dueBy)?"14 days before your event":LONGDATE.format(dueBy)}</b> (14 days before your event).</p>`;
+}
+$("printInvoice").onclick=()=>window.print();
+
+/* Templates: the print designs from the site's Print Templates page */
+const TEMPLATES="dec14-ny-dr-4x6-ps holiday-cheer-2-4x6-drb black-ice-2-4x6-cropped fiesta-2-drb-4x6-single-pse pot-o-gold-2-4x6-cropped midnight-watercolor-drb-4x6-pse baby-safari-1-portrait-mirror-4x6-cropped ever-after-portrait-mirror-1-4x6-cropped nov15a-dr-4x6-ps painted-leaves-portrait-mirror-1-cropped red-carpet-4x6-ps sweetheart-black-1-4x6-cropped winterreds-single boo-2-portrait-mirror-4x6-full-bleed art-deco-2-portrait-mirror-4x6-cropped b-w-grad-2-portrait-mirror-4x6-cropped birthday_vert_1 babyshowerh graduationv hope-2-portrait-mirror-4x6-cropped".split(" ");
+const tplName=f=>{ const known={"dec14-ny-dr-4x6-ps":"New Year","nov15a-dr-4x6-ps":"Autumn Glow","winterreds-single":"Winter Reds","birthday_vert_1":"Birthday","babyshowerh":"Baby Shower","graduationv":"Graduation","pot-o-gold-2-4x6-cropped":"Pot o' Gold","b-w-grad-2-portrait-mirror-4x6-cropped":"Black & White Grad"}; if(known[f]) return known[f];
+  return f.replace(/-(portrait-mirror|4x6|cropped|drb|dr|ps|pse|single|full-bleed|\d)(?=-|$)/g,"").split(/[-_]/).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join(" "); };
+function drawTemplates(){
+  if(!needLive("tplGrid")) return;
+  const b=S.cur; S.tplPick=S.tplPick||b.template||"";
+  if(b.customPrint) $("tplIntro").textContent="You chose a custom design. Pick the closest style below as a starting point, and add your text. We'll send you a proof.";
+  $("tplGrid").innerHTML=TEMPLATES.map(f=>{ const n=tplName(f); return `<button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===n}" data-name="${n}"><img src="/images/templates/${f}-thumb.webp" alt="" width="600" height="400" loading="lazy"><span>${n}</span></button>`; }).join("");
+  $("tplGrid").querySelectorAll(".tplopt").forEach(o=>o.onclick=()=>{ S.tplPick=o.dataset.name; $("tplGrid").querySelectorAll(".tplopt").forEach(x=>x.setAttribute("aria-checked",x===o)); });
+  if(!$("tplText").value) $("tplText").value=b.templateText||"";
+  $("tplMsg").textContent = b.template ? `Saved: ${b.template}.` : "";
+}
+$("tplSave").onclick=async()=>{
+  const m=$("tplMsg"); m.classList.remove("err");
+  if(!S.tplPick){ m.classList.add("err"); m.textContent="Please choose a template."; return; }
+  const btn=$("tplSave"); btn.disabled=true; btn.textContent="Saving…";
+  try{ const r=await api(null,{action:"template",id:S.cur.id,ln:S.cur.ln,template:S.tplPick,templateText:$("tplText").value});
+    if(r.ok){ S.cur.template=S.tplPick; S.cur.templateText=$("tplText").value; m.textContent=`Saved: ${S.tplPick}. We'll send you a proof before your event.`; renderTabs(); }
+    else { m.classList.add("err"); m.textContent="We couldn't save your template. Please try again."; } }
+  catch(e){ m.classList.add("err"); m.textContent="We couldn't reach the booking system. Please try again."; }
+  btn.disabled=false; btn.textContent="Save template";
+};
+
+/* Messages */
+function drawThread(list){
+  S.msgCount=list.length;
+  $("thread").innerHTML = list.length ? list.map(x=>`<div class="bubble${x.from==="You"?" me":""}"><small>${x.from} · ${x.at}</small></div>`).join("") : '<p class="empty">No messages yet.</p>';
+  $("thread").querySelectorAll(".bubble").forEach((el,i)=>el.appendChild(document.createTextNode(list[i].text)));
+}
+async function loadMessages(){
+  if(!needLive("thread")) return;
+  $("thread").innerHTML='<p class="empty">Loading messages…</p>';
+  try{ const r=await api({action:"messages",id:S.cur.id,ln:S.cur.ln}); if(r.ok){ drawThread(r.messages); renderTabs(); } }
+  catch(e){ $("thread").innerHTML='<p class="empty">We couldn\'t load your messages.</p>'; }
+}
+$("msgSend").onclick=async()=>{
+  const t=$("msgText").value.trim(), st=$("msgStatus"); st.classList.remove("err");
+  if(!t){ st.classList.add("err"); st.textContent="Please type a message."; $("msgText").focus(); return; }
+  const btn=$("msgSend"); btn.disabled=true; btn.textContent="Sending…";
+  try{ const r=await api(null,{action:"message",id:S.cur.id,ln:S.cur.ln,text:t});
+    if(r.ok){ drawThread(r.messages); renderTabs(); $("msgText").value=""; st.textContent="Message sent. We'll reply by email and here."; }
+    else { st.classList.add("err"); st.textContent="We couldn't send your message. Please try again."; } }
+  catch(e){ st.classList.add("err"); st.textContent="We couldn't reach the booking system. Please email inquiries@magicmirrorrentalservices.com."; }
+  btn.disabled=false; btn.textContent="Send message";
+};
+
+/* Confirm details */
+function fillDetails(){
+  const b=S.cur, kv=(k,v)=>`<div class="kv"><b>${k}</b><span>${v||""}</span></div>`;
+  $("detailsSummary").innerHTML=kv("Event",b.evName)+kv("Date",b.date)+kv("Time",b.start+(b.end?" – "+b.end:""))+kv("Venue",b.vName)+kv("Address",(b.vAddr||"")+" "+(b.vZip||""));
+  $("dName").value=b.onsiteName||$("dName").value||`${b.fn} ${b.ln}`; $("dPhone").value=b.onsitePhone||$("dPhone").value||b.phone||"";
+  $("dGuests").value=b.guests||$("dGuests").value; $("dNotes").value=b.setupNotes||$("dNotes").value;
+  $("dMsg").classList.remove("err"); $("dMsg").textContent=b.detailsAt?`Confirmed on ${b.detailsAt}. You can update and confirm again any time.`:"";
+  if(!live()){ $("dSave").disabled=true; $("dMsg").textContent="Available once your booking is saved online."; }
+}
+$("detailsForm").addEventListener("submit",async e=>{
+  e.preventDefault(); const m=$("dMsg"); m.classList.remove("err");
+  ["dName","dPhone","dConfirm"].forEach(id=>$(id).removeAttribute("aria-invalid"));
+  const bad=(t,id)=>{ m.classList.add("err"); m.textContent=t; $(id).setAttribute("aria-invalid","true"); $(id).focus(); };
+  if(!$("dName").value.trim()) return bad("Please enter an on-site contact name.","dName");
+  if(!$("dPhone").value.trim()) return bad("Please enter an on-site contact phone.","dPhone");
+  if(!$("dConfirm").checked) return bad("Please confirm the details are correct.","dConfirm");
+  const btn=$("dSave"); btn.disabled=true; btn.textContent="Saving…";
+  const body={action:"details",id:S.cur.id,ln:S.cur.ln,onsiteName:$("dName").value,onsitePhone:$("dPhone").value,guests:$("dGuests").value,setupNotes:$("dNotes").value,confirm:true};
+  try{ const r=await api(null,body);
+    if(r.ok){ Object.assign(S.cur,{onsiteName:body.onsiteName,onsitePhone:body.onsitePhone,guests:body.guests,setupNotes:body.setupNotes,detailsAt:r.detailsAt}); m.textContent=`Thank you. Details confirmed on ${r.detailsAt}.`; renderTabs(); }
+    else { m.classList.add("err"); m.textContent="We couldn't save your details. Please try again."; } }
+  catch(err){ m.classList.add("err"); m.textContent="We couldn't reach the booking system. Please try again."; }
+  btn.disabled=false; btn.textContent="Confirm details";
+});
+
+/* ===== Contract signing ===== */
+async function openContract(){
+  const b=S.cur;
+  if(!live()){ $("contractDoc").textContent="Your contract is available once your booking is saved online."; $("signForm").classList.add("hidden"); return; }
+  $("contractDoc").textContent="Loading contract…"; $("signMsg").textContent="";
+  try{
+    const r=await api({action:"contract",id:b.id,ln:b.ln});
+    if(!r.ok){ $("contractDoc").textContent="We couldn't load your contract. Please email inquiries@magicmirrorrentalservices.com."; return; }
+    $("contractDoc").innerHTML=r.html; $("consentText").textContent=r.consent;
+    const signed=!!r.signedAt;
+    $("signForm").classList.toggle("hidden",signed);
+    $("signedNote").classList.toggle("hidden",!signed);
+    if(signed) $("signedNote").textContent=`Signed by ${r.signer} on ${r.signedAt}. A copy was emailed to you.`;
+    else { if(!$("signerName").value) $("signerName").value=`${b.fn} ${b.ln}`; sizePad(); }
+  }catch(e){ $("contractDoc").textContent="We couldn't reach the booking system. Please try again."; }
+}
+
+// signature pad: draw with mouse/finger, or type a name
+const pad=$("sigPad"), pctx=pad.getContext("2d"); let drawing=false, inked=false, sigMode="draw";
+function sizePad(){
+  const r=pad.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  pad.width=Math.round(r.width*dpr); pad.height=Math.round(r.height*dpr);
+  pctx.setTransform(dpr,0,0,dpr,0,0); clearPad();
+}
+function clearPad(){ pctx.fillStyle="#ffffff"; pctx.fillRect(0,0,pad.width,pad.height); inked=false; if(sigMode==="type") drawTyped(); }
+function pos(e){ const r=pad.getBoundingClientRect(); return [e.clientX-r.left,e.clientY-r.top]; }
+pad.addEventListener("pointerdown",e=>{ if(sigMode!=="draw") return; drawing=true; pad.setPointerCapture(e.pointerId); const [x,y]=pos(e); pctx.beginPath(); pctx.moveTo(x,y); });
+pad.addEventListener("pointermove",e=>{ if(!drawing) return; const [x,y]=pos(e); pctx.lineTo(x,y); pctx.strokeStyle="#17121b"; pctx.lineWidth=2.4; pctx.lineCap="round"; pctx.lineJoin="round"; pctx.stroke(); inked=true; });
+["pointerup","pointercancel","pointerleave"].forEach(t=>pad.addEventListener(t,()=>{ drawing=false; }));
+function drawTyped(){
+  const t=$("sigTyped").value.trim(); const r=pad.getBoundingClientRect();
+  pctx.fillStyle="#ffffff"; pctx.fillRect(0,0,r.width,r.height);
+  if(!t){ inked=false; return; }
+  pctx.fillStyle="#17121b"; pctx.font='600 46px "Dancing Script", cursive'; pctx.textBaseline="middle"; pctx.fillText(t,24,r.height/2,r.width-48); inked=true;
+}
+function setMode(m){
+  sigMode=m; $("modeDraw").setAttribute("aria-pressed",m==="draw"); $("modeType").setAttribute("aria-pressed",m==="type");
+  $("typeWrap").classList.toggle("hidden",m!=="type");
+  $("sigHelp").textContent = m==="draw" ? "Click and drag with your mouse, or sign with your finger on a phone or tablet." : "Your typed name is shown in the box as your signature.";
+  clearPad(); if(m==="type"){ if(!$("sigTyped").value) $("sigTyped").value=$("signerName").value; document.fonts.load('600 46px "Dancing Script"').then(drawTyped); $("sigTyped").focus(); }
+}
+$("modeDraw").onclick=()=>setMode("draw"); $("modeType").onclick=()=>setMode("type");
+$("sigTyped").addEventListener("input",drawTyped);
+$("sigClear").onclick=()=>{ if(sigMode==="type") $("sigTyped").value=""; clearPad(); };
+window.addEventListener("resize",()=>{ if(!$("pane-contract").classList.contains("hidden") && !inked) sizePad(); });
+
+$("signForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const msg=$("signMsg"), name=$("signerName").value.trim(), title=$("signerTitle").value.trim();
+  const fail=(t,el)=>{ msg.textContent=t; if(el){ el.setAttribute("aria-invalid","true"); el.focus(); } };
+  ["signerName","signerTitle","esignConsent"].forEach(id=>$(id).removeAttribute("aria-invalid"));
+  if(!inked) return fail("Please add your signature in the box.", sigMode==="type"?$("sigTyped"):$("modeDraw"));
+  if(!name) return fail("Please enter the signer's name.",$("signerName"));
+  if(!title) return fail("Please enter the signer's title, e.g. Client.",$("signerTitle"));
+  if(!$("esignConsent").checked) return fail("Please agree to sign electronically.",$("esignConsent"));
+  const btn=$("signBtn"); btn.disabled=true; btn.textContent="Signing…"; msg.textContent="";
+  const body={ action:"sign", id:S.cur.id, ln:S.cur.ln, signerName:name, signerTitle:title,
+    modelRelease:$("modelRelease").checked, consent:true, signature:pad.toDataURL("image/png") };
+  let r=null;
+  try{ const res=await fetch("/api/sign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}); if(res.ok||res.status===400) r=await res.json(); }catch(err){}
+  if(!r){ try{ r=await api(null,body); }catch(err){} }   // fallback straight to the back end (no IP captured)
+  btn.disabled=false; btn.textContent="Accept & sign";
+  if(r && r.ok){
+    S.cur.signedAt=r.signedAt; openContract(); renderTabs();
+  } else if(r && r.error==="ALREADY_SIGNED"){ openContract(); }
+  else msg.textContent="We couldn't save your signature. Please try again, or email inquiries@magicmirrorrentalservices.com.";
+});
 </script>
 </body>
 </html>
