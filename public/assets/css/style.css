@@ -476,16 +476,6 @@ p { margin: 0 0 1em; }
 .mm-step-list h3 { font-size: 24px; margin-bottom: 8px; }
 .mm-step-list p { color: var(--muted); font-size: 16px; margin: 0; }
 
-.mm-games { margin-top: var(--gap-section); background: radial-gradient(120% 140% at 100% 0%, var(--purple-deep) 0%, var(--surface) 60%); border-block: 1px solid rgba(136, 76, 158, .4); scroll-margin-top: var(--header-h); }
-.mm-games-grid { display: grid; grid-template-columns: 5fr 6fr; gap: clamp(32px, 5vw, 80px); align-items: center; padding-block: clamp(48px, 5vw, 80px); }
-.mm-games figure { margin: 0; }
-.mm-games figure img { width: 100%; aspect-ratio: 1; object-fit: cover; }
-.mm-games .eyebrow { color: var(--accent); }
-.mm-games h2 { font-size: var(--t-head); margin-bottom: 20px; max-width: 16ch; }
-.mm-games p { color: var(--muted); max-width: 52ch; }
-.game-list { list-style: none; counter-reset: g; margin: 28px 0 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
-.game-list li { counter-increment: g; display: flex; align-items: baseline; gap: 14px; padding: 14px 0; border-top: 1px solid rgba(255, 255, 255, .22); font: 700 20px/1.25 var(--head); }
-.game-list li::before { content: counter(g, decimal-leading-zero); font-size: 14px; color: var(--accent); letter-spacing: .1em; }
 
 .mm-included { padding-top: var(--gap-section); }
 .inc-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid rgba(255, 255, 255, .14); border-left: 1px solid rgba(255, 255, 255, .14); }
@@ -501,7 +491,7 @@ p { margin: 0 0 1em; }
   .inc-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 900px) {
-  .mm-hero, .mm-games-grid { grid-template-columns: 1fr; }
+  .mm-hero { grid-template-columns: 1fr; }
   .mm-hero-img { order: -1; margin-right: 18px; }
   .mm-hero-img img { aspect-ratio: 4 / 3; }
   .mm-facts ul { grid-template-columns: repeat(2, 1fr); gap: 24px 16px; }
@@ -512,7 +502,6 @@ p { margin: 0 0 1em; }
   .mm-hero .btn { width: 100%; }
   .mm-step-list { grid-template-columns: 1fr; gap: 36px; }
   .mm-step-list figure { aspect-ratio: 3 / 2; }
-  .game-list { grid-template-columns: 1fr; }
   .inc-grid li { padding: 20px 16px 24px; }
   .inc-grid h3 { font-size: 16px; }
   .inc-grid p { font-size: 14px; }
