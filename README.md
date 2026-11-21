@@ -42,21 +42,39 @@ Without these the form shows visitors the email address instead.
 
 ## Booking
 
-The Book Now page embeds the existing BoothBook widgets from `booking.magicmirrorrentalservices.com`, so bookings keep flowing to BoothBook unchanged. Keep that subdomain's DNS record pointing at BoothBook when moving DNS to Cloudflare.
+BoothBook is retired. Bookings, payments and the owner dashboard all run on our own system.
 
-### Own booking system (replacing BoothBook)
+| Address | What it is |
+|---|---|
+| `www.magicmirrorrentalservices.com/booking/` and `booking.magicmirrorrentalservices.com` | Client booking page and portal (`public/booking/`) |
+| `app.magicmirrorrentalservices.com` | Owner dashboard (`public/app/`, not indexed) |
 
-- `public/booking/` is the booking page, portal and confirmation. It saves to the Google Sheet "MMRS Bookings" through an Apps Script web app.
-- `apps-script/Code.gs` is that web app's code (paste into the sheet's Extensions > Apps Script, deploy as a Web app, Execute as Me, access Anyone).
-- `API_URL` near the top of the script in `public/booking/index.html` is the deployed web app URL ("Booking v1"). To update the back end, use Deploy > Manage deployments > edit > New version so the URL stays the same.
-- When leaving BoothBook, point `booking.magicmirrorrentalservices.com` at this Pages project (Custom domains tab). `functions/_middleware.js` serves `/booking/` on that subdomain.
+`functions/_middleware.js` serves `/booking/` at the root of `booking.*` and `/app/` at the root of `app.*`. `/book-now` redirects to `/booking/`.
+
+### Back end
+
+- Google Sheet "MMRS Bookings" with tabs Bookings, Blocked Dates, Messages, Payments, Automation Log.
+- `apps-script/Code.gs` is the sheet's bound Apps Script (Extensions > Apps Script). New booking IDs continue after `CONFIG.FIRST_ID` (150).
+- One deployment serves both pages: Web app, Execute as **Me**, access **Anyone**. Its URL is `API_URL` in `public/booking/index.html` and `public/app/index.html`.
+- To ship a code change: paste `Code.gs`, save, then Deploy > Manage deployments > edit (pencil) > Version: New version > Deploy. The URL stays the same.
+- `CONFIG` at the top of `Code.gs`: `NOTIFY` (who gets new-booking alerts), `ADMINS` (who can sign in to the dashboard), `FROM` / `REPLY_TO` (client emails are sent as inquiries@).
+
+### Dashboard sign-in
+
+- Only emails in `CONFIG.ADMINS` can sign in, with a password or a 6-digit code emailed to them.
+- Each person sets their own password from the dashboard's Password button. Passwords are stored salted and hashed in Script Properties, never in this repo.
+- Sessions last 30 days. 5 wrong passwords locks sign-in for a while.
+
+### Payments (Stripe)
+
+- Clients pay deposits and balances through Stripe Checkout. Script Properties > `STRIPE_SECRET_KEY` holds a **restricted** live key with Checkout Sessions: Write only.
+- Payments are recorded in the Payments tab on return and by the daily reconcile.
+
+### Emails and automations
+
+- Emails go out from inquiries@magicmirrorrentalservices.com (Gmail "Send mail as" alias on the owner account), with the logo inline.
+- `installAutomations()` sets a daily trigger (~9 AM ET) that reconciles Stripe and sends reminders, logged in the Automation Log tab. `previewAutomations()` shows what would send; `stopAutomations()` removes the trigger.
 
 ## Local preview
 
     cd public && python3 -m http.server 8000
-
-### Owner dashboard
-- Private link (only the owner's Google account can open it):
-  https://script.google.com/macros/s/AKfycbx1lq2Q_-pE6TWRketGBYo6Xek3Xl15xVjYmb_Qq1Hbv8c_KmZB4hIHeLQO2flanhOq/exec?admin
-- Code: `apps-script/Admin.html` (page) + the "Owner dashboard" section of `apps-script/Code.gs`.
-- Deployments: "Booking v3" (public, Anyone) and "Owner dashboard" (Only myself). After code changes, update both to a new version.
