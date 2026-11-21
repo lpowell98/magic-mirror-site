@@ -95,7 +95,8 @@ dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0}dt{color:v
 .btns{display:flex;gap:8px;flex-wrap:wrap}
 .login{max-width:440px;margin:8vh auto 0}.login h1{margin-top:0}.lmsg{color:var(--accent);min-height:1.5em;margin:12px 0 0}
 .who{color:var(--muted);font-size:13px}
-#signout{background:none;border:0;color:var(--muted);font-weight:600;cursor:pointer;padding:10px 6px}#signout:hover{color:var(--accent)}
+#signout,.hbtn{background:none;border:0;color:var(--muted);font-weight:600;cursor:pointer;padding:10px 6px}#signout:hover,.hbtn:hover{color:var(--accent)}
+dialog#pwDlg{background:var(--surface);color:var(--ink);border:0;padding:24px;max-width:420px;width:92vw}dialog#pwDlg::backdrop{background:rgba(0,0,0,.6)}
 #loading{padding:60px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){#drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.6}}}
 </style>
@@ -113,21 +114,29 @@ dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0}dt{color:v
   <div class="spacer"></div>
   <span id="who" class="who"></span>
   <button id="refresh" type="button">Refresh</button>
+  <button id="pwBtn" type="button" class="hbtn">Password</button>
   <button id="signout" type="button">Sign out</button>
 </header>
 <main>
   <section id="v-login" class="hidden" aria-labelledby="loginTitle">
     <div class="card login">
       <h1 id="loginTitle">Sign in</h1>
-      <form id="emailForm" class="f">
-        <label style="width:100%">Email<input type="email" id="lEmail" name="email" autocomplete="email" spellcheck="false" required style="width:100%"></label>
+      <form id="pwForm" class="f">
+        <label style="width:100%">Email<input type="email" id="lEmail" name="email" autocomplete="username" spellcheck="false" required style="width:100%"></label>
+        <label style="width:100%">Password<input type="password" id="lPw" name="password" autocomplete="current-password" required style="width:100%"></label>
+        <button class="btn" type="submit">Sign in</button>
+        <button class="btn ghost" type="button" id="useCode">Email me a code instead</button>
+      </form>
+      <form id="emailForm" class="f hidden">
+        <p style="margin:0;color:var(--muted)">We'll email a 6-digit sign-in code to <b id="codeTo"></b>. Use this if you forgot your password.</p>
         <button class="btn" type="submit">Email me a code</button>
+        <button class="btn ghost" type="button" id="usePw">Use my password</button>
       </form>
       <form id="codeForm" class="f hidden">
         <p id="codeSent" style="margin:0 0 4px;color:var(--muted)"></p>
         <label style="width:100%">6-digit code<input type="text" id="lCode" name="one-time-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required style="width:100%;font-size:22px;letter-spacing:6px"></label>
         <button class="btn" type="submit">Sign in</button>
-        <button class="btn ghost" type="button" id="backBtn">Use a different email</button>
+        <button class="btn ghost" type="button" id="backBtn">Back to sign in</button>
       </form>
       <p class="lmsg" id="lMsg" role="status" aria-live="polite"></p>
     </div>
@@ -185,6 +194,18 @@ dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0}dt{color:v
 
 <div id="scrim" class="hidden"></div>
 <aside id="drawer" class="hidden" role="dialog" aria-modal="true" aria-labelledby="dTitle"></aside>
+<dialog id="pwDlg" aria-labelledby="pwTitle">
+  <form id="setPwForm" class="f" method="dialog">
+    <h2 id="pwTitle" style="width:100%;margin:0 0 4px">Set your password</h2>
+    <p style="margin:0;color:var(--muted);font-size:14px">At least 8 characters. Use one that's only for this dashboard.</p>
+    <input type="text" name="username" autocomplete="username" id="pwUser" hidden>
+    <label style="width:100%">New password<input type="password" id="pw1" name="new-password" autocomplete="new-password" minlength="8" required style="width:100%"></label>
+    <label style="width:100%">Type it again<input type="password" id="pw2" name="confirm-password" autocomplete="new-password" minlength="8" required style="width:100%"></label>
+    <p id="pwMsg" class="lmsg" role="status" aria-live="polite" style="width:100%"></p>
+    <button class="btn" type="submit" id="pwSave">Save password</button>
+    <button class="btn ghost" type="button" id="pwCancel">Cancel</button>
+  </form>
+</dialog>
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script>
@@ -213,7 +234,7 @@ function fail(e){ toast("That didn't save: "+(e&&e.message||e)+". Click Refresh 
 
 function setAuthed(on){
   document.querySelector("header nav").classList.toggle("hidden",!on);
-  ["refresh","signout","who"].forEach(id=>$(id).classList.toggle("hidden",!on));
+  ["refresh","signout","who","pwBtn"].forEach(id=>$(id).classList.toggle("hidden",!on));
   $("v-login").classList.toggle("hidden",on);
   if(!on){ document.querySelectorAll("main>section:not(#v-login)").forEach(s=>s.classList.add("hidden")); $("loading").classList.add("hidden"); }
 }
@@ -227,20 +248,34 @@ async function load(){
 function signOut(silent){
   if(TOKEN&&!silent) post({action:"adminLogout",token:TOKEN}).catch(()=>{});
   TOKEN=null; store.set("mmrsToken",null); closeDrawer&&cur&&closeDrawer();
-  setAuthed(false); $("emailForm").classList.remove("hidden"); $("codeForm").classList.add("hidden");
+  setAuthed(false); $("pwForm").classList.remove("hidden"); $("emailForm").classList.add("hidden"); $("codeForm").classList.add("hidden");
   $("lMsg").textContent=silent?"Your session ended. Please sign in again.":"";
 }
 $("signout").onclick=()=>signOut(false);
+function signedIn(r){ TOKEN=r.token; store.set("mmrsToken",r.token); store.set("mmrsEmail",r.email); $("lMsg").textContent=""; $("lCode").value=""; $("lPw").value=""; load(); }
+$("pwForm").onsubmit=async e=>{ e.preventDefault(); const btn=e.target.querySelector("button[type=submit]"); btn.disabled=true; $("lMsg").textContent="Signing in…";
+  try{ const r=await post({action:"adminLogin",email:$("lEmail").value,password:$("lPw").value}); if(r.ok) signedIn(r); else $("lMsg").textContent=r.error; }
+  catch(err){ $("lMsg").textContent="Couldn't reach the booking system. Try again."; } btn.disabled=false; };
+$("useCode").onclick=()=>{ if(!$("lEmail").reportValidity()) return; $("codeTo").textContent=$("lEmail").value; $("pwForm").classList.add("hidden"); $("emailForm").classList.remove("hidden"); $("lMsg").textContent=""; };
+$("usePw").onclick=()=>{ $("emailForm").classList.add("hidden"); $("pwForm").classList.remove("hidden"); $("lMsg").textContent=""; };
+$("pwBtn").onclick=()=>{ $("pwUser").value=store.get("mmrsEmail")||""; $("pw1").value=""; $("pw2").value=""; $("pwMsg").textContent=""; $("pwDlg").showModal(); $("pw1").focus(); };
+$("pwCancel").onclick=()=>$("pwDlg").close();
+$("setPwForm").onsubmit=async e=>{ e.preventDefault();
+  if($("pw1").value!==$("pw2").value){ $("pwMsg").textContent="The two passwords don't match."; return; }
+  $("pwSave").disabled=true; $("pwMsg").textContent="Saving…";
+  try{ const r=await post({action:"adminSetPassword",token:TOKEN,password:$("pw1").value});
+    if(r.ok){ $("pwDlg").close(); toast("Password saved"); } else if(r.error==="SIGNED_OUT"){ $("pwDlg").close(); signOut(true); } else $("pwMsg").textContent=r.error;
+  }catch(err){ $("pwMsg").textContent="Couldn't reach the booking system. Try again."; } $("pwSave").disabled=false; };
 $("emailForm").onsubmit=async e=>{ e.preventDefault(); const btn=e.target.querySelector("button"); btn.disabled=true; $("lMsg").textContent="Sending…";
-  try{ await post({action:"adminCode",email:$("lEmail").value}); $("emailForm").classList.add("hidden"); $("codeForm").classList.remove("hidden");
+  try{ await post({action:"adminCode",email:$("lEmail").value}); $("emailForm").classList.add("hidden"); $("pwForm").classList.add("hidden"); $("codeForm").classList.remove("hidden");
     $("codeSent").textContent="If "+$("lEmail").value+" is an owner account, a code is on its way. It expires in 10 minutes."; $("lMsg").textContent=""; $("lCode").focus();
   }catch(err){ $("lMsg").textContent="Couldn't reach the booking system. Try again."; } btn.disabled=false; };
 $("codeForm").onsubmit=async e=>{ e.preventDefault(); const btn=e.target.querySelector("button[type=submit]"); btn.disabled=true; $("lMsg").textContent="Checking…";
   try{ const r=await post({action:"adminVerify",email:$("lEmail").value,code:$("lCode").value});
-    if(r.ok){ TOKEN=r.token; store.set("mmrsToken",r.token); store.set("mmrsEmail",r.email); $("lMsg").textContent=""; $("lCode").value=""; load(); }
+    if(r.ok) signedIn(r);
     else $("lMsg").textContent=r.error;
   }catch(err){ $("lMsg").textContent="Couldn't reach the booking system. Try again."; } btn.disabled=false; };
-$("backBtn").onclick=()=>{ $("codeForm").classList.add("hidden"); $("emailForm").classList.remove("hidden"); $("lMsg").textContent=""; $("lEmail").focus(); };
+$("backBtn").onclick=()=>{ $("codeForm").classList.add("hidden"); $("pwForm").classList.remove("hidden"); $("lMsg").textContent=""; $("lEmail").focus(); };
 function setData(d){ D=d; draw(); if(cur) openBooking(cur, true); }
 
 let didSetup=false;

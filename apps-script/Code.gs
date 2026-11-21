@@ -691,11 +691,27 @@ function adminApi_(a) {
       return { ok: false, error: 'That code is not right. Check the email and try again.' };
     }
     cache.remove(key);
-    const token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
-    const props = PropertiesService.getScriptProperties();
-    props.setProperty('sess:' + sha_(token), JSON.stringify({ email, exp: Date.now() + SESSION_DAYS * 864e5 }));
-    pruneSessions_(props);
-    return { ok: true, token, email };
+    return newSession_(email);
+  }
+  if (a.action === 'adminLogin') {
+    const email = isAdminEmail_(a.email), lockKey = 'pwfail:' + String(a.email || '').toLowerCase();
+    const fails = Number(cache.get(lockKey) || 0);
+    if (fails >= 5) return { ok: false, error: 'Too many tries. Wait 15 minutes, or sign in with an emailed code.' };
+    const stored = email && PropertiesService.getScriptProperties().getProperty('pw:' + email);
+    if (!stored || !checkPassword_(String(a.password || ''), stored)) {
+      cache.put(lockKey, String(fails + 1), 900);
+      return { ok: false, error: stored || !email ? 'Email or password is not right.' : 'No password set for this account yet. Use an emailed code, then set one.' };
+    }
+    cache.remove(lockKey);
+    return newSession_(email);
+  }
+  if (a.action === 'adminSetPassword') {
+    const email = sessionEmail_(a.token);
+    if (!email) return { ok: false, error: 'SIGNED_OUT' };
+    const pw = String(a.password || '');
+    if (pw.length < 8) return { ok: false, error: 'Use at least 8 characters.' };
+    PropertiesService.getScriptProperties().setProperty('pw:' + email, hashPassword_(pw));
+    return { ok: true };
   }
   if (a.action === 'adminLogout') {
     if (a.token) PropertiesService.getScriptProperties().deleteProperty('sess:' + sha_(a.token));
@@ -711,6 +727,26 @@ function adminApi_(a) {
     finally { apiAdmin_ = ''; }
   }
   return { ok: false, error: 'Unknown action' };
+}
+
+function newSession_(email) {
+  const token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
+  const props = PropertiesService.getScriptProperties();
+  props.setProperty('sess:' + sha_(token), JSON.stringify({ email, exp: Date.now() + SESSION_DAYS * 864e5 }));
+  pruneSessions_(props);
+  return { ok: true, token, email };
+}
+
+// Salted, stretched hash: "salt$hash". The plain password is never stored.
+function hashPassword_(pw, salt) {
+  salt = salt || Utilities.getUuid().replace(/-/g, '');
+  let h = salt + pw;
+  for (let i = 0; i < 1000; i++) h = sha_(h + salt);
+  return salt + '$' + h;
+}
+function checkPassword_(pw, stored) {
+  const salt = String(stored).split('$')[0];
+  return hashPassword_(pw, salt) === stored;
 }
 
 function pruneSessions_(props) {
