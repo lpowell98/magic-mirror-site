@@ -158,7 +158,7 @@ p { margin: 0 0 1em; }
 .voice { padding-top: var(--gap-section); display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
 .voice-print { grid-column: 1 / span 6; margin: 0; }
 .voice-print img { width: 100%; }
-.voice-quote { grid-column: 7 / span 6; margin: 40px 0 0; }
+.voice-quote { grid-column: 7 / span 6; margin: 0; align-self: center; }
 .voice-quote p { font: 400 var(--t-statement)/1.25 var(--head); letter-spacing: -.01em; margin-bottom: 24px; }
 .voice-quote footer { font-size: 17px; color: var(--muted); }
 .voice-more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin: 48px 0 0; padding: 0; list-style: none; }
