@@ -8,7 +8,7 @@ const CONFIG = {
   OWNER_EMAIL: 'lanspowelljr@gmail.com',      // where new-booking alerts go
   BUSINESS: 'Magic Mirror Rental Services',
   REPLY_TO: 'inquiries@magicmirrorrentalservices.com',
-  PORTAL_URL: 'https://booking.magic-mirror-site-gna.pages.dev/booking/',  // change to booking.magicmirrorrentalservices.com/ at go-live
+  PORTAL_URL: 'https://www.magicmirrorrentalservices.com/booking/',
   FIRST_ID: 150,                               // new IDs start after this (BoothBook used up to 150)
   DEPOSIT: 250,
   FREE_MILES: 20,
