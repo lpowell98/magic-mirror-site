@@ -8,7 +8,7 @@ const CONFIG = {
   OWNER_EMAIL: 'lanspowelljr@gmail.com',      // where new-booking alerts go
   BUSINESS: 'Magic Mirror Rental Services',
   REPLY_TO: 'inquiries@magicmirrorrentalservices.com',
-  PORTAL_URL: '',                              // set to your GitHub Pages URL after publishing
+  PORTAL_URL: 'https://booking.magic-mirror-site-gna.pages.dev/booking/',  // change to booking.magicmirrorrentalservices.com/ at go-live
   FIRST_ID: 150,                               // new IDs start after this (BoothBook used up to 150)
   DEPOSIT: 250,
   FREE_MILES: 20,
@@ -16,6 +16,7 @@ const CONFIG = {
   TZ: 'America/New_York',
   PACKAGES: { bronze: ['Bronze Package', 650], silver: ['Silver Package', 850], gold: ['Gold Package', 1100] },
   PRINTS:   { tpl: ['Template Design Print-out', 0], cus: ['Custom Design Print-out', 75] },
+  STAFF:    [{ name: 'Lans', email: 'lanspowelljr@gmail.com' }, { name: 'Jonah Simon', email: '' }],  // add Jonah's email
   TIMES:    { t30: ['Additional Time (30 minutes)', 75], t60: ['Additional Time (1 hour)', 100], t120: ['Additional Time (2 hour)', 150] }
 };
 
@@ -23,13 +24,15 @@ const COL = { ID:1, CREATED:2, STATUS:3, DATE:4, TYPE:5, EVNAME:6, START:7, END:
   VNAME:11, VADDR:12, VZIP:13, MILES:14, FEE:15, FN:16, LN:17, EMAIL:18, PHONE:19, STREET:20, ZIP:21,
   PKG:22, PRINT:23, XTIME:24, COUPON:25, REF:26, PAYOPT:27, TOTAL:28, PAID:29, BALANCE:30, NOTES:31,
   SIGNED_AT:32, SIGNER:33, SIGN_IP:34, CONTRACT_PDF:35, MODEL_RELEASE:36,
-  TEMPLATE:37, TEMPLATE_TEXT:38, ONSITE_NAME:39, ONSITE_PHONE:40, GUESTS:41, SETUP_NOTES:42, DETAILS_AT:43 };
-const NCOL = 43;
+  TEMPLATE:37, TEMPLATE_TEXT:38, ONSITE_NAME:39, ONSITE_PHONE:40, GUESTS:41, SETUP_NOTES:42, DETAILS_AT:43,
+  STAFF:44, ADMIN_NOTES:45, TEAM_NOTES:46 };
+const NCOL = 46;
 
 /* ---------------- HTTP ---------------- */
 
 function doGet(e) {
   const p = e.parameter || {};
+  if (p.admin !== undefined) return adminPage_();
   try {
     if (p.action === 'dates')  return json({ ok: true, taken: takenDates_() });
     if (p.action === 'lookup') return json(lookup_(p.id, p.ln));
@@ -361,6 +364,197 @@ function addMessage_(b) {
     subject: `Message from ${f.r[COL.FN - 1]} ${f.r[COL.LN - 1]} (booking #${f.r[0]})`,
     htmlBody: `<p>${esc_(text).replace(/\n/g, '<br>')}</p><hr><p style="color:#666">Reply to this email to answer ${esc_(f.r[COL.FN - 1])} directly, or add a row to the Messages tab with From = Magic Mirror to show your reply in their portal.</p>` });
   return getMessages_(b.id, b.ln);
+}
+
+/* ---------------- Owner dashboard ----------------
+   Open it at the "Owner dashboard" deployment URL (access: Only myself) with ?admin on the end.
+   Every function below checks that the signed-in Google user is OWNER_EMAIL, so the public
+   deployment can never use them. */
+
+function isOwner_() {
+  const me = String(Session.getActiveUser().getEmail() || '').toLowerCase();
+  return me && me === CONFIG.OWNER_EMAIL.toLowerCase();
+}
+function guard_() { if (!isOwner_()) throw new Error('Not authorised'); }
+
+function adminPage_() {
+  if (!isOwner_()) return HtmlService.createHtmlOutput('<p style="font-family:sans-serif">Not authorised.</p>');
+  return HtmlService.createHtmlOutputFromFile('Admin').setTitle('MMRS Owner Dashboard')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function paymentsSheet_() {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName('Payments');
+  if (!sh) { sh = ss.insertSheet('Payments'); sh.appendRow(['Booking ID', 'Date', 'Amount', 'Method', 'Note', 'Recorded']); sh.setFrozenRows(1); }
+  return sh;
+}
+
+// Adds the dashboard columns (Staff, Admin Notes, Team Notes) if the sheet doesn't have them yet.
+function ensureAdminCols_() {
+  const sh = sheet_('Bookings');
+  if (sh.getMaxColumns() < NCOL) sh.insertColumnsAfter(sh.getMaxColumns(), NCOL - sh.getMaxColumns());
+  const head = sh.getRange(1, COL.STAFF, 1, 3);
+  if (!head.getValues()[0][0]) head.setValues([['Staff', 'Admin Notes', 'Team Notes']]).setFontWeight('bold');
+}
+
+function num_(v) { const n = Number(v); return isFinite(n) ? n : 0; }
+
+function adminData() {
+  guard_(); ensureAdminCols_();
+  const bookings = rows_().filter(r => r[0] !== '').map(r => ({
+    id: Number(r[0]), created: fmtDate_(r[1]), status: String(r[COL.STATUS - 1]), date: fmtDate_(r[COL.DATE - 1]),
+    type: String(r[COL.TYPE - 1]), evName: String(r[COL.EVNAME - 1]), start: fmtTime_(r[COL.START - 1]), end: fmtTime_(r[COL.END - 1]),
+    arrive: fmtTime_(r[COL.ARRIVE - 1]), depart: fmtTime_(r[COL.DEPART - 1]),
+    vName: String(r[COL.VNAME - 1]), vAddr: String(r[COL.VADDR - 1]), vZip: String(r[COL.VZIP - 1]), miles: r[COL.MILES - 1],
+    fn: String(r[COL.FN - 1]), ln: String(r[COL.LN - 1]), email: String(r[COL.EMAIL - 1]), phone: String(r[COL.PHONE - 1]),
+    pkg: String(r[COL.PKG - 1]), print: String(r[COL.PRINT - 1]), xtime: String(r[COL.XTIME - 1]),
+    total: num_(r[COL.TOTAL - 1]), paid: num_(r[COL.PAID - 1]), notes: String(r[COL.NOTES - 1]),
+    signedAt: r[COL.SIGNED_AT - 1] ? fmtStamp_(r[COL.SIGNED_AT - 1]) : '', signer: String(r[COL.SIGNER - 1]),
+    pdf: String(r[COL.CONTRACT_PDF - 1]), template: String(r[COL.TEMPLATE - 1]), templateText: String(r[COL.TEMPLATE_TEXT - 1]),
+    onsiteName: String(r[COL.ONSITE_NAME - 1]), onsitePhone: String(r[COL.ONSITE_PHONE - 1]), guests: String(r[COL.GUESTS - 1]),
+    setupNotes: String(r[COL.SETUP_NOTES - 1]), detailsAt: r[COL.DETAILS_AT - 1] ? fmtStamp_(r[COL.DETAILS_AT - 1]) : '',
+    staff: String(r[COL.STAFF - 1] || ''), adminNotes: String(r[COL.ADMIN_NOTES - 1] || ''), teamNotes: String(r[COL.TEAM_NOTES - 1] || '')
+  }));
+  const ms = messagesSheet_(), mn = ms.getLastRow();
+  const messages = mn < 2 ? [] : ms.getRange(2, 1, mn - 1, 4).getValues().filter(r => r[0] !== '')
+    .map(r => ({ id: Number(r[0]), at: fmtStamp_(r[1]), ts: r[1] instanceof Date ? r[1].getTime() : 0, from: String(r[2]), text: String(r[3]) }));
+  const ps = paymentsSheet_(), pn = ps.getLastRow();
+  const payments = pn < 2 ? [] : ps.getRange(2, 1, pn - 1, 5).getValues().filter(r => r[0] !== '')
+    .map(r => ({ id: Number(r[0]), date: fmtDate_(r[1]), amount: num_(r[2]), method: String(r[3]), note: String(r[4]) }));
+  const bl = sheet_('Blocked Dates'), bn = bl.getLastRow();
+  const blocked = bn < 2 ? [] : bl.getRange(2, 1, bn - 1, 2).getValues().filter(r => r[0])
+    .map(r => ({ date: fmtDate_(r[0]), reason: String(r[1] || '') }));
+  return { bookings, messages, payments, blocked, staff: CONFIG.STAFF.map(s => s.name),
+    statuses: ['Unconfirmed', 'Confirmed', 'Completed', 'Cancelled'], today: Utilities.formatDate(new Date(), CONFIG.TZ, 'MM/dd/yyyy') };
+}
+
+function fmtTime_(v) { return v instanceof Date ? Utilities.formatDate(v, CONFIG.TZ, 'h:mm a').toLowerCase() : String(v || '').trim(); }
+
+function rowById_(id) {
+  const i = rows_().findIndex(x => String(x[0]) === String(id));
+  if (i === -1) throw new Error('Booking #' + id + ' not found');
+  return i + 2;
+}
+
+function withLock_(fn) {
+  const lock = LockService.getScriptLock(); lock.waitLock(15000);
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+
+// f: { status, staff, adminNotes, teamNotes }
+function adminUpdate(id, f) {
+  guard_();
+  return withLock_(() => {
+    const sh = sheet_('Bookings'), row = rowById_(id), r = sh.getRange(row, 1, 1, NCOL).getValues()[0];
+    if (f.status !== undefined) {
+      if (['Unconfirmed', 'Confirmed', 'Completed', 'Cancelled'].indexOf(f.status) === -1) throw new Error('Bad status');
+      sh.getRange(row, COL.STATUS).setValue(f.status);
+    }
+    if (f.staff !== undefined && f.staff !== String(r[COL.STAFF - 1] || '')) {
+      sh.getRange(row, COL.STAFF).setValue(clip_(f.staff, 100));
+      notifyStaff_(r, f.staff);
+    }
+    if (f.adminNotes !== undefined) sh.getRange(row, COL.ADMIN_NOTES).setNumberFormat('@').setValue(clip_(f.adminNotes, 5000));
+    if (f.teamNotes !== undefined) sh.getRange(row, COL.TEAM_NOTES).setNumberFormat('@').setValue(clip_(f.teamNotes, 5000));
+    return adminData();
+  });
+}
+
+// Tells each newly assigned staff member (who has an email in CONFIG.STAFF) about the event.
+function notifyStaff_(r, staffList) {
+  const before = String(r[COL.STAFF - 1] || '').split(',').map(s => s.trim());
+  String(staffList || '').split(',').map(s => s.trim()).filter(n => n && before.indexOf(n) === -1).forEach(n => {
+    const s = CONFIG.STAFF.find(x => x.name === n);
+    if (!s || !s.email || s.email.toLowerCase() === CONFIG.OWNER_EMAIL.toLowerCase()) return;   // no email to yourself
+    MailApp.sendEmail({ to: s.email, subject: `You're assigned: ${r[COL.EVNAME - 1]} on ${fmtDate_(r[COL.DATE - 1])} (#${r[0]})`,
+      htmlBody: `<p>Hi ${esc_(n)},</p><p>You've been assigned to booking #${r[0]}.</p><table cellpadding="4">
+        <tr><td><b>Date</b></td><td>${esc_(fmtDate_(r[COL.DATE - 1]))}</td></tr>
+        <tr><td><b>Event</b></td><td>${esc_(fmtTime_(r[COL.START - 1]))} – ${esc_(fmtTime_(r[COL.END - 1]))} (arrive ${esc_(fmtTime_(r[COL.ARRIVE - 1]))})</td></tr>
+        <tr><td><b>Venue</b></td><td>${esc_(r[COL.VNAME - 1])}, ${esc_(r[COL.VADDR - 1])}</td></tr>
+        <tr><td><b>Package</b></td><td>${esc_(r[COL.PKG - 1])}</td></tr>
+        <tr><td><b>Team notes</b></td><td>${esc_(r[COL.TEAM_NOTES - 1] || '—')}</td></tr></table>` });
+  });
+}
+
+// p: { amount, method, date (MM/dd/yyyy), note }
+function adminAddPayment(id, p) {
+  guard_();
+  const amt = Math.round(Number(p.amount) * 100) / 100;
+  if (!(amt > 0)) throw new Error('Enter an amount above $0');
+  return withLock_(() => {
+    const sh = sheet_('Bookings'), row = rowById_(id);
+    const cell = sh.getRange(row, COL.PAID);
+    cell.setValue(Math.round((num_(cell.getValue()) + amt) * 100) / 100);
+    const ps = paymentsSheet_(), pr = ps.getLastRow() + 1;
+    ps.getRange(pr, 2).setNumberFormat('@'); ps.getRange(pr, 3).setNumberFormat('$#,##0.00');
+    ps.getRange(pr, 1, 1, 6).setValues([[Number(id), clip_(p.date, 10) || Utilities.formatDate(new Date(), CONFIG.TZ, 'MM/dd/yyyy'),
+      amt, clip_(p.method, 40) || 'Other', clip_(p.note, 300), new Date()]]);
+    return adminData();
+  });
+}
+
+function adminReply(id, text) {
+  guard_();
+  text = clip_(text, 2000); if (!text) throw new Error('Message is empty');
+  return withLock_(() => {
+    const r = sheet_('Bookings').getRange(rowById_(id), 1, 1, NCOL).getValues()[0];
+    const sh = messagesSheet_(), row = sh.getLastRow() + 1;
+    sh.getRange(row, 4).setNumberFormat('@');
+    sh.getRange(row, 1, 1, 4).setValues([[Number(id), new Date(), CONFIG.BUSINESS, text]]);
+    MailApp.sendEmail({ to: r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, name: CONFIG.BUSINESS,
+      subject: `New message about your booking #${id}`,
+      htmlBody: `<p>Hi ${esc_(r[COL.FN - 1])},</p><p>${esc_(text).replace(/\n/g, '<br>')}</p>${portalLink_(r)}<p>— ${CONFIG.BUSINESS}</p>` });
+    return adminData();
+  });
+}
+
+function portalLink_(r, label) {
+  if (!CONFIG.PORTAL_URL) return '';
+  const url = CONFIG.PORTAL_URL + '?id=' + encodeURIComponent(r[0]) + '&ln=' + encodeURIComponent(r[COL.LN - 1]);
+  return `<p><a href="${url}">${label || 'Open your booking'}</a></p>`;
+}
+
+// kind: 'portal' | 'contract' | 'template' | 'details' | 'payment'
+function adminResend(id, kind) {
+  guard_();
+  const r = sheet_('Bookings').getRange(rowById_(id), 1, 1, NCOL).getValues()[0];
+  const bal = num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1]);
+  const ask = {
+    portal:   ['Your booking with ' + CONFIG.BUSINESS, 'Here is the link to your booking.'],
+    contract: ['Please sign your contract', 'Your contract is ready to sign. Open your booking and go to the Contract tab.'],
+    template: ['Choose your print template', 'Please choose the template for your photo print-outs. Open your booking and go to the Choose Template tab.'],
+    details:  ['Please confirm your event details', 'Please confirm your on-site contact, guest count and setup notes. Open your booking and go to the Confirm Details tab.'],
+    payment:  ['Payment reminder', `Your remaining balance is <b>$${bal.toFixed(2)}</b>, due 14 days before your event. Reply to this email if you have any questions.`]
+  }[kind];
+  if (!ask) throw new Error('Unknown email type');
+  MailApp.sendEmail({ to: r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, name: CONFIG.BUSINESS,
+    subject: `${ask[0]} (booking #${r[0]})`,
+    htmlBody: `<p>Hi ${esc_(r[COL.FN - 1])},</p><p>${ask[1]}</p><p>Event: <b>${esc_(r[COL.EVNAME - 1])}</b> on ${esc_(fmtDate_(r[COL.DATE - 1]))}</p>${portalLink_(r)}<p>Booking ID: ${r[0]} · Last name: ${esc_(r[COL.LN - 1])}</p><p>— ${CONFIG.BUSINESS}</p>` });
+  return { ok: true, sentTo: r[COL.EMAIL - 1] };
+}
+
+function adminBlock(date, reason) {
+  guard_();
+  if (!/^\d{2}\/\d{2}\/\d{4}$/.test(String(date))) throw new Error('Use MM/DD/YYYY');
+  return withLock_(() => {
+    const bl = sheet_('Blocked Dates'), row = bl.getLastRow() + 1;
+    bl.getRange(row, 1).setNumberFormat('@');
+    bl.getRange(row, 1, 1, 2).setValues([[date, clip_(reason, 200)]]);
+    return adminData();
+  });
+}
+
+function adminUnblock(date) {
+  guard_();
+  return withLock_(() => {
+    const bl = sheet_('Blocked Dates'), n = bl.getLastRow();
+    if (n > 1) {
+      const vals = bl.getRange(2, 1, n - 1, 1).getValues();
+      for (let i = vals.length - 1; i >= 0; i--) if (fmtDate_(vals[i][0]) === date) bl.deleteRow(i + 2);
+    }
+    return adminData();
+  });
 }
 
 /* ---------------- One-time test (run from the editor to grant permissions) ---------------- */

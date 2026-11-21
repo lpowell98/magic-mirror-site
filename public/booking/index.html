@@ -985,6 +985,10 @@ $("signForm").addEventListener("submit",async e=>{
   } else if(r && r.error==="ALREADY_SIGNED"){ openContract(); }
   else msg.textContent="We couldn't save your signature. Please try again, or email inquiries@magicmirrorrentalservices.com.";
 });
+
+/* ===== Deep link from emails: /booking/?id=123&ln=Smith opens that booking ===== */
+(()=>{ const q=new URLSearchParams(location.search);
+  if(q.get("id") && q.get("ln")){ $("mId").value=q.get("id"); $("mSur").value=q.get("ln"); $("searchBtn").click(); } })();
 </script>
 </body>
 </html>
