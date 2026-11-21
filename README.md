@@ -54,3 +54,9 @@ The Book Now page embeds the existing BoothBook widgets from `booking.magicmirro
 ## Local preview
 
     cd public && python3 -m http.server 8000
+
+### Owner dashboard
+- Private link (only the owner's Google account can open it):
+  https://script.google.com/macros/s/AKfycbx1lq2Q_-pE6TWRketGBYo6Xek3Xl15xVjYmb_Qq1Hbv8c_KmZB4hIHeLQO2flanhOq/exec?admin
+- Code: `apps-script/Admin.html` (page) + the "Owner dashboard" section of `apps-script/Code.gs`.
+- Deployments: "Booking v3" (public, Anyone) and "Owner dashboard" (Only myself). After code changes, update both to a new version.
