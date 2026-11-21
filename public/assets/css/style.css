@@ -494,7 +494,7 @@ p { margin: 0 0 1em; }
 .inc-icon { width: 40px; height: 40px; color: var(--accent); margin-bottom: 20px; display: block; }
 .inc-grid h3 { font: 700 18px/1.25 var(--body); letter-spacing: 0; margin-bottom: 6px; }
 .inc-grid p { color: var(--muted); font-size: 15px; line-height: 1.5; margin: 0; }
-.mm-included + .closing .closing-band img { aspect-ratio: 16 / 9; object-position: center 40%; }
+.mm-games + .closing .closing-band img { aspect-ratio: 16 / 9; object-position: center 40%; }
 
 @media (max-width: 1080px) {
   .mm-step-list { grid-template-columns: repeat(2, 1fr); gap: 40px 24px; }
@@ -517,3 +517,4 @@ p { margin: 0 0 1em; }
   .inc-grid h3 { font-size: 16px; }
   .inc-grid p { font-size: 14px; }
 }
+.mm-games + .closing { margin-top: 0; }
