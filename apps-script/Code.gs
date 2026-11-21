@@ -557,6 +557,112 @@ function adminUnblock(date) {
   });
 }
 
+/* ---------------- Automations (daily) ----------------
+   Run installAutomations() once from the editor to start the daily 9 AM run.
+   Run previewAutomations() any time to see what would be sent today without sending anything.
+   Every email is logged in the "Automation Log" tab, so nothing is sent twice. */
+
+const AUTOMATIONS = {
+  contractReminder: true,   // client: 3+ days after booking, contract still unsigned
+  payment14: true,          // client: balance owed, 14 days before the event
+  payment7: true,           // client: balance owed, 7 days before
+  paymentOverdue: true,     // client: balance still owed 5 days after the event
+  ownerHeadsUp: true        // you: event reminders 8 and 2 days before
+};
+
+function autoLog_() {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName('Automation Log');
+  if (!sh) { sh = ss.insertSheet('Automation Log'); sh.appendRow(['Booking ID', 'Reminder', 'Sent', 'To']); sh.setFrozenRows(1); }
+  return sh;
+}
+
+function dayNum_(v) {   // whole days since epoch in the business time zone
+  const s = v instanceof Date ? Utilities.formatDate(v, CONFIG.TZ, 'MM/dd/yyyy') : String(v || '').trim();
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(s); if (!m) return null;
+  return Math.round(Date.UTC(+m[3], +m[1] - 1, +m[2]) / 864e5);
+}
+
+// Works out which reminders are due today. Returns [{ id, kind, to, subject, html }].
+function dueReminders_() {
+  const today = dayNum_(new Date());
+  const logSh = autoLog_(), ln = logSh.getLastRow();
+  const sent = {};
+  if (ln > 1) logSh.getRange(2, 1, ln - 1, 2).getValues().forEach(r => sent[r[0] + '|' + r[1]] = true);
+  const out = [];
+  const add = (r, kind, to, subject, body) => {
+    if (sent[r[0] + '|' + kind] || !to) return;
+    out.push({ id: r[0], kind, to, subject: `${subject} (booking #${r[0]})`, html: body });
+  };
+  rows_().forEach(r => {
+    const id = r[0], status = String(r[COL.STATUS - 1]);
+    if (!id || status === 'Cancelled') return;
+    const ev = dayNum_(r[COL.DATE - 1]); if (ev === null) return;
+    const until = ev - today, bal = num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1]);
+    const imported = /imported from boothbook/i.test(String(r[COL.NOTES - 1]));
+    const client = String(r[COL.EMAIL - 1]), fn = esc_(r[COL.FN - 1]);
+    const evLine = `<p>Event: <b>${esc_(r[COL.EVNAME - 1])}</b> on ${esc_(fmtDate_(r[COL.DATE - 1]))}</p>`;
+    const sign = `${portalLink_(r)}<p>Booking ID: ${id} · Last name: ${esc_(r[COL.LN - 1])}</p><p>— ${CONFIG.BUSINESS}</p>`;
+
+    if (AUTOMATIONS.contractReminder && !imported && until > 0 && !r[COL.SIGNED_AT - 1]) {
+      const made = dayNum_(r[COL.CREATED - 1]);
+      if (made !== null && today - made >= 3)
+        add(r, 'contract', client, 'Reminder: please sign your contract',
+          `<p>Hi ${fn},</p><p>Your contract is still waiting for your signature. Please open your booking and go to the Contract tab to sign it.</p>${evLine}${sign}`);
+    }
+    if (bal > 0.005 && status !== 'Completed') {
+      const due = `<p>Your remaining balance is <b>$${bal.toFixed(2)}</b>.</p>`;
+      if (AUTOMATIONS.payment14 && until <= 14 && until > 7)
+        add(r, 'pay14', client, 'Your balance is due', `<p>Hi ${fn},</p>${due}<p>It's due 14 days before your event. Reply to this email with any questions.</p>${evLine}${sign}`);
+      if (AUTOMATIONS.payment7 && until <= 7 && until >= 0)
+        add(r, 'pay7', client, 'Payment reminder', `<p>Hi ${fn},</p>${due}<p>Your event is ${until === 0 ? 'today' : 'in ' + until + ' day' + (until === 1 ? '' : 's')}. Please pay the balance as soon as you can.</p>${evLine}${sign}`);
+    }
+    if (AUTOMATIONS.paymentOverdue && bal > 0.005 && until <= -5 && until >= -30 && !imported)
+      add(r, 'overdue', client, 'Your balance is overdue', `<p>Hi ${fn},</p><p>Thank you for having us at your event. Our records show a remaining balance of <b>$${bal.toFixed(2)}</b>. Please pay it at your earliest convenience, or reply if you think this is a mistake.</p>${evLine}${sign}`);
+    if (AUTOMATIONS.ownerHeadsUp && status !== 'Completed' && (until === 8 || until === 2)) {
+      const flags = [status === 'Unconfirmed' ? 'NOT CONFIRMED' : '', !r[COL.SIGNED_AT - 1] && !imported ? 'contract unsigned' : '',
+        bal > 0.005 ? `$${bal.toFixed(2)} owed` : '', !r[COL.STAFF - 1] ? 'no staff assigned' : '', !r[COL.DETAILS_AT - 1] && !imported ? 'details not confirmed' : ''].filter(String);
+      add(r, 'owner' + until, CONFIG.OWNER_EMAIL, `In ${until} days: ${r[COL.EVNAME - 1]}`,
+        `<p><b>${esc_(r[COL.EVNAME - 1])}</b> is in ${until} days (${esc_(fmtDate_(r[COL.DATE - 1]))}).</p>
+         <p>${esc_(fmtTime_(r[COL.START - 1]))} – ${esc_(fmtTime_(r[COL.END - 1]))}, arrive ${esc_(fmtTime_(r[COL.ARRIVE - 1]))}<br>
+         ${esc_(r[COL.VNAME - 1])}, ${esc_(r[COL.VADDR - 1])}<br>${esc_(r[COL.PKG - 1])} · Staff: ${esc_(r[COL.STAFF - 1] || 'none')}<br>
+         Client: ${esc_(r[COL.FN - 1] + ' ' + r[COL.LN - 1])}, ${esc_(r[COL.PHONE - 1])}</p>
+         <p>${flags.length ? '⚠️ ' + esc_(flags.join(' · ')) : '✅ Everything is in order.'}</p>`);
+    }
+  });
+  return out;
+}
+
+function runAutomations() {
+  const lock = LockService.getScriptLock(); lock.waitLock(30000);
+  try {
+    const log = autoLog_();
+    dueReminders_().forEach(m => {
+      const isOwner = m.to === CONFIG.OWNER_EMAIL;
+      MailApp.sendEmail(Object.assign({ to: m.to, subject: m.subject, htmlBody: m.html, name: CONFIG.BUSINESS },
+        isOwner ? {} : { replyTo: CONFIG.REPLY_TO }));
+      log.appendRow([m.id, m.kind, new Date(), m.to]);
+    });
+  } finally { lock.releaseLock(); }
+}
+
+function previewAutomations() {
+  const due = dueReminders_();
+  Logger.log(due.length ? due.map(m => `#${m.id} ${m.kind} → ${m.to}: ${m.subject}`).join('\n') : 'Nothing due today.');
+  return due.map(m => ({ id: m.id, kind: m.kind, to: m.to, subject: m.subject }));
+}
+
+function installAutomations() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'runAutomations').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('runAutomations').timeBased().everyDays(1).atHour(9).inTimezone(CONFIG.TZ).create();
+  Logger.log('Daily automations scheduled for about 9 AM ' + CONFIG.TZ);
+}
+
+function stopAutomations() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'runAutomations').forEach(t => ScriptApp.deleteTrigger(t));
+  Logger.log('Automations stopped.');
+}
+
 /* ---------------- One-time test (run from the editor to grant permissions) ---------------- */
 
 function testSetup() {
