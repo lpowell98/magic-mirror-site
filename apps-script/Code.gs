@@ -6,7 +6,9 @@
 
 const CONFIG = {
   OWNER_EMAIL: 'lanspowelljr@gmail.com',      // where new-booking alerts go
-  NOTIFY: 'lanspowelljr@gmail.com, inquiries@magicmirrorrentalservices.com',  // who gets owner alerts (bookings, contracts, payments, messages, heads-ups)
+  NOTIFY: 'lanspowelljr@gmail.com, inquiries@magicmirrorrentalservices.com',
+  ADMINS: ['lanspowelljr@gmail.com', 'inquiries@magicmirrorrentalservices.com'],  // who can open the owner dashboard
+  FROM: 'inquiries@magicmirrorrentalservices.com',   // emails are sent from this address when the sending account can use it  // who gets owner alerts (bookings, contracts, payments, messages, heads-ups)
   BUSINESS: 'Magic Mirror Rental Services',
   REPLY_TO: 'inquiries@magicmirrorrentalservices.com',
   PORTAL_URL: 'https://www.magicmirrorrentalservices.com/booking/',
@@ -160,10 +162,28 @@ function emailButton_(url, label) {
 }
 
 // Every email goes through here so they all carry the brand.
+// Sends from CONFIG.FROM when the account running the script is that address or has it as a Gmail
+// "Send mail as" alias; otherwise sends from the running account with replies going to CONFIG.FROM.
 function sendMail_(o) {
-  const msg = Object.assign({}, o, { name: o.name || CONFIG.BUSINESS, htmlBody: emailHtml_(o.htmlBody || ''),
-    inlineImages: Object.assign({ mmrslogo: logoBlob_() }, o.inlineImages || {}) });
-  MailApp.sendEmail(msg);
+  const html = emailHtml_(o.htmlBody || ''), images = Object.assign({ mmrslogo: logoBlob_() }, o.inlineImages || {});
+  const opts = { htmlBody: html, name: o.name || CONFIG.BUSINESS, replyTo: o.replyTo || CONFIG.FROM, inlineImages: images };
+  if (o.attachments) opts.attachments = o.attachments;
+  try {
+    if (canSendAs_()) opts.from = CONFIG.FROM;
+    GmailApp.sendEmail(o.to, o.subject, 'Please view this email in an HTML-capable mail app.', opts);
+  } catch (e) {
+    Logger.log('GmailApp failed, using MailApp: ' + e);
+    MailApp.sendEmail(Object.assign({}, o, { htmlBody: html, name: opts.name, replyTo: opts.replyTo, inlineImages: images }));
+  }
+}
+
+let canSendAs__;
+function canSendAs_() {
+  if (canSendAs__ !== undefined) return canSendAs__;
+  const me = String(Session.getEffectiveUser().getEmail() || '').toLowerCase(), from = CONFIG.FROM.toLowerCase();
+  try { canSendAs__ = me === from || GmailApp.getAliases().some(a => a.toLowerCase() === from); }
+  catch (e) { canSendAs__ = false; }
+  return canSendAs__;
 }
 
 /* ---------------- Lookup (client portal) ---------------- */
@@ -422,7 +442,7 @@ function addMessage_(b) {
 
 function isOwner_() {
   const me = String(Session.getActiveUser().getEmail() || '').toLowerCase();
-  return me && me === CONFIG.OWNER_EMAIL.toLowerCase();
+  return !!me && CONFIG.ADMINS.some(a => a.toLowerCase() === me);
 }
 function guard_() { if (!isOwner_()) throw new Error('Not authorised'); }
 
