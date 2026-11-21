@@ -52,6 +52,8 @@ function doPost(e) {
     if (b.action === 'template') return json(saveTemplate_(b));
     if (b.action === 'details') return json(saveDetails_(b));
     if (b.action === 'message') return json(addMessage_(b));
+    if (b.action === 'pay') return json(startPayment_(b));
+    if (b.action === 'confirmPay') return json(confirmPayment_(b));
     return json({ ok: false, error: 'Unknown action' });
   } catch (err) {
     return json({ ok: false, error: String(err) });
@@ -530,15 +532,28 @@ function adminAddPayment(id, p) {
   const amt = Math.round(Number(p.amount) * 100) / 100;
   if (!(amt > 0)) throw new Error('Enter an amount above $0');
   return withLock_(() => {
-    const sh = sheet_('Bookings'), row = rowById_(id);
-    const cell = sh.getRange(row, COL.PAID);
-    cell.setValue(Math.round((num_(cell.getValue()) + amt) * 100) / 100);
-    const ps = paymentsSheet_(), pr = ps.getLastRow() + 1;
-    ps.getRange(pr, 2).setNumberFormat('@'); ps.getRange(pr, 3).setNumberFormat('$#,##0.00');
-    ps.getRange(pr, 1, 1, 6).setValues([[Number(id), clip_(p.date, 10) || Utilities.formatDate(new Date(), CONFIG.TZ, 'MM/dd/yyyy'),
-      amt, clip_(p.method, 40) || 'Other', clip_(p.note, 300), new Date()]]);
+    recordPayment_(id, amt, clip_(p.method, 40) || 'Other', clip_(p.date, 10), clip_(p.note, 300), '');
     return adminData();
   });
+}
+
+// Adds a row to the Payments tab and raises Paid on the booking. Callers hold the script lock.
+// ref (e.g. a Stripe Checkout session id) makes it idempotent: the same ref is never recorded twice.
+function recordPayment_(id, amt, method, date, note, ref) {
+  const ps = paymentsSheet_();
+  if (ps.getMaxColumns() < 7) ps.insertColumnsAfter(ps.getMaxColumns(), 7 - ps.getMaxColumns());
+  if (!ps.getRange(1, 7).getValue()) ps.getRange(1, 7).setValue('Reference');
+  if (ref) {
+    const n = ps.getLastRow();
+    if (n > 1 && ps.getRange(2, 7, n - 1, 1).getValues().some(r => String(r[0]) === String(ref))) return false;
+  }
+  const sh = sheet_('Bookings'), row = rowById_(id), cell = sh.getRange(row, COL.PAID);
+  cell.setValue(Math.round((num_(cell.getValue()) + amt) * 100) / 100);
+  const pr = ps.getLastRow() + 1;
+  ps.getRange(pr, 2).setNumberFormat('@'); ps.getRange(pr, 3).setNumberFormat('$#,##0.00'); ps.getRange(pr, 7).setNumberFormat('@');
+  ps.getRange(pr, 1, 1, 7).setValues([[Number(id), date || Utilities.formatDate(new Date(), CONFIG.TZ, 'MM/dd/yyyy'),
+    amt, method, note || '', new Date(), ref || '']]);
+  return true;
 }
 
 function adminReply(id, text) {
@@ -602,6 +617,96 @@ function adminUnblock(date) {
     }
     return adminData();
   });
+}
+
+/* ---------------- Stripe payments ----------------
+   Setup (one time): Apps Script → Project Settings → Script properties → add
+     STRIPE_SECRET_KEY = sk_test_… (test) or sk_live_… (live)
+   The key never goes in this file or on GitHub. Clients pay on Stripe Checkout; on return the
+   portal calls confirmPay, which re-checks the session with Stripe before recording anything.
+   runAutomations() also reconciles the last 3 days of completed sessions, in case a client
+   closed the tab before returning. */
+
+function stripeKey_() {
+  const k = PropertiesService.getScriptProperties().getProperty('STRIPE_SECRET_KEY');
+  if (!k) throw new Error('Online payments are not set up yet');
+  return k;
+}
+
+function stripe_(method, path, payload) {
+  const res = UrlFetchApp.fetch('https://api.stripe.com/v1/' + path, {
+    method, payload, muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + stripeKey_() } });
+  const body = JSON.parse(res.getContentText());
+  if (res.getResponseCode() >= 300) throw new Error((body.error && body.error.message) || 'Stripe error');
+  return body;
+}
+
+function portalUrl_(id, ln) {
+  return CONFIG.PORTAL_URL + '?id=' + encodeURIComponent(id) + '&ln=' + encodeURIComponent(ln);
+}
+
+// b: { id, ln, amount } → { ok, url } of a Stripe Checkout page for that amount.
+function startPayment_(b) {
+  const f = findRow_(b.id, b.ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+  const r = f.r, bal = Math.round((num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1])) * 100) / 100;
+  const amt = Math.round(Number(b.amount) * 100) / 100;
+  if (!(bal > 0)) return { ok: false, error: 'Your booking is already paid in full.' };
+  if (!(amt >= 1) || amt > bal + 0.001) return { ok: false, error: `Enter an amount between $1.00 and $${bal.toFixed(2)}.` };
+  const id = String(r[0]), back = portalUrl_(id, r[COL.LN - 1]);
+  const s = stripe_('post', 'checkout/sessions', {
+    mode: 'payment',
+    success_url: back + '&paid={CHECKOUT_SESSION_ID}',
+    cancel_url: back + '&paycancel=1',
+    customer_email: String(r[COL.EMAIL - 1]),
+    client_reference_id: id,
+    'metadata[booking_id]': id,
+    'payment_intent_data[metadata][booking_id]': id,
+    'payment_intent_data[description]': `Booking #${id} – ${r[COL.EVNAME - 1]} on ${fmtDate_(r[COL.DATE - 1])}`,
+    'line_items[0][quantity]': 1,
+    'line_items[0][price_data][currency]': 'usd',
+    'line_items[0][price_data][unit_amount]': Math.round(amt * 100),
+    'line_items[0][price_data][product_data][name]': `${CONFIG.BUSINESS} – booking #${id}`,
+    'line_items[0][price_data][product_data][description]': `${r[COL.EVNAME - 1]}, ${fmtDate_(r[COL.DATE - 1])}`
+  });
+  return { ok: true, url: s.url };
+}
+
+// Records a completed Checkout session once. Returns true if it was new.
+function applySession_(s) {
+  const id = s.metadata && s.metadata.booking_id;
+  if (!id || s.payment_status !== 'paid') return false;
+  const amt = Math.round(s.amount_total) / 100;
+  const note = 'Stripe' + (s.livemode ? '' : ' (TEST MODE)') + (s.payment_intent ? ' ' + s.payment_intent : '');
+  if (!recordPayment_(id, amt, s.livemode ? 'Stripe' : 'Stripe (test)', '', note, s.id)) return false;
+  const r = sheet_('Bookings').getRange(rowById_(id), 1, 1, NCOL).getValues()[0];
+  const bal = num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1]);
+  const sum = `<p><b>Amount paid:</b> $${amt.toFixed(2)}<br><b>Remaining balance:</b> $${Math.max(0, bal).toFixed(2)}</p>`;
+  sendMail_({ to: r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, subject: `Payment received – booking #${id}`,
+    htmlBody: `<h1 style="margin:0 0 16px;font-size:26px;color:#17121b">Thank you, ${esc_(r[COL.FN - 1])}.</h1>
+      <p>We've received your payment for <b>${esc_(r[COL.EVNAME - 1])}</b> on <b>${esc_(fmtDate_(r[COL.DATE - 1]))}</b>.</p>${sum}
+      ${bal > 0.005 ? '<p>The remaining balance is due 14 days before your event.</p>' : '<p>Your booking is paid in full.</p>'}${portalLink_(r, 'View your booking')}` });
+  sendMail_({ to: CONFIG.OWNER_EMAIL, subject: `Stripe payment $${amt.toFixed(2)} – #${id} ${r[COL.EVNAME - 1]}${s.livemode ? '' : ' (TEST)'}`,
+    htmlBody: `<p>${esc_(r[COL.FN - 1] + ' ' + r[COL.LN - 1])} paid <b>$${amt.toFixed(2)}</b> online for booking #${id} (${esc_(String(r[COL.STATUS - 1]))}).</p>${sum}` });
+  return true;
+}
+
+// b: { id, ln, session } — called by the portal when Stripe sends the client back.
+function confirmPayment_(b) {
+  const f = findRow_(b.id, b.ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+  const s = stripe_('get', 'checkout/sessions/' + encodeURIComponent(String(b.session || '').slice(0, 200)));
+  if (!s.metadata || String(s.metadata.booking_id) !== String(f.r[0])) return { ok: false, error: 'This payment is for a different booking.' };
+  if (s.payment_status !== 'paid') return { ok: false, error: 'Payment not completed.' };
+  const isNew = applySession_(s);
+  return { ok: true, recorded: isNew, amount: s.amount_total / 100, booking: lookup_(b.id, b.ln).booking };
+}
+
+// Catches payments whose clients never came back to the portal.
+function reconcileStripe_() {
+  if (!PropertiesService.getScriptProperties().getProperty('STRIPE_SECRET_KEY')) return 0;
+  const since = Math.floor(Date.now() / 1000) - 3 * 86400;
+  const list = stripe_('get', `checkout/sessions?status=complete&limit=100&created[gte]=${since}`);
+  let n = 0; (list.data || []).forEach(s => { if (applySession_(s)) n++; });
+  return n;
 }
 
 /* ---------------- Automations (daily) ----------------
@@ -683,6 +788,7 @@ function dueReminders_() {
 function runAutomations() {
   const lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
+    try { reconcileStripe_(); } catch (e) { Logger.log('Stripe reconcile: ' + e); }
     const log = autoLog_();
     dueReminders_().forEach(m => {
       const isOwner = m.to === CONFIG.OWNER_EMAIL;

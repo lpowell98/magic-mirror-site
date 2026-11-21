@@ -753,7 +753,8 @@ $("bookBtn").onclick=async()=>{
       payOpt:S.payOpt, terms:$("terms").checked };
     try{
       const r=await api(null,payload);
-      if(r.ok){ takenDates.add(b.date); renderPortal(r.booking,true); }
+      if(r.ok){ takenDates.add(b.date); renderPortal(r.booking,true);
+        if(S.payOpt!=="later"){ const amt=S.payOpt==="full"?r.booking.total:Math.min(CFG.deposit,r.booking.total); startPay(r.booking.id,r.booking.ln,amt,$("payBtn")); } }
       else{
         const w=$("bottomWarn");
         w.textContent = r.error==="DATE_TAKEN" ? "Sorry, that date was just booked. Please choose another date." : "Something went wrong: "+r.error;
@@ -792,7 +793,8 @@ function renderPortal(b,isNew){
   $("payAmt").value=due.toFixed(2);
   $("payTiles").querySelectorAll(".paytile").forEach(t=>t.onclick=()=>{ $("payTiles").querySelectorAll(".paytile").forEach(x=>{ x.classList.remove("on"); x.setAttribute("aria-pressed","false"); }); t.classList.add("on"); t.setAttribute("aria-pressed","true"); $("payAmt").value=(+t.dataset.v).toFixed(2); });
   $("payNote").textContent="";
-  $("payBtn").onclick=()=>{ $("payNote").textContent="Online payments are coming soon. For now we'll send you a payment link."; };
+  $("payBtn").onclick=()=>startPay(b.id,b.ln,$("payAmt").value,$("payBtn"));
+  $("payBtn").disabled=!(due>0.005); if(!(due>0.005)) $("payNote").textContent="Your booking is paid in full. Thank you!";
   S.cur=b;
   renderTabs(); selectTab("bookings"); show("portal");
 }
@@ -990,9 +992,32 @@ $("signForm").addEventListener("submit",async e=>{
   else msg.textContent="We couldn't save your signature. Please try again, or email inquiries@magicmirrorrentalservices.com.";
 });
 
-/* ===== Deep link from emails: /booking/?id=123&ln=Smith opens that booking ===== */
-(()=>{ const q=new URLSearchParams(location.search);
-  if(q.get("id") && q.get("ln")){ $("mId").value=q.get("id"); $("mSur").value=q.get("ln"); $("searchBtn").click(); } })();
+/* ===== Online payment (Stripe Checkout) ===== */
+async function startPay(id,ln,amount,btn){
+  const note=$("payNote"), amt=Math.round(parseFloat(String(amount).replace(/[^\d.]/g,""))*100)/100;
+  if(!(amt>=1)){ note.textContent="Enter an amount of at least $1.00."; $("payAmt").focus(); return; }
+  btn.disabled=true; btn.textContent="Opening secure payment…"; note.textContent="";
+  try{ const r=await api(null,{action:"pay",id,ln,amount:amt});
+    if(r.ok&&r.url){ location.href=r.url; return; }
+    note.textContent=r.error==="NOT_FOUND"?"We couldn't find your booking. Please look it up again.":(r.error||"We couldn't start the payment. Please try again.");
+  }catch(e){ note.textContent="We couldn't reach the payment system. Please try again, or email inquiries@magicmirrorrentalservices.com."; }
+  btn.disabled=false; btn.textContent="Make payment";
+}
+
+/* ===== Deep link from emails and Stripe: /booking/?id=123&ln=Smith[&paid=cs_…|&paycancel=1] ===== */
+(async()=>{ const q=new URLSearchParams(location.search), id=q.get("id"), ln=q.get("ln");
+  if(!id||!ln) return;
+  $("mId").value=id; $("mSur").value=ln;
+  const paid=q.get("paid"), cancelled=q.get("paycancel");
+  if(paid||cancelled) history.replaceState(null,"",location.pathname+"?id="+encodeURIComponent(id)+"&ln="+encodeURIComponent(ln));
+  if(!paid){ $("searchBtn").click(); if(cancelled){ const w=setInterval(()=>{ if(S.cur){ clearInterval(w); $("payBtn").scrollIntoView({block:"center"}); $("payNote").textContent="Payment cancelled. Nothing was charged."; } },200); setTimeout(()=>clearInterval(w),10000); } return; }
+  $("manageMsg").textContent="Confirming your payment…";
+  try{ const r=await api(null,{action:"confirmPay",id,ln,session:paid});
+    if(r.ok){ renderPortal(r.booking,false); $("manageMsg").textContent=""; $("payBtn").scrollIntoView({block:"center"});
+      $("payNote").textContent="Thank you! Your payment of "+money(r.amount)+" was received. A receipt is on its way to your email."; return; }
+    $("searchBtn").click(); $("manageMsg").textContent=r.error||"We couldn't confirm your payment yet. If you were charged, we'll update your booking shortly.";
+  }catch(e){ $("searchBtn").click(); }
+})();
 </script>
 </body>
 </html>
