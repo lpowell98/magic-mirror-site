@@ -6,6 +6,7 @@
 
 const CONFIG = {
   OWNER_EMAIL: 'lanspowelljr@gmail.com',      // where new-booking alerts go
+  NOTIFY: 'lanspowelljr@gmail.com, inquiries@magicmirrorrentalservices.com',  // who gets owner alerts (bookings, contracts, payments, messages, heads-ups)
   BUSINESS: 'Magic Mirror Rental Services',
   REPLY_TO: 'inquiries@magicmirrorrentalservices.com',
   PORTAL_URL: 'https://www.magicmirrorrentalservices.com/booking/',
@@ -202,7 +203,7 @@ function itemsTable_(p) {
 function notifyOwner_(id, b, p) {
   const ss = SpreadsheetApp.getActive();
   sendMail_({
-    to: CONFIG.OWNER_EMAIL,
+    to: CONFIG.NOTIFY,
     subject: `New booking #${id}: ${b.evName} on ${b.date}`,
     htmlBody: `<p><b>New booking #${id}</b> (Unconfirmed)</p>
       <p>${b.fn} ${b.ln} · ${b.email} · ${b.phone}<br>${b.eventType || ''}: ${b.evName}<br>
@@ -342,7 +343,7 @@ function signContract_(b) {
   sendMail_({ to: f.r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, name: CONFIG.BUSINESS, subject: subj,
     htmlBody: `<p>Hi ${esc_(f.r[COL.FN - 1])},</p><p>Thank you for signing your contract for <b>${esc_(f.r[COL.EVNAME - 1])}</b> on <b>${esc_(fmtDate_(f.r[COL.DATE - 1]))}</b>. A copy is attached for your records.</p><p>${CONFIG.BUSINESS}</p>`,
     attachments: [pdf] });
-  sendMail_({ to: CONFIG.OWNER_EMAIL, subject: `Contract signed: #${id} ${f.r[COL.EVNAME - 1]}`,
+  sendMail_({ to: CONFIG.NOTIFY, subject: `Contract signed: #${id} ${f.r[COL.EVNAME - 1]}`,
     htmlBody: `<p>${esc_(name)} signed the contract for booking #${id} at ${esc_(stamp)}.</p><p><a href="${file.getUrl()}">Open signed PDF in Drive</a></p>`,
     attachments: [pdf] });
   return { ok: true, signedAt: stamp };
@@ -364,7 +365,7 @@ function saveTemplate_(b) {
   const text = clip_(b.templateText, 300);
   const sh = sheet_('Bookings');
   sh.getRange(f.index, COL.TEMPLATE, 1, 2).setNumberFormat('@').setValues([[t, text]]);
-  sendMail_({ to: CONFIG.OWNER_EMAIL, replyTo: f.r[COL.EMAIL - 1],
+  sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Template chosen: #${f.r[0]} ${f.r[COL.EVNAME - 1]}`,
     htmlBody: `<p>Booking #${f.r[0]} (${esc_(f.r[COL.FN - 1])} ${esc_(f.r[COL.LN - 1])}) chose <b>${esc_(t)}</b>.</p><p>Text on the print: ${esc_(text) || '(none)'}</p>` });
   return { ok: true };
@@ -378,7 +379,7 @@ function saveDetails_(b) {
   const now = new Date(), sh = sheet_('Bookings');
   sh.getRange(f.index, COL.ONSITE_NAME, 1, 4).setNumberFormat('@').setValues([[name, phone, clip_(b.guests, 20), clip_(b.setupNotes, 2000)]]);
   sh.getRange(f.index, COL.DETAILS_AT).setNumberFormat('MM/dd/yyyy h:mm am/pm').setValue(now);
-  sendMail_({ to: CONFIG.OWNER_EMAIL, replyTo: f.r[COL.EMAIL - 1],
+  sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Details confirmed: #${f.r[0]} ${f.r[COL.EVNAME - 1]}`,
     htmlBody: `<p>Booking #${f.r[0]} confirmed their event details.</p><p>On-site contact: ${esc_(name)}, ${esc_(phone)}<br>Guests: ${esc_(clip_(b.guests, 20)) || 'not given'}<br>Setup notes: ${esc_(clip_(b.setupNotes, 2000)) || 'none'}</p>` });
   return { ok: true, detailsAt: fmtStamp_(now) };
@@ -408,7 +409,7 @@ function addMessage_(b) {
   const sh = messagesSheet_(), row = sh.getLastRow() + 1;
   sh.getRange(row, 4).setNumberFormat('@');
   sh.getRange(row, 1, 1, 4).setValues([[f.r[0], new Date(), 'Client', text]]);
-  sendMail_({ to: CONFIG.OWNER_EMAIL, replyTo: f.r[COL.EMAIL - 1],
+  sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Message from ${f.r[COL.FN - 1]} ${f.r[COL.LN - 1]} (booking #${f.r[0]})`,
     htmlBody: `<p>${esc_(text).replace(/\n/g, '<br>')}</p><hr><p style="color:#666">Reply to this email to answer ${esc_(f.r[COL.FN - 1])} directly, or add a row to the Messages tab with From = Magic Mirror to show your reply in their portal.</p>` });
   return getMessages_(b.id, b.ln);
@@ -685,7 +686,7 @@ function applySession_(s) {
     htmlBody: `<h1 style="margin:0 0 16px;font-size:26px;color:#17121b">Thank you, ${esc_(r[COL.FN - 1])}.</h1>
       <p>We've received your payment for <b>${esc_(r[COL.EVNAME - 1])}</b> on <b>${esc_(fmtDate_(r[COL.DATE - 1]))}</b>.</p>${sum}
       ${bal > 0.005 ? '<p>The remaining balance is due 14 days before your event.</p>' : '<p>Your booking is paid in full.</p>'}${portalLink_(r, 'View your booking')}` });
-  sendMail_({ to: CONFIG.OWNER_EMAIL, subject: `Stripe payment $${amt.toFixed(2)} – #${id} ${r[COL.EVNAME - 1]}${s.livemode ? '' : ' (TEST)'}`,
+  sendMail_({ to: CONFIG.NOTIFY, subject: `Stripe payment $${amt.toFixed(2)} – #${id} ${r[COL.EVNAME - 1]}${s.livemode ? '' : ' (TEST)'}`,
     htmlBody: `<p>${esc_(r[COL.FN - 1] + ' ' + r[COL.LN - 1])} paid <b>$${amt.toFixed(2)}</b> online for booking #${id} (${esc_(String(r[COL.STATUS - 1]))}).</p>${sum}` });
   return true;
 }
@@ -774,7 +775,7 @@ function dueReminders_() {
     if (AUTOMATIONS.ownerHeadsUp && status !== 'Completed' && (until === 8 || until === 2)) {
       const flags = [status === 'Unconfirmed' ? 'NOT CONFIRMED' : '', !r[COL.SIGNED_AT - 1] && !imported ? 'contract unsigned' : '',
         bal > 0.005 ? `$${bal.toFixed(2)} owed` : '', !r[COL.STAFF - 1] ? 'no staff assigned' : '', !r[COL.DETAILS_AT - 1] && !imported ? 'details not confirmed' : ''].filter(String);
-      add(r, 'owner' + until, CONFIG.OWNER_EMAIL, `In ${until} days: ${r[COL.EVNAME - 1]}`,
+      add(r, 'owner' + until, CONFIG.NOTIFY, `In ${until} days: ${r[COL.EVNAME - 1]}`,
         `<p><b>${esc_(r[COL.EVNAME - 1])}</b> is in ${until} days (${esc_(fmtDate_(r[COL.DATE - 1]))}).</p>
          <p>${esc_(fmtTime_(r[COL.START - 1]))} – ${esc_(fmtTime_(r[COL.END - 1]))}, arrive ${esc_(fmtTime_(r[COL.ARRIVE - 1]))}<br>
          ${esc_(r[COL.VNAME - 1])}, ${esc_(r[COL.VADDR - 1])}<br>${esc_(r[COL.PKG - 1])} · Staff: ${esc_(r[COL.STAFF - 1] || 'none')}<br>
@@ -791,7 +792,7 @@ function runAutomations() {
     try { reconcileStripe_(); } catch (e) { Logger.log('Stripe reconcile: ' + e); }
     const log = autoLog_();
     dueReminders_().forEach(m => {
-      const isOwner = m.to === CONFIG.OWNER_EMAIL;
+      const isOwner = m.to === CONFIG.NOTIFY;
       sendMail_(Object.assign({ to: m.to, subject: m.subject, htmlBody: m.html, name: CONFIG.BUSINESS },
         isOwner ? {} : { replyTo: CONFIG.REPLY_TO }));
       log.appendRow([m.id, m.kind, new Date(), m.to]);
