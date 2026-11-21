@@ -662,9 +662,9 @@ function startPayment_(b) {
     'metadata[booking_id]': id,
     'payment_intent_data[metadata][booking_id]': id,
     'payment_intent_data[description]': `Booking #${id} – ${r[COL.EVNAME - 1]} on ${fmtDate_(r[COL.DATE - 1])}`,
-    'line_items[0][quantity]': 1,
+    'line_items[0][quantity]': '1',            // strings: Apps Script would send numbers as "1.0"
     'line_items[0][price_data][currency]': 'usd',
-    'line_items[0][price_data][unit_amount]': Math.round(amt * 100),
+    'line_items[0][price_data][unit_amount]': String(Math.round(amt * 100)),
     'line_items[0][price_data][product_data][name]': `${CONFIG.BUSINESS} – booking #${id}`,
     'line_items[0][price_data][product_data][description]': `${r[COL.EVNAME - 1]}, ${fmtDate_(r[COL.DATE - 1])}`
   });
