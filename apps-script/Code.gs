@@ -837,6 +837,13 @@ function stopAutomations() {
   Logger.log('Automations stopped.');
 }
 
+// Run once from the editor: lets every admin open the signed-contract PDFs.
+function shareWithAdmins() {
+  const f = contractsFolder_();
+  CONFIG.ADMINS.filter(a => a.toLowerCase() !== CONFIG.OWNER_EMAIL.toLowerCase()).forEach(a => f.addViewer(a));
+  Logger.log('Contracts folder shared with: ' + CONFIG.ADMINS.join(', '));
+}
+
 /* ---------------- One-time test (run from the editor to grant permissions) ---------------- */
 
 function testSetup() {
