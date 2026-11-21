@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /app/
 Sitemap: https://www.magicmirrorrentalservices.com/sitemap.xml

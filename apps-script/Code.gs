@@ -46,6 +46,11 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  // Owner dashboard on app.magicmirrorrentalservices.com (handles its own locking)
+  try {
+    const a = JSON.parse(e.postData.contents);
+    if (String(a.action || '').indexOf('admin') === 0) return json(adminApi_(a));
+  } catch (err) { return json({ ok: false, error: String(err.message || err) }); }
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(15000);
@@ -444,7 +449,8 @@ function isOwner_() {
   const me = String(Session.getActiveUser().getEmail() || '').toLowerCase();
   return !!me && CONFIG.ADMINS.some(a => a.toLowerCase() === me);
 }
-function guard_() { if (!isOwner_()) throw new Error('Not authorised'); }
+let apiAdmin_ = '';   // set when a request comes from the app.* dashboard with a valid session
+function guard_() { if (!apiAdmin_ && !isOwner_()) throw new Error('Not authorised'); }
 
 function adminPage_() {
   if (!isOwner_()) return HtmlService.createHtmlOutput('<p style="font-family:sans-serif">Not authorised.</p>');
@@ -637,6 +643,80 @@ function adminUnblock(date) {
       for (let i = vals.length - 1; i >= 0; i--) if (fmtDate_(vals[i][0]) === date) bl.deleteRow(i + 2);
     }
     return adminData();
+  });
+}
+
+/* ---------------- Dashboard API (app.magicmirrorrentalservices.com) ----------------
+   Sign-in: the admin enters their email, gets a 6-digit code by email, and receives a session token
+   valid for 30 days. Tokens are stored hashed in Script Properties. */
+
+const ADMIN_FNS = { adminData, adminUpdate, adminAddPayment, adminReply, adminResend, adminBlock, adminUnblock };
+const SESSION_DAYS = 30;
+
+function sha_(t) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(t), Utilities.Charset.UTF_8)
+    .map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('');
+}
+function isAdminEmail_(e) { e = String(e || '').trim().toLowerCase(); return CONFIG.ADMINS.some(a => a.toLowerCase() === e) ? e : ''; }
+
+function sessionEmail_(token) {
+  if (!token || String(token).length < 30) return '';
+  const props = PropertiesService.getScriptProperties();
+  const raw = props.getProperty('sess:' + sha_(token)); if (!raw) return '';
+  const s = JSON.parse(raw);
+  if (Date.now() > s.exp) { props.deleteProperty('sess:' + sha_(token)); return ''; }
+  return isAdminEmail_(s.email);
+}
+
+function adminApi_(a) {
+  const cache = CacheService.getScriptCache();
+  if (a.action === 'adminCode') {
+    const email = isAdminEmail_(a.email);
+    if (email && !cache.get('codeSent:' + email)) {
+      const code = String(Math.floor(100000 + Math.random() * 900000));
+      cache.put('code:' + email, JSON.stringify({ h: sha_(code), tries: 0 }), 600);
+      cache.put('codeSent:' + email, '1', 45);
+      sendMail_({ to: email, subject: `Your dashboard sign-in code: ${code}`,
+        htmlBody: `<p>Your Magic Mirror owner dashboard sign-in code is:</p><p style="font-size:32px;font-weight:800;letter-spacing:4px;margin:12px 0">${code}</p><p>It expires in 10 minutes. If you didn't try to sign in, you can ignore this email.</p>` });
+    }
+    return { ok: true };   // same answer either way, so the form can't be used to test addresses
+  }
+  if (a.action === 'adminVerify') {
+    const email = isAdminEmail_(a.email), key = 'code:' + email, raw = email && cache.get(key);
+    if (!raw) return { ok: false, error: 'That code has expired. Request a new one.' };
+    const c = JSON.parse(raw);
+    if (c.tries >= 5) { cache.remove(key); return { ok: false, error: 'Too many tries. Request a new code.' }; }
+    if (sha_(String(a.code || '').trim()) !== c.h) {
+      c.tries++; cache.put(key, JSON.stringify(c), 600);
+      return { ok: false, error: 'That code is not right. Check the email and try again.' };
+    }
+    cache.remove(key);
+    const token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
+    const props = PropertiesService.getScriptProperties();
+    props.setProperty('sess:' + sha_(token), JSON.stringify({ email, exp: Date.now() + SESSION_DAYS * 864e5 }));
+    pruneSessions_(props);
+    return { ok: true, token, email };
+  }
+  if (a.action === 'adminLogout') {
+    if (a.token) PropertiesService.getScriptProperties().deleteProperty('sess:' + sha_(a.token));
+    return { ok: true };
+  }
+  if (a.action === 'adminCall') {
+    const email = sessionEmail_(a.token);
+    if (!email) return { ok: false, error: 'SIGNED_OUT' };
+    const fn = ADMIN_FNS[a.fn]; if (!fn) return { ok: false, error: 'Unknown action' };
+    apiAdmin_ = email;
+    try { return { ok: true, value: fn.apply(null, Array.isArray(a.args) ? a.args : []), email }; }
+    catch (err) { return { ok: false, error: String(err.message || err) }; }
+    finally { apiAdmin_ = ''; }
+  }
+  return { ok: false, error: 'Unknown action' };
+}
+
+function pruneSessions_(props) {
+  const all = props.getProperties(), now = Date.now();
+  Object.keys(all).filter(k => k.indexOf('sess:') === 0).forEach(k => {
+    try { if (JSON.parse(all[k]).exp < now) props.deleteProperty(k); } catch (e) { props.deleteProperty(k); }
   });
 }
 

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Owner dashboard | Magic Mirror Rental Services</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/images/brand/favicon.ico">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+<meta charset="utf-8">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#0e0b11;--surface:#1a1420;--surface2:#251c2d;--line:#33283d;--accent:#fba924;--accent-hover:#f4ca3e;--purple:#6e266c;--purple-deep:#4f1a4d;--paper:#eeece9;--ink:#f3f1ee;--muted:#c4bacb;
+  --ok:#3fb27f;--warn:#fba924;--bad:#e5484d;--info:#6aa3ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.5 Montserrat,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+header{display:flex;align-items:center;gap:28px;padding:12px 24px;background:#000;position:sticky;top:0;z-index:5;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px;font-weight:700;color:var(--muted);text-decoration:none}.brand img{height:52px;width:auto;display:block}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button{background:none;border:0;padding:10px 14px;border-radius:0;color:var(--ink);cursor:pointer;font-weight:600;box-shadow:inset 0 -3px 0 transparent;transition:box-shadow .2s,color .2s}
+nav button:hover{color:var(--accent)}
+nav button[aria-selected=true]{color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+button:focus-visible,a:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button,a,.row,tbody tr{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.idbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+fieldset{border:0;margin:0;padding:0}legend{font-size:12px;color:var(--muted);margin-bottom:4px;padding:0}
+.badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:9px;background:var(--accent);color:#1a1420;font-size:11px;font-weight:700;margin-left:6px;text-align:center}
+.spacer{flex:1}
+#refresh{background:var(--surface2);border:0;border-radius:0;padding:10px 16px;color:var(--ink);font-weight:600;cursor:pointer}#refresh:hover{background:var(--purple-deep)}
+main{padding:24px;max-width:1400px;margin:0 auto}
+h1{font:800 clamp(30px,3vw,44px)/1.05 Montserrat,sans-serif;letter-spacing:-.02em;margin:8px 0 24px}h2{font-size:18px;font-weight:700;margin:0 0 12px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
+.stat{background:var(--surface);padding:18px 20px}.stat:first-child{background:var(--purple)}
+.stat b{display:block;font:800 32px/1.1 Montserrat,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:14px;font-weight:600}.stat:first-child span{color:var(--ink)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--surface);padding:22px}
+.list{display:flex;flex-direction:column}
+.row{display:flex;gap:14px;align-items:center;padding:12px 14px;margin-bottom:4px;border:0;cursor:pointer;background:var(--bg);text-align:left;width:100%;transition:background-color .15s}
+.row:last-child{margin-bottom:0}.row:hover{background:var(--purple-deep)}
+.row .when{width:96px;flex:none;color:var(--muted);font-variant-numeric:tabular-nums}
+.row .what{flex:1;min-width:0}.row .what small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty{color:var(--muted);padding:12px 4px}
+.pill{display:inline-block;padding:3px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+.s-Unconfirmed{background:#4a3a12;color:#ffd27a}.s-Confirmed{background:#123a2a;color:#7be0b0}.s-Completed{background:#2a2a35;color:#bdb6c6}.s-Cancelled{background:#3d1517;color:#ff9a9d}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.filters input,.filters select,.f input,.f select,.f textarea{background:var(--bg);border:2px solid var(--surface2);border-radius:0;padding:9px 12px;color:var(--ink)}
+.filters input:focus,.filters select:focus,.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--accent)}
+.filters input,.filters select{background:var(--surface)}
+.filters input{min-width:220px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{color:var(--muted);font-size:13px;font-weight:600;position:sticky;top:0;background:var(--surface)}
+tbody tr{cursor:pointer}tbody tr:hover{background:var(--surface2)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.ev{white-space:normal;max-width:280px}
+.tablewrap{overflow:auto;max-height:calc(100vh - 220px)}
+.owe{color:var(--warn)}
+.cal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.cal-head button{background:var(--surface2);border:0;border-radius:0;padding:8px 14px;cursor:pointer;font-weight:600}.cal-head button:hover{background:var(--purple-deep)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dow{color:var(--muted);font-size:13px;font-weight:600;padding:4px}
+.day{min-height:96px;background:var(--surface);border:2px solid transparent;padding:6px;display:flex;flex-direction:column;gap:3px}
+.day.out{opacity:.35}.day.today{border-color:var(--accent)}
+.day.blocked{background:repeating-linear-gradient(45deg,var(--surface),var(--surface) 6px,#2b1d2c 6px,#2b1d2c 12px)}
+.day .n{font-size:12px;color:var(--muted)}
+.chip{font-size:12px;padding:3px 6px;border-radius:0;border:0;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.btn{background:var(--accent);color:var(--bg);border:0;border-radius:0;padding:10px 18px;font-weight:600;cursor:pointer;transition:background-color .2s,transform .2s}.btn:hover{background:var(--accent-hover)}.btn:active{transform:translateY(1px)}
+.btn.ghost{background:var(--surface2);color:var(--ink)}.btn.ghost:hover{background:var(--purple-deep)}
+.btn:disabled{opacity:.5;cursor:default}
+/* drawer */
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--surface);box-shadow:-24px 0 48px rgba(0,0,0,.45);z-index:21;overflow:auto;padding:22px 24px 60px;overscroll-behavior:contain}
+.hidden{display:none!important}
+.dh{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.dh h2{font-size:19px;margin:0}.dh p{margin:2px 0 0;color:var(--muted)}
+.x{margin-left:auto;background:var(--surface2);border:0;border-radius:0;width:34px;height:34px;cursor:pointer;font-size:18px;flex:none}
+.sec{padding:18px 0 6px}
+.sec h3{font-size:16px;font-weight:700;color:var(--accent);margin:0 0 10px}
+dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0}dt{color:var(--muted)}dd{margin:0;word-break:break-word}
+.f{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.f textarea{width:100%;min-height:70px;resize:vertical}
+.money{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.money div{background:var(--bg);padding:10px 12px}.money b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}.money span{font-size:13px;color:var(--muted)}
+.checks{display:flex;gap:14px;flex-wrap:wrap}.checks label{display:flex;gap:6px;align-items:center}
+.thread{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:320px;overflow:auto}
+.bubble{max-width:85%;padding:10px 14px;background:var(--bg);white-space:pre-wrap}
+.bubble.me{align-self:flex-end;background:var(--purple-deep)}.bubble small{display:block;color:var(--muted);font-size:11px;margin-bottom:2px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:12px 18px;font-weight:600;z-index:40}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.login{max-width:440px;margin:8vh auto 0}.login h1{margin-top:0}.lmsg{color:var(--accent);min-height:1.5em;margin:12px 0 0}
+.who{color:var(--muted);font-size:13px}
+#signout{background:none;border:0;color:var(--muted);font-weight:600;cursor:pointer;padding:10px 6px}#signout:hover{color:var(--accent)}
+#loading{padding:60px;text-align:center;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){#drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.6}}}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="https://www.magicmirrorrentalservices.com/" target="_blank" rel="noopener"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services" width="85" height="52"><span>Owner dashboard</span></a>
+  <nav role="tablist" aria-label="Sections">
+    <button role="tab" data-v="overview" aria-selected="true">Overview</button>
+    <button role="tab" data-v="bookings" aria-selected="false">Bookings</button>
+    <button role="tab" data-v="calendar" aria-selected="false">Calendar</button>
+    <button role="tab" data-v="messages" aria-selected="false">Messages<span id="msgBadge"></span></button>
+    <button role="tab" data-v="blocked" aria-selected="false">Blocked dates</button>
+  </nav>
+  <div class="spacer"></div>
+  <span id="who" class="who"></span>
+  <button id="refresh" type="button">Refresh</button>
+  <button id="signout" type="button">Sign out</button>
+</header>
+<main>
+  <section id="v-login" class="hidden" aria-labelledby="loginTitle">
+    <div class="card login">
+      <h1 id="loginTitle">Sign in</h1>
+      <form id="emailForm" class="f">
+        <label style="width:100%">Email<input type="email" id="lEmail" name="email" autocomplete="email" spellcheck="false" required style="width:100%"></label>
+        <button class="btn" type="submit">Email me a code</button>
+      </form>
+      <form id="codeForm" class="f hidden">
+        <p id="codeSent" style="margin:0 0 4px;color:var(--muted)"></p>
+        <label style="width:100%">6-digit code<input type="text" id="lCode" name="one-time-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required style="width:100%;font-size:22px;letter-spacing:6px"></label>
+        <button class="btn" type="submit">Sign in</button>
+        <button class="btn ghost" type="button" id="backBtn">Use a different email</button>
+      </form>
+      <p class="lmsg" id="lMsg" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+  <div id="loading" class="hidden">Loading bookings…</div>
+
+  <section id="v-overview" class="hidden">
+    <h1>Overview</h1>
+    <div class="stats" id="stats"></div>
+    <div class="grid2">
+      <div class="card"><h2>Next events</h2><div class="list" id="nextList"></div></div>
+      <div class="card"><h2>Needs attention</h2><div class="list" id="attnList"></div></div>
+    </div>
+  </section>
+
+  <section id="v-bookings" class="hidden">
+    <h1>Bookings</h1>
+    <div class="filters">
+      <input id="fq" name="search" type="search" autocomplete="off" spellcheck="false" placeholder="Search name, event, venue, email, ID…" aria-label="Search bookings">
+      <select id="fwhen" aria-label="Timeframe"><option value="up">Upcoming</option><option value="past">Past</option><option value="all">All dates</option></select>
+      <select id="fstatus" aria-label="Status"><option value="">Any status</option></select>
+      <select id="fpaid" aria-label="Payment"><option value="">Paid or not</option><option value="owe">Balance owed</option><option value="paid">Paid in full</option></select>
+      <select id="ftype" aria-label="Event type"><option value="">Any event type</option></select>
+      <select id="fstaff" aria-label="Staff"><option value="">Any staff</option><option value="-">Unassigned</option></select>
+    </div>
+    <div class="card" style="padding:0"><div class="tablewrap"><table>
+      <thead><tr><th>ID</th><th>Event date</th><th>Client</th><th>Event</th><th>Package</th><th>Status</th><th class="num">Total</th><th class="num">Balance</th><th>Staff</th></tr></thead>
+      <tbody id="tbody"></tbody></table></div></div>
+    <p id="count" style="color:var(--muted)"></p>
+  </section>
+
+  <section id="v-calendar" class="hidden">
+    <div class="cal-head"><button type="button" id="calPrev" aria-label="Previous month">‹</button><h1 id="calTitle" style="margin:0;min-width:200px"></h1><button type="button" id="calNext" aria-label="Next month">›</button><button type="button" id="calToday">Today</button></div>
+    <div class="cal" id="cal"></div>
+  </section>
+
+  <section id="v-messages" class="hidden">
+    <h1>Messages</h1>
+    <div class="card"><div class="list" id="convList"></div></div>
+  </section>
+
+  <section id="v-blocked" class="hidden">
+    <h1>Blocked dates</h1>
+    <p style="color:var(--muted);margin-top:-8px">Clients can't book these dates. Booked dates are blocked automatically.</p>
+    <div class="card" style="margin-bottom:16px">
+      <form class="f" id="blockForm">
+        <label>Date<input type="date" id="bDate" name="block-date" required></label>
+        <label style="flex:1">Reason (optional)<input type="text" id="bReason" name="block-reason" autocomplete="off" maxlength="200" style="width:100%"></label>
+        <button class="btn" type="submit">Block date</button>
+      </form>
+    </div>
+    <div class="card"><div class="list" id="blockList"></div></div>
+  </section>
+</main>
+
+<div id="scrim" class="hidden"></div>
+<aside id="drawer" class="hidden" role="dialog" aria-modal="true" aria-labelledby="dTitle"></aside>
+<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=t=>String(t==null?"":t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+const money=n=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(n||0);
+const API_URL="https://script.google.com/macros/s/AKfycbxhDac5Mxk2Q7a5mGAyA_N_vj-bxNKTG33sIv7THBLbF6DkzW5L6Hf4viE2ZVU8AI0/exec";
+const store={ get:k=>{ try{ return localStorage.getItem(k); }catch(e){ return null; } }, set:(k,v)=>{ try{ v==null?localStorage.removeItem(k):localStorage.setItem(k,v); }catch(e){} } };
+let TOKEN=store.get("mmrsToken");
+async function post(body){ const r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)}); return r.json(); }
+async function run(fn,...args){
+  const r=await post({action:"adminCall",token:TOKEN,fn,args});
+  if(r.ok) return r.value;
+  if(r.error==="SIGNED_OUT"){ signOut(true); throw new Error("Please sign in again"); }
+  throw new Error(r.error||"Something went wrong");
+}
+const key=d=>{ const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(d||""); return m?Number(m[3]+m[1]+m[2]):0; };
+const fromKey=k=>new Date(Math.floor(k/10000),Math.floor(k/100)%100-1,k%100);
+const SHORT=new Intl.DateTimeFormat("en-US",{weekday:"short",month:"short",day:"numeric",year:"numeric"});
+const pretty=d=>key(d)?SHORT.format(fromKey(key(d))):d;
+const bal=b=>Math.round((b.total-b.paid)*100)/100;
+let D=null, cur=null, view="overview", calM=null;
+
+function toast(t){ const el=$("toast"); el.textContent=t; el.classList.remove("hidden"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.add("hidden"),2600); }
+function fail(e){ toast("That didn't save: "+(e&&e.message||e)+". Click Refresh and try again."); }
+
+function setAuthed(on){
+  document.querySelector("header nav").classList.toggle("hidden",!on);
+  ["refresh","signout","who"].forEach(id=>$(id).classList.toggle("hidden",!on));
+  $("v-login").classList.toggle("hidden",on);
+  if(!on){ document.querySelectorAll("main>section:not(#v-login)").forEach(s=>s.classList.add("hidden")); $("loading").classList.add("hidden"); }
+}
+async function load(){
+  if(!TOKEN){ setAuthed(false); $("lEmail").focus(); return; }
+  setAuthed(true); $("loading").classList.remove("hidden"); $("loading").textContent="Loading bookings…";
+  $("who").textContent=store.get("mmrsEmail")||"";
+  try{ D=await run("adminData"); }catch(e){ if(TOKEN) $("loading").textContent="Couldn't load: "+(e.message||e); return; }
+  $("loading").classList.add("hidden"); setup(); restore();
+}
+function signOut(silent){
+  if(TOKEN&&!silent) post({action:"adminLogout",token:TOKEN}).catch(()=>{});
+  TOKEN=null; store.set("mmrsToken",null); closeDrawer&&cur&&closeDrawer();
+  setAuthed(false); $("emailForm").classList.remove("hidden"); $("codeForm").classList.add("hidden");
+  $("lMsg").textContent=silent?"Your session ended. Please sign in again.":"";
+}
+$("signout").onclick=()=>signOut(false);
+$("emailForm").onsubmit=async e=>{ e.preventDefault(); const btn=e.target.querySelector("button"); btn.disabled=true; $("lMsg").textContent="Sending…";
+  try{ await post({action:"adminCode",email:$("lEmail").value}); $("emailForm").classList.add("hidden"); $("codeForm").classList.remove("hidden");
+    $("codeSent").textContent="If "+$("lEmail").value+" is an owner account, a code is on its way. It expires in 10 minutes."; $("lMsg").textContent=""; $("lCode").focus();
+  }catch(err){ $("lMsg").textContent="Couldn't reach the booking system. Try again."; } btn.disabled=false; };
+$("codeForm").onsubmit=async e=>{ e.preventDefault(); const btn=e.target.querySelector("button[type=submit]"); btn.disabled=true; $("lMsg").textContent="Checking…";
+  try{ const r=await post({action:"adminVerify",email:$("lEmail").value,code:$("lCode").value});
+    if(r.ok){ TOKEN=r.token; store.set("mmrsToken",r.token); store.set("mmrsEmail",r.email); $("lMsg").textContent=""; $("lCode").value=""; load(); }
+    else $("lMsg").textContent=r.error;
+  }catch(err){ $("lMsg").textContent="Couldn't reach the booking system. Try again."; } btn.disabled=false; };
+$("backBtn").onclick=()=>{ $("codeForm").classList.add("hidden"); $("emailForm").classList.remove("hidden"); $("lMsg").textContent=""; $("lEmail").focus(); };
+function setData(d){ D=d; draw(); if(cur) openBooking(cur, true); }
+
+let didSetup=false;
+function setup(){
+  if(didSetup) return; didSetup=true;
+  D.statuses.forEach(s=>$("fstatus").add(new Option(s,s)));
+  [...new Set(D.bookings.map(b=>b.type).filter(Boolean))].sort().forEach(t=>$("ftype").add(new Option(t,t)));
+  D.staff.forEach(s=>$("fstaff").add(new Option(s,s)));
+  const t=key(D.today); calM=new Date(Math.floor(t/10000),Math.floor(t/100)%100-1,1);
+}
+
+function show(v){
+  view=v; document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
+  document.querySelectorAll("main>section").forEach(s=>s.classList.toggle("hidden",s.id!=="v-"+v));
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{ show(b.dataset.v); draw(); saveState(); });
+$("refresh").onclick=async()=>{ $("refresh").disabled=true; try{ setData(await run("adminData")); toast("Up to date"); }catch(e){fail(e);} $("refresh").disabled=false; };
+
+/* ---------- derived ---------- */
+const today=()=>key(D.today);
+const live=b=>b.status!=="Cancelled";
+const upcoming=()=>D.bookings.filter(b=>live(b)&&key(b.date)>=today()).sort((a,b)=>key(a.date)-key(b.date));
+function convos(){
+  const m={}; D.messages.forEach(x=>{ (m[x.id]=m[x.id]||[]).push(x); });
+  return Object.keys(m).map(id=>{ const list=m[id].sort((a,b)=>a.ts-b.ts); const last=list[list.length-1];
+    return { id:Number(id), list, last, needs:last.from==="Client" }; }).sort((a,b)=>b.last.ts-a.last.ts);
+}
+const byId=id=>D.bookings.find(b=>b.id===Number(id));
+const daysTo=b=>Math.round((fromKey(key(b.date))-fromKey(today()))/864e5);
+
+function draw(){
+  $("loading").classList.add("hidden");
+  const n=convos().filter(c=>c.needs).length; $("msgBadge").innerHTML=n?`<span class="badge">${n}</span>`:"";
+  ({overview:drawOverview,bookings:drawBookings,calendar:drawCal,messages:drawMessages,blocked:drawBlocked})[view]();
+  show(view);
+}
+
+function rowHtml(b,sub){
+  return `<button type="button" class="row" data-id="${b.id}"><span class="when">${esc(pretty(b.date).replace(/, \d{4}$/,""))}</span>
+    <span class="what"><b>${esc(b.evName||"(no name)")}</b><small>${esc(sub||(b.fn+" "+b.ln+" · "+b.pkg))}</small></span>
+    <span class="pill s-${esc(b.status)}">${esc(b.status)}</span></button>`;
+}
+function bindRows(el){ el.querySelectorAll("[data-id]").forEach(r=>r.onclick=()=>openBooking(Number(r.dataset.id))); }
+
+function drawOverview(){
+  const up=upcoming(), yr=String(today()).slice(0,4);
+  const thisYear=D.bookings.filter(b=>live(b)&&String(key(b.date)).slice(0,4)===yr);
+  const unconf=up.filter(b=>b.status==="Unconfirmed").length;
+  const owed=up.reduce((s,b)=>s+Math.max(0,bal(b)),0);
+  const next30=up.filter(b=>daysTo(b)<=30).length;
+  $("stats").innerHTML=[
+    [up.length,"Upcoming events"],[next30,"In the next 30 days"],[unconf,"Unconfirmed upcoming"],
+    [money(owed),"Balance owed (upcoming)"],[money(thisYear.reduce((s,b)=>s+b.paid,0)),yr+" collected"],[thisYear.length,yr+" bookings"]
+  ].map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
+  $("nextList").innerHTML=up.slice(0,8).map(b=>rowHtml(b,`${b.start}–${b.end} · ${b.vName}`)).join("")||`<div class="empty">No upcoming events.</div>`;
+  const attn=[];
+  up.forEach(b=>{
+    if(b.status==="Unconfirmed") attn.push([b,"Not confirmed yet"]);
+    if(!b.signedAt && !/imported/i.test(b.notes)) attn.push([b,"Contract not signed"]);
+    if(bal(b)>0 && daysTo(b)<=14) attn.push([b,`${money(bal(b))} due — event in ${daysTo(b)} days`]);
+    if(!b.staff && daysTo(b)<=21) attn.push([b,"No staff assigned"]);
+  });
+  convos().filter(c=>c.needs).forEach(c=>{ const b=byId(c.id); if(b) attn.unshift([b,"Message waiting: "+c.last.text.slice(0,60)]); });
+  $("attnList").innerHTML=attn.slice(0,12).map(([b,t])=>rowHtml(b,t)).join("")||`<div class="empty">All caught up.</div>`;
+  bindRows($("nextList")); bindRows($("attnList"));
+}
+
+/* ---------- bookings ---------- */
+["fq","fwhen","fstatus","fpaid","ftype","fstaff"].forEach(id=>$(id).addEventListener("input",drawBookings));
+function drawBookings(){
+  const q=$("fq").value.trim().toLowerCase(), w=$("fwhen").value, st=$("fstatus").value, pd=$("fpaid").value, ty=$("ftype").value, sf=$("fstaff").value, t=today();
+  let list=D.bookings.filter(b=>{
+    const k=key(b.date);
+    if(w==="up"&&k<t) return false; if(w==="past"&&k>=t) return false;
+    if(st&&b.status!==st) return false; if(ty&&b.type!==ty) return false;
+    if(pd==="owe"&&!(bal(b)>0)) return false; if(pd==="paid"&&bal(b)>0) return false;
+    if(sf==="-"&&b.staff) return false; if(sf&&sf!=="-"&&b.staff.split(",").map(s=>s.trim()).indexOf(sf)===-1) return false;
+    if(q&&![b.id,b.fn,b.ln,b.evName,b.vName,b.email,b.phone,b.vAddr].join(" ").toLowerCase().includes(q)) return false;
+    return true;
+  });
+  list.sort((a,b)=>w==="up"?key(a.date)-key(b.date):key(b.date)-key(a.date));
+  $("tbody").innerHTML=list.map(b=>`<tr data-id="${b.id}"><td><button type="button" class="idbtn" aria-label="Open booking ${b.id}, ${esc(b.fn+" "+b.ln)}">#${b.id}</button></td><td>${esc(pretty(b.date))}</td><td>${esc(b.fn+" "+b.ln)}</td>
+    <td class="ev">${esc(b.evName)}</td><td>${esc(b.pkg.replace(" Package",""))}</td><td><span class="pill s-${esc(b.status)}">${esc(b.status)}</span></td>
+    <td class="num">${money(b.total)}</td><td class="num ${bal(b)>0?"owe":""}">${money(bal(b))}</td><td>${esc(b.staff||"—")}</td></tr>`).join("")
+    ||`<tr><td colspan="9" class="empty">No bookings match.</td></tr>`;
+  $("tbody").querySelectorAll("tr[data-id]").forEach(r=>{ r.onclick=()=>openBooking(Number(r.dataset.id)); });
+  $("count").textContent=`${list.length} booking${list.length===1?"":"s"} · ${money(list.reduce((s,b)=>s+b.total,0))} total · ${money(list.reduce((s,b)=>s+Math.max(0,bal(b)),0))} owed`;
+}
+
+/* ---------- calendar ---------- */
+const MONTH=new Intl.DateTimeFormat("en-US",{month:"long",year:"numeric"});
+$("calPrev").onclick=()=>{ calM.setMonth(calM.getMonth()-1); drawCal(); };
+$("calNext").onclick=()=>{ calM.setMonth(calM.getMonth()+1); drawCal(); };
+$("calToday").onclick=()=>{ const t=today(); calM=new Date(Math.floor(t/10000),Math.floor(t/100)%100-1,1); drawCal(); };
+const k8=d=>d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+const COLORS={Unconfirmed:"#4a3a12;color:#ffd27a",Confirmed:"#123a2a;color:#7be0b0",Completed:"#2a2a35;color:#bdb6c6",Cancelled:"#3d1517;color:#ff9a9d"};
+function drawCal(){
+  $("calTitle").textContent=MONTH.format(calM);
+  const start=new Date(calM); start.setDate(1-start.getDay());
+  const blocked={}; D.blocked.forEach(x=>blocked[key(x.date)]=x.reason||"Blocked");
+  const byDay={}; D.bookings.forEach(b=>{ (byDay[key(b.date)]=byDay[key(b.date)]||[]).push(b); });
+  let h=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<div class="dow">${d}</div>`).join("");
+  for(let i=0;i<42;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i); const k=k8(d);
+    const cls=["day"]; if(d.getMonth()!==calM.getMonth()) cls.push("out"); if(k===today()) cls.push("today"); if(blocked[k]) cls.push("blocked");
+    h+=`<div class="${cls.join(" ")}" ${blocked[k]?`title="${esc(blocked[k])}"`:""}><span class="n">${d.getDate()}</span>${(byDay[k]||[]).map(b=>
+      `<button type="button" class="chip" style="background:${COLORS[b.status]}" data-id="${b.id}" title="${esc(b.evName)}">${esc(b.start)} ${esc(b.evName)}</button>`).join("")}
+      ${blocked[k]?`<span class="chip" style="background:none;color:var(--muted)">⛔ ${esc(blocked[k])}</span>`:""}</div>`;
+  }
+  $("cal").innerHTML=h; bindRows($("cal"));
+}
+
+/* ---------- messages ---------- */
+function drawMessages(){
+  const cs=convos();
+  $("convList").innerHTML=cs.map(c=>{ const b=byId(c.id)||{id:c.id,evName:"Booking #"+c.id,fn:"",ln:"",date:"",status:""};
+    return `<button type="button" class="row" data-id="${c.id}"><span class="when">${esc(c.last.at.split(" ")[0])}</span>
+      <span class="what"><b>${esc(b.fn+" "+b.ln)} · #${c.id} ${esc(b.evName)}</b><small>${esc((c.last.from==="Client"?"":"You: ")+c.last.text)}</small></span>
+      ${c.needs?`<span class="pill s-Unconfirmed">Needs reply</span>`:""}</button>`; }).join("")||`<div class="empty">No messages yet. Clients can message you from their booking portal.</div>`;
+  $("convList").querySelectorAll("[data-id]").forEach(r=>r.onclick=()=>openBooking(Number(r.dataset.id),false,"msgs"));
+}
+
+/* ---------- blocked ---------- */
+function drawBlocked(){
+  const list=[...D.blocked].sort((a,b)=>key(a.date)-key(b.date)).filter(x=>key(x.date)>=today());
+  $("blockList").innerHTML=list.map(x=>`<div class="row" style="cursor:default"><span class="when">${esc(x.date)}</span><span class="what"><b>${esc(pretty(x.date))}</b><small>${esc(x.reason||"—")}</small></span>
+    <button type="button" class="btn ghost" data-un="${esc(x.date)}">Unblock</button></div>`).join("")||`<div class="empty">No upcoming blocked dates.</div>`;
+  $("blockList").querySelectorAll("[data-un]").forEach(b=>b.onclick=async()=>{ if(!confirm(`Unblock ${b.dataset.un}? Clients will be able to book it again.`)) return; b.disabled=true; try{ setData(await run("adminUnblock",b.dataset.un)); toast("Date unblocked"); }catch(e){fail(e); b.disabled=false;} });
+}
+$("blockForm").onsubmit=async e=>{ e.preventDefault(); const v=$("bDate").value; if(!v) return;
+  const [y,m,d]=v.split("-"); const date=`${m}/${d}/${y}`;
+  if(D.bookings.some(b=>live(b)&&b.date===date) && !confirm("There's already a booking on this date. Block it anyway?")) return;
+  try{ setData(await run("adminBlock",date,$("bReason").value)); $("blockForm").reset(); toast("Blocked "+date); }catch(err){fail(err);} };
+
+/* ---------- booking drawer ---------- */
+const METHODS=["Credit card (Square)","PayPal","Stripe","Cash","Check","Zelle","Venmo","Other"];
+let opener=null;
+function openBooking(id,keep,focus){
+  const b=byId(id); if(!b) return; if(!keep){ opener=document.activeElement; } cur=id; if(!keep) saveState();
+  document.querySelector("header").inert=true; document.querySelector("main").inert=true;
+  const scroll=keep?$("drawer").scrollTop:0;
+  const pays=D.payments.filter(p=>p.id===id), thread=D.messages.filter(m=>m.id===id).sort((a,c)=>a.ts-c.ts);
+  const staff=b.staff.split(",").map(s=>s.trim()).filter(Boolean);
+  const [y,m,d]=[D.today.slice(6),D.today.slice(0,2),D.today.slice(3,5)];
+  $("drawer").innerHTML=`
+    <div class="dh"><div><h2 id="dTitle">#${b.id} · ${esc(b.evName)}</h2><p>${esc(pretty(b.date))} · ${esc(b.start)}–${esc(b.end)} · ${esc(b.type)}</p></div>
+      <button type="button" class="x" id="dClose" aria-label="Close">×</button></div>
+    <div class="f" style="margin-bottom:14px">
+      <label>Status<select id="dStatus">${D.statuses.map(s=>`<option ${s===b.status?"selected":""}>${s}</option>`).join("")}</select></label>
+      <fieldset><legend>Staff</legend><div class="checks">${D.staff.map(s=>`<label><input type="checkbox" class="dStaff" value="${esc(s)}" ${staff.includes(s)?"checked":""}> ${esc(s)}</label>`).join("")}</div></fieldset>
+    </div>
+    <div class="sec"><h3>Client & event</h3><dl>
+      <dt>Client</dt><dd>${esc(b.fn+" "+b.ln)}</dd>
+      <dt>Email</dt><dd><a href="mailto:${esc(b.email)}">${esc(b.email)}</a></dd>
+      <dt>Phone</dt><dd><a href="tel:${esc(b.phone.replace(/[^\d+]/g,""))}">${esc(b.phone)}</a></dd>
+      <dt>Venue</dt><dd>${esc(b.vName)}<br><a href="https://maps.google.com/?q=${encodeURIComponent(b.vAddr+" "+b.vZip)}">${esc(b.vAddr)} ${esc(b.vZip)}</a></dd>
+      <dt>Arrive / leave</dt><dd>${esc(b.arrive||"—")} / ${esc(b.depart||"—")}</dd>
+      <dt>Package</dt><dd>${esc([b.pkg,b.print,b.xtime].filter(Boolean).join(" · "))}</dd>
+      <dt>Miles</dt><dd>${esc(b.miles||"—")}</dd>
+      <dt>Booked</dt><dd>${esc(b.created)}</dd>
+      ${b.notes?`<dt>Notes</dt><dd>${esc(b.notes)}</dd>`:""}
+    </dl></div>
+    <div class="sec"><h3>Payments</h3>
+      <div class="money"><div><b>${money(b.total)}</b><span>Total</span></div><div><b>${money(b.paid)}</b><span>Paid</span></div><div><b class="${bal(b)>0?"owe":""}">${money(bal(b))}</b><span>Balance</span></div></div>
+      ${pays.length?`<table style="margin-bottom:10px"><tbody>${pays.map(p=>`<tr style="cursor:default"><td>${esc(p.date)}</td><td>${esc(p.method)}</td><td class="ev">${esc(p.note)}</td><td class="num">${money(p.amount)}</td></tr>`).join("")}</tbody></table>`:""}
+      <form class="f" id="payForm">
+        <label>Amount<input type="number" id="pAmt" name="payment-amount" min="0.01" step="0.01" inputmode="decimal" style="width:110px" required value="${bal(b)>0?bal(b):""}"></label>
+        <label>Method<select id="pMethod">${METHODS.map(x=>`<option>${x}</option>`).join("")}</select></label>
+        <label>Date<input type="date" id="pDate" name="payment-date" value="${y}-${m}-${d}"></label>
+        <label style="flex:1;min-width:140px">Note<input type="text" id="pNote" name="payment-note" autocomplete="off" maxlength="300"></label>
+        <button class="btn" type="submit">Add payment</button>
+      </form></div>
+    <div class="sec"><h3>Contract</h3>${b.signedAt?`<p>Signed by <b>${esc(b.signer)}</b> on ${esc(b.signedAt)}${b.pdf?` · <a href="${esc(b.pdf)}" target="_blank" rel="noopener">Open signed PDF</a>`:""}</p>`:`<p style="color:var(--muted)">Not signed${/imported/i.test(b.notes)?" here (signed in BoothBook if it was a past booking)":""}.</p>`}</div>
+    <div class="sec"><h3>Template & details</h3><dl>
+      <dt>Template</dt><dd>${esc(b.template||"Not chosen")}${b.templateText?`<br><small style="color:var(--muted)">${esc(b.templateText)}</small>`:""}</dd>
+      <dt>On-site contact</dt><dd>${esc([b.onsiteName,b.onsitePhone].filter(Boolean).join(" · ")||"—")}</dd>
+      <dt>Guests</dt><dd>${esc(b.guests||"—")}</dd>
+      <dt>Setup notes</dt><dd>${esc(b.setupNotes||"—")}</dd>
+      <dt>Confirmed</dt><dd>${esc(b.detailsAt||"Not yet")}</dd></dl></div>
+    <div class="sec"><h3>Email the client</h3><div class="btns">
+      <button type="button" class="btn ghost" data-send="portal">Booking link</button>
+      <button type="button" class="btn ghost" data-send="contract">Sign contract</button>
+      <button type="button" class="btn ghost" data-send="template">Choose template</button>
+      <button type="button" class="btn ghost" data-send="details">Confirm details</button>
+      <button type="button" class="btn ghost" data-send="payment">Payment reminder</button></div></div>
+    <div class="sec"><h3>Notes</h3>
+      <div class="f"><label style="width:100%">Admin notes (only you)<textarea id="nAdmin" name="admin-notes">${esc(b.adminNotes)}</textarea></label>
+      <label style="width:100%">Team notes (included in staff emails)<textarea id="nTeam" name="team-notes">${esc(b.teamNotes)}</textarea></label>
+      <button type="button" class="btn" id="nSave">Save notes</button></div></div>
+    <div class="sec" id="msgs"><h3>Messages</h3>
+      <div class="thread">${thread.map(x=>`<div class="bubble ${x.from==="Client"?"":"me"}"><small>${esc(x.from==="Client"?b.fn:"You")} · ${esc(x.at)}</small>${esc(x.text)}</div>`).join("")||`<div class="empty">No messages.</div>`}</div>
+      <div class="f"><label style="width:100%">Reply (emails ${esc(b.email)} and shows in their portal)<textarea id="rText" name="reply" maxlength="2000"></textarea></label>
+      <button type="button" class="btn" id="rSend">Send reply</button></div></div>`;
+  $("drawer").classList.remove("hidden"); $("scrim").classList.remove("hidden"); document.body.style.overflow="hidden";
+  $("drawer").scrollTop=scroll;
+  if(focus==="msgs") $("msgs").scrollIntoView(); else if(!keep) $("dClose").focus();
+  $("dClose").onclick=closeDrawer;
+  const busy=async(btn,fn)=>{ btn.disabled=true; try{ await fn(); }catch(e){ fail(e); } btn.disabled=false; };
+  $("dStatus").onchange=e=>{ if(e.target.value==="Cancelled"&&!confirm(`Cancel booking #${id}? The date ${b.date} will open up for new bookings.`)){ e.target.value=b.status; return; } busy(e.target,async()=>{ setData(await run("adminUpdate",id,{status:e.target.value})); toast("Status: "+e.target.value); }); };
+  document.querySelectorAll(".dStaff").forEach(c=>c.onchange=()=>busy(c,async()=>{
+    const v=[...document.querySelectorAll(".dStaff:checked")].map(x=>x.value).join(", ");
+    setData(await run("adminUpdate",id,{staff:v})); toast(v?"Staff: "+v:"Staff cleared"); }));
+  $("payForm").onsubmit=e=>{ e.preventDefault(); const btn=e.submitter||e.target.querySelector("button");
+    const [py,pm,pd]=($("pDate").value||"").split("-");
+    busy(btn,async()=>{ setData(await run("adminAddPayment",id,{amount:$("pAmt").value,method:$("pMethod").value,date:py?`${pm}/${pd}/${py}`:"",note:$("pNote").value})); toast("Payment added"); }); };
+  $("nSave").onclick=e=>busy(e.target,async()=>{ setData(await run("adminUpdate",id,{adminNotes:$("nAdmin").value,teamNotes:$("nTeam").value})); toast("Notes saved"); });
+  $("rSend").onclick=e=>{ if(!$("rText").value.trim()) return; busy(e.target,async()=>{ setData(await run("adminReply",id,$("rText").value)); toast("Reply sent"); }); };
+  document.querySelectorAll("[data-send]").forEach(btn=>btn.onclick=()=>{
+    if(!confirm(`Email "${btn.textContent}" to ${b.email}?`)) return;
+    busy(btn,async()=>{ const r=await run("adminResend",id,btn.dataset.send); toast("Sent to "+r.sentTo); }); });
+}
+function closeDrawer(){ cur=null; $("drawer").classList.add("hidden"); $("scrim").classList.add("hidden"); document.body.style.overflow="";
+  document.querySelector("header").inert=false; document.querySelector("main").inert=false; saveState();
+  if(opener&&document.contains(opener)) opener.focus(); opener=null; }
+
+/* ---------- keep tab and open booking in the URL (survives reload) ---------- */
+function saveState(){ const q=new URLSearchParams(); if(view!=="overview") q.set("v",view); if(cur) q.set("b",String(cur)); const s=q.toString(); try{ history.replaceState(null,"",location.pathname+(s?"?"+s:"")); }catch(e){} }
+function restore(){ const p=new URLSearchParams(location.search); const v=p.get("v"); if(v&&v!=="login"&&$("v-"+v)) view=v; draw(); const b=p.get("b"); if(b&&byId(b)) openBooking(Number(b)); }
+$("scrim").onclick=closeDrawer;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&cur) closeDrawer(); });
+
+load();
+</script>
+</body>
+</html>
