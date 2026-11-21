@@ -3,10 +3,12 @@
 <head>
 <base target="_top">
 <meta charset="utf-8">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0e0b11;--surface:#1a1420;--surface2:#251c2d;--line:#33283d;--accent:#fba924;--accent-hover:#f4ca3e;--purple:#6e266c;--purple-deep:#4f1a4d;--paper:#eeece9;--ink:#f3f1ee;--muted:#c4bacb;
+:root{color-scheme:dark;--bg:#0e0b11;--surface:#1a1420;--surface2:#251c2d;--line:#33283d;--accent:#fba924;--accent-hover:#f4ca3e;--purple:#6e266c;--purple-deep:#4f1a4d;--paper:#eeece9;--ink:#f3f1ee;--muted:#c4bacb;
   --ok:#3fb27f;--warn:#fba924;--bad:#e5484d;--info:#6aa3ff}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.5 Montserrat,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
@@ -18,7 +20,10 @@ nav{display:flex;gap:4px;flex-wrap:wrap}
 nav button{background:none;border:0;padding:10px 14px;border-radius:0;color:var(--ink);cursor:pointer;font-weight:600;box-shadow:inset 0 -3px 0 transparent;transition:box-shadow .2s,color .2s}
 nav button:hover{color:var(--accent)}
 nav button[aria-selected=true]{color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
-nav button:focus-visible,.btn:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:focus-visible,a:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button,a,.row,tbody tr{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.idbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+fieldset{border:0;margin:0;padding:0}legend{font-size:12px;color:var(--muted);margin-bottom:4px;padding:0}
 .badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:9px;background:var(--accent);color:#1a1420;font-size:11px;font-weight:700;margin-left:6px;text-align:center}
 .spacer{flex:1}
 #refresh{background:var(--surface2);border:0;border-radius:0;padding:10px 16px;color:var(--ink);font-weight:600;cursor:pointer}#refresh:hover{background:var(--purple-deep)}
@@ -116,7 +121,7 @@ dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0}dt{color:v
   <section id="v-bookings" class="hidden">
     <h1>Bookings</h1>
     <div class="filters">
-      <input id="fq" type="search" placeholder="Search name, event, venue, email, ID…" aria-label="Search bookings">
+      <input id="fq" name="search" type="search" autocomplete="off" spellcheck="false" placeholder="Search name, event, venue, email, ID…" aria-label="Search bookings">
       <select id="fwhen" aria-label="Timeframe"><option value="up">Upcoming</option><option value="past">Past</option><option value="all">All dates</option></select>
       <select id="fstatus" aria-label="Status"><option value="">Any status</option></select>
       <select id="fpaid" aria-label="Payment"><option value="">Paid or not</option><option value="owe">Balance owed</option><option value="paid">Paid in full</option></select>
@@ -144,8 +149,8 @@ dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0}dt{color:v
     <p style="color:var(--muted);margin-top:-8px">Clients can't book these dates. Booked dates are blocked automatically.</p>
     <div class="card" style="margin-bottom:16px">
       <form class="f" id="blockForm">
-        <label>Date<input type="date" id="bDate" required></label>
-        <label style="flex:1">Reason (optional)<input type="text" id="bReason" maxlength="200" style="width:100%"></label>
+        <label>Date<input type="date" id="bDate" name="block-date" required></label>
+        <label style="flex:1">Reason (optional)<input type="text" id="bReason" name="block-reason" autocomplete="off" maxlength="200" style="width:100%"></label>
         <button class="btn" type="submit">Block date</button>
       </form>
     </div>
@@ -170,11 +175,12 @@ const bal=b=>Math.round((b.total-b.paid)*100)/100;
 let D=null, cur=null, view="overview", calM=null;
 
 function toast(t){ const el=$("toast"); el.textContent=t; el.classList.remove("hidden"); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.add("hidden"),2600); }
-function fail(e){ toast("Error: "+(e&&e.message||e)); }
+function fail(e){ toast("That didn't save: "+(e&&e.message||e)+". Click Refresh and try again."); }
 
 async function load(){
   try{ D=await run("adminData"); }catch(e){ $("loading").textContent="Couldn't load: "+(e.message||e); return; }
-  $("loading").classList.add("hidden"); setup(); draw();
+  $("loading").classList.add("hidden"); setup();
+  if(window.google&&google.script&&google.script.url) google.script.url.getLocation(restore); else draw();
 }
 function setData(d){ D=d; draw(); if(cur) openBooking(cur, true); }
 
@@ -191,7 +197,7 @@ function show(v){
   view=v; document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
   document.querySelectorAll("main>section").forEach(s=>s.classList.toggle("hidden",s.id!=="v-"+v));
 }
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{ show(b.dataset.v); draw(); });
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{ show(b.dataset.v); draw(); saveState(); });
 $("refresh").onclick=async()=>{ $("refresh").disabled=true; try{ setData(await run("adminData")); toast("Up to date"); }catch(e){fail(e);} $("refresh").disabled=false; };
 
 /* ---------- derived ---------- */
@@ -257,11 +263,11 @@ function drawBookings(){
     return true;
   });
   list.sort((a,b)=>w==="up"?key(a.date)-key(b.date):key(b.date)-key(a.date));
-  $("tbody").innerHTML=list.map(b=>`<tr data-id="${b.id}" tabindex="0"><td>#${b.id}</td><td>${esc(pretty(b.date))}</td><td>${esc(b.fn+" "+b.ln)}</td>
+  $("tbody").innerHTML=list.map(b=>`<tr data-id="${b.id}"><td><button type="button" class="idbtn" aria-label="Open booking ${b.id}, ${esc(b.fn+" "+b.ln)}">#${b.id}</button></td><td>${esc(pretty(b.date))}</td><td>${esc(b.fn+" "+b.ln)}</td>
     <td class="ev">${esc(b.evName)}</td><td>${esc(b.pkg.replace(" Package",""))}</td><td><span class="pill s-${esc(b.status)}">${esc(b.status)}</span></td>
     <td class="num">${money(b.total)}</td><td class="num ${bal(b)>0?"owe":""}">${money(bal(b))}</td><td>${esc(b.staff||"—")}</td></tr>`).join("")
     ||`<tr><td colspan="9" class="empty">No bookings match.</td></tr>`;
-  $("tbody").querySelectorAll("tr[data-id]").forEach(r=>{ r.onclick=()=>openBooking(Number(r.dataset.id)); r.onkeydown=e=>{ if(e.key==="Enter") openBooking(Number(r.dataset.id)); }; });
+  $("tbody").querySelectorAll("tr[data-id]").forEach(r=>{ r.onclick=()=>openBooking(Number(r.dataset.id)); });
   $("count").textContent=`${list.length} booking${list.length===1?"":"s"} · ${money(list.reduce((s,b)=>s+b.total,0))} total · ${money(list.reduce((s,b)=>s+Math.max(0,bal(b)),0))} owed`;
 }
 
@@ -303,7 +309,7 @@ function drawBlocked(){
   const list=[...D.blocked].sort((a,b)=>key(a.date)-key(b.date)).filter(x=>key(x.date)>=today());
   $("blockList").innerHTML=list.map(x=>`<div class="row" style="cursor:default"><span class="when">${esc(x.date)}</span><span class="what"><b>${esc(pretty(x.date))}</b><small>${esc(x.reason||"—")}</small></span>
     <button type="button" class="btn ghost" data-un="${esc(x.date)}">Unblock</button></div>`).join("")||`<div class="empty">No upcoming blocked dates.</div>`;
-  $("blockList").querySelectorAll("[data-un]").forEach(b=>b.onclick=async()=>{ b.disabled=true; try{ setData(await run("adminUnblock",b.dataset.un)); toast("Date unblocked"); }catch(e){fail(e); b.disabled=false;} });
+  $("blockList").querySelectorAll("[data-un]").forEach(b=>b.onclick=async()=>{ if(!confirm(`Unblock ${b.dataset.un}? Clients will be able to book it again.`)) return; b.disabled=true; try{ setData(await run("adminUnblock",b.dataset.un)); toast("Date unblocked"); }catch(e){fail(e); b.disabled=false;} });
 }
 $("blockForm").onsubmit=async e=>{ e.preventDefault(); const v=$("bDate").value; if(!v) return;
   const [y,m,d]=v.split("-"); const date=`${m}/${d}/${y}`;
@@ -312,8 +318,10 @@ $("blockForm").onsubmit=async e=>{ e.preventDefault(); const v=$("bDate").value;
 
 /* ---------- booking drawer ---------- */
 const METHODS=["Credit card (Square)","PayPal","Stripe","Cash","Check","Zelle","Venmo","Other"];
+let opener=null;
 function openBooking(id,keep,focus){
-  const b=byId(id); if(!b) return; cur=id;
+  const b=byId(id); if(!b) return; if(!keep){ opener=document.activeElement; } cur=id; if(!keep) saveState();
+  document.querySelector("header").inert=true; document.querySelector("main").inert=true;
   const scroll=keep?$("drawer").scrollTop:0;
   const pays=D.payments.filter(p=>p.id===id), thread=D.messages.filter(m=>m.id===id).sort((a,c)=>a.ts-c.ts);
   const staff=b.staff.split(",").map(s=>s.trim()).filter(Boolean);
@@ -323,7 +331,7 @@ function openBooking(id,keep,focus){
       <button type="button" class="x" id="dClose" aria-label="Close">×</button></div>
     <div class="f" style="margin-bottom:14px">
       <label>Status<select id="dStatus">${D.statuses.map(s=>`<option ${s===b.status?"selected":""}>${s}</option>`).join("")}</select></label>
-      <div><div style="font-size:12px;color:var(--muted);margin-bottom:4px">Staff</div><div class="checks">${D.staff.map(s=>`<label><input type="checkbox" class="dStaff" value="${esc(s)}" ${staff.includes(s)?"checked":""}> ${esc(s)}</label>`).join("")}</div></div>
+      <fieldset><legend>Staff</legend><div class="checks">${D.staff.map(s=>`<label><input type="checkbox" class="dStaff" value="${esc(s)}" ${staff.includes(s)?"checked":""}> ${esc(s)}</label>`).join("")}</div></fieldset>
     </div>
     <div class="sec"><h3>Client & event</h3><dl>
       <dt>Client</dt><dd>${esc(b.fn+" "+b.ln)}</dd>
@@ -340,10 +348,10 @@ function openBooking(id,keep,focus){
       <div class="money"><div><b>${money(b.total)}</b><span>Total</span></div><div><b>${money(b.paid)}</b><span>Paid</span></div><div><b class="${bal(b)>0?"owe":""}">${money(bal(b))}</b><span>Balance</span></div></div>
       ${pays.length?`<table style="margin-bottom:10px"><tbody>${pays.map(p=>`<tr style="cursor:default"><td>${esc(p.date)}</td><td>${esc(p.method)}</td><td class="ev">${esc(p.note)}</td><td class="num">${money(p.amount)}</td></tr>`).join("")}</tbody></table>`:""}
       <form class="f" id="payForm">
-        <label>Amount<input type="number" id="pAmt" min="0.01" step="0.01" inputmode="decimal" style="width:110px" required value="${bal(b)>0?bal(b):""}"></label>
+        <label>Amount<input type="number" id="pAmt" name="payment-amount" min="0.01" step="0.01" inputmode="decimal" style="width:110px" required value="${bal(b)>0?bal(b):""}"></label>
         <label>Method<select id="pMethod">${METHODS.map(x=>`<option>${x}</option>`).join("")}</select></label>
-        <label>Date<input type="date" id="pDate" value="${y}-${m}-${d}"></label>
-        <label style="flex:1;min-width:140px">Note<input type="text" id="pNote" maxlength="300"></label>
+        <label>Date<input type="date" id="pDate" name="payment-date" value="${y}-${m}-${d}"></label>
+        <label style="flex:1;min-width:140px">Note<input type="text" id="pNote" name="payment-note" autocomplete="off" maxlength="300"></label>
         <button class="btn" type="submit">Add payment</button>
       </form></div>
     <div class="sec"><h3>Contract</h3>${b.signedAt?`<p>Signed by <b>${esc(b.signer)}</b> on ${esc(b.signedAt)}${b.pdf?` · <a href="${esc(b.pdf)}" target="_blank" rel="noopener">Open signed PDF</a>`:""}</p>`:`<p style="color:var(--muted)">Not signed${/imported/i.test(b.notes)?" here (signed in BoothBook if it was a past booking)":""}.</p>`}</div>
@@ -360,19 +368,19 @@ function openBooking(id,keep,focus){
       <button type="button" class="btn ghost" data-send="details">Confirm details</button>
       <button type="button" class="btn ghost" data-send="payment">Payment reminder</button></div></div>
     <div class="sec"><h3>Notes</h3>
-      <div class="f"><label style="width:100%">Admin notes (only you)<textarea id="nAdmin">${esc(b.adminNotes)}</textarea></label>
-      <label style="width:100%">Team notes (included in staff emails)<textarea id="nTeam">${esc(b.teamNotes)}</textarea></label>
+      <div class="f"><label style="width:100%">Admin notes (only you)<textarea id="nAdmin" name="admin-notes">${esc(b.adminNotes)}</textarea></label>
+      <label style="width:100%">Team notes (included in staff emails)<textarea id="nTeam" name="team-notes">${esc(b.teamNotes)}</textarea></label>
       <button type="button" class="btn" id="nSave">Save notes</button></div></div>
     <div class="sec" id="msgs"><h3>Messages</h3>
       <div class="thread">${thread.map(x=>`<div class="bubble ${x.from==="Client"?"":"me"}"><small>${esc(x.from==="Client"?b.fn:"You")} · ${esc(x.at)}</small>${esc(x.text)}</div>`).join("")||`<div class="empty">No messages.</div>`}</div>
-      <div class="f"><label style="width:100%">Reply (emails ${esc(b.email)} and shows in their portal)<textarea id="rText" maxlength="2000"></textarea></label>
+      <div class="f"><label style="width:100%">Reply (emails ${esc(b.email)} and shows in their portal)<textarea id="rText" name="reply" maxlength="2000"></textarea></label>
       <button type="button" class="btn" id="rSend">Send reply</button></div></div>`;
   $("drawer").classList.remove("hidden"); $("scrim").classList.remove("hidden"); document.body.style.overflow="hidden";
   $("drawer").scrollTop=scroll;
   if(focus==="msgs") $("msgs").scrollIntoView(); else if(!keep) $("dClose").focus();
   $("dClose").onclick=closeDrawer;
   const busy=async(btn,fn)=>{ btn.disabled=true; try{ await fn(); }catch(e){ fail(e); } btn.disabled=false; };
-  $("dStatus").onchange=e=>busy(e.target,async()=>{ setData(await run("adminUpdate",id,{status:e.target.value})); toast("Status: "+e.target.value); });
+  $("dStatus").onchange=e=>{ if(e.target.value==="Cancelled"&&!confirm(`Cancel booking #${id}? The date ${b.date} will open up for new bookings.`)){ e.target.value=b.status; return; } busy(e.target,async()=>{ setData(await run("adminUpdate",id,{status:e.target.value})); toast("Status: "+e.target.value); }); };
   document.querySelectorAll(".dStaff").forEach(c=>c.onchange=()=>busy(c,async()=>{
     const v=[...document.querySelectorAll(".dStaff:checked")].map(x=>x.value).join(", ");
     setData(await run("adminUpdate",id,{staff:v})); toast(v?"Staff: "+v:"Staff cleared"); }));
@@ -385,7 +393,14 @@ function openBooking(id,keep,focus){
     if(!confirm(`Email "${btn.textContent}" to ${b.email}?`)) return;
     busy(btn,async()=>{ const r=await run("adminResend",id,btn.dataset.send); toast("Sent to "+r.sentTo); }); });
 }
-function closeDrawer(){ cur=null; $("drawer").classList.add("hidden"); $("scrim").classList.add("hidden"); document.body.style.overflow=""; }
+function closeDrawer(){ cur=null; $("drawer").classList.add("hidden"); $("scrim").classList.add("hidden"); document.body.style.overflow="";
+  document.querySelector("header").inert=false; document.querySelector("main").inert=false; saveState();
+  if(opener&&document.contains(opener)) opener.focus(); opener=null; }
+
+/* ---------- keep tab and open booking in the URL (survives reload) ---------- */
+const H=window.google&&google.script&&google.script.history;
+function saveState(){ if(!H) return; const params={admin:"",v:view}; if(cur) params.b=String(cur); try{ H.replace({v:view,b:cur},params); }catch(e){} }
+function restore(loc){ const p=(loc&&loc.parameter)||{}; if(p.v&&$("v-"+p.v)) view=p.v; draw(); if(p.b&&byId(p.b)) openBooking(Number(p.b)); }
 $("scrim").onclick=closeDrawer;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&cur) closeDrawer(); });
 
