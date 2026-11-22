@@ -274,6 +274,8 @@ p { margin: 0 0 1em; }
 .contact-wrap { display: grid; grid-template-columns: 5fr 7fr; gap: clamp(32px, 6vw, 96px); padding-bottom: var(--gap-section); }
 .contact-aside p { color: var(--muted); }
 .contact-aside a:not(.btn) { color: var(--ink); }
+.contact-wrap > * { min-width: 0; }
+.contact-aside a:not(.btn) { overflow-wrap: anywhere; }
 .contact-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 24px; }
 .contact-form label { font-weight: 600; font-size: 17px; display: grid; gap: 8px; }
 .contact-form .full { grid-column: 1 / -1; }
