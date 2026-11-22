@@ -78,3 +78,14 @@ BoothBook is retired. Bookings, payments and the owner dashboard all run on our 
 ## Local preview
 
     cd public && python3 -m http.server 8000
+
+## Speed
+
+- Montserrat is self-hosted in `public/assets/fonts/` (no Google Fonts request) and preloaded on every page.
+- Gallery photos have three sizes: `-sm` (480px), `-thumb` (800px) and full. Pages use `srcset` so phones get the small ones.
+- After changing `style.css` or `main.js`, bump the `?v=` on their links so browsers fetch the new file.
+
+## Search engines
+
+Every push to `main` pings IndexNow (Bing, Yandex and others) with the URLs in `public/sitemap.xml`.
+The key file is `public/c4524209ecb8611b8f0f23fa8546fa1d.txt`; keep it deployed. Add new pages to the sitemap.
