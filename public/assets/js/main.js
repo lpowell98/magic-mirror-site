@@ -110,7 +110,11 @@ if (wall && window.WALL_POOL && !reduceMotion) {
     if (fig.classList.contains('busy')) return;
     const cur = fig.querySelector('img.cur');
     const next = document.createElement('img');
-    next.className = 'next'; next.alt = ''; next.src = pool.shift();
+    const src = pool.shift();
+    next.className = 'next'; next.alt = '';
+    // Phones load the small version, like the first wall images do
+    if (cur.sizes) { next.sizes = cur.sizes; next.srcset = `${src.replace('-thumb.webp', '-sm.webp')} 480w, ${src} 800w`; }
+    next.src = src;
     next.onload = () => {
       fig.classList.add('busy'); fig.append(next);
       requestAnimationFrame(() => fig.classList.add('swap'));
@@ -153,13 +157,15 @@ if (pickData) {
     i = (i + list.length) % list.length;
     const item = list[i];
     fig.classList.add('fading');
+    // Phones get the 800px version of the print, large screens the full one
+    const setSrc = (el) => { el.sizes = im.sizes; el.srcset = `${item.src.replace(/\.webp$/, '-thumb.webp')} 800w, ${item.src} 1600w`; el.src = item.src; };
     const pre = new Image();
     pre.onload = pre.onerror = () => {
-      im.src = item.src; im.alt = 'Photo booth print from ' + item.cap;
+      setSrc(im); im.alt = 'Photo booth print from ' + item.cap;
       im.width = pre.naturalWidth || im.width; im.height = pre.naturalHeight || im.height;
       requestAnimationFrame(() => fig.classList.remove('fading'));
     };
-    pre.src = item.src;
+    setSrc(pre);
     typeEl.textContent = type; capEl.textContent = item.cap;
     countEl.textContent = `${i + 1} / ${list.length}`;
     document.querySelector('.pk-prev').hidden = document.querySelector('.pk-next').hidden = list.length < 2;

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SRC, OUT = ROOT / "src-images", ROOT / "public" / "images"
 
 # folder -> (max width of the full image, max width of the thumbnail or None)
+# Gallery photos also get a 480px "-sm" version, which phones load for the grid and the home page wall.
 SIZES = {
     "gallery": (1600, 800),
     "templates": (1200, 600),
@@ -25,6 +26,7 @@ SIZES = {
     "magic-mirror/icons": (184, None),
     "brand": (640, None),            # logo is shown up to 320px wide
 }
+SMALL_W = 480
 KEEP_AS_IS = {"favicon.ico", "og-image.png", "apple-touch-icon.png"}  # social sites and old browsers need these formats
 
 
@@ -52,6 +54,10 @@ def main():
         outs = [(OUT / rel.with_suffix(".webp"), full_w)]
         if thumb_w:
             outs.append((OUT / rel.with_name(rel.stem + "-thumb.webp"), thumb_w))
+        if str(rel.parent) == "gallery":
+            outs.append((OUT / rel.with_name(rel.stem + "-sm.webp"), SMALL_W))
+        if src.name == "logo.png":
+            outs.append((OUT / rel.with_name("logo-sm.webp"), 240))  # header logo, shown 116px wide
         for dest, w in outs:
             save(im, dest, w)
             after += dest.stat().st_size

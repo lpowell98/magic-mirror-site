@@ -20,9 +20,9 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=picker2">
+<link rel="preload" href="/assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="/assets/css/style.css?v=speed1">
 <style>
 /* Booking flow, styled with the site's tokens (assets/css/style.css) */
 .bk{padding-bottom:var(--gap-section)}
@@ -257,7 +257,7 @@
 <a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
   <div class="wrap bar">
-    <a class="logo" href="/"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services, home" width="116" height="71"></a>
+    <a class="logo" href="/"><img src="/images/brand/logo-sm.webp" alt="Magic Mirror Rental Services, home" width="116" height="71"></a>
     <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
     <nav class="main-nav" id="site-nav" aria-label="Main">
       <ul>
@@ -519,7 +519,7 @@
   </div>
   <div class="wrap legal"><p>© <span data-year>2026</span> Magic Mirror Rental Services. Established 2019. <a href="/privacy/">Privacy</a></p><p>Photo booth rentals for weddings, birthdays, graduations, campus and corporate events.</p></div>
 </footer>
-<script src="/assets/js/main.js?v=review20" defer></script>
+<script src="/assets/js/main.js?v=speed1" defer></script>
 <script>
 /* ===== Back end: paste your Apps Script web app URL here (leave blank for offline demo mode) ===== */
 const API_URL = "https://script.google.com/macros/s/AKfycbxhDac5Mxk2Q7a5mGAyA_N_vj-bxNKTG33sIv7THBLbF6DkzW5L6Hf4viE2ZVU8AI0/exec";

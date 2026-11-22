@@ -35,3 +35,15 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@4 pages deploy public --project-name magic-mirror-site --branch "${{ github.ref_name }}"
+
+      # Tell Bing (and other IndexNow search engines) the live pages changed.
+      # The key file public/c4524209ecb8611b8f0f23fa8546fa1d.txt proves we own the site. Never fails the deploy.
+      - name: Notify search engines (IndexNow)
+        if: github.ref_name == 'main'
+        continue-on-error: true
+        run: |
+          sleep 30
+          URLS=$(grep -o '<loc>[^<]*' public/sitemap.xml | sed 's/<loc>//' | jq -R . | jq -sc .)
+          curl -sS -w '\nIndexNow HTTP %{http_code}\n' -X POST https://api.indexnow.org/indexnow \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            -d "{\"host\":\"www.magicmirrorrentalservices.com\",\"key\":\"c4524209ecb8611b8f0f23fa8546fa1d\",\"keyLocation\":\"https://www.magicmirrorrentalservices.com/c4524209ecb8611b8f0f23fa8546fa1d.txt\",\"urlList\":$URLS}"
