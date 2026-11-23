@@ -21,3 +21,5 @@ Events inside the City of Boston have no travel fee; events outside Boston inclu
 - [Event Gallery](https://www.magicmirrorrentalservices.com/gallery/): photos from past events
 - [Book Now](https://www.magicmirrorrentalservices.com/booking/): check availability and book online
 - [Contact](https://www.magicmirrorrentalservices.com/contact-us/): inquiries@magicmirrorrentalservices.com
+- [Booking terms](https://www.magicmirrorrentalservices.com/terms/): deposit, payments, date changes, cancellations and refunds
+- [Privacy](https://www.magicmirrorrentalservices.com/privacy/): what we collect and who we share it with
