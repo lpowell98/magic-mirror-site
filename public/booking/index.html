@@ -278,7 +278,7 @@
   </div>
 </header>
 <main id="main">
-<header class="page-head wrap"><h1 id="pageTitle">Book now</h1><p id="pageLede">Pick your date, package and extras below. A $250 deposit holds your date. Already booked? Look up your booking with your Booking ID and last name.</p></header>
+<header class="page-head wrap"><h1 id="pageTitle">Book now</h1><p id="pageLede">Choose your date, package and extras below. A $250 deposit reserves your date. Already booked? Find your booking with your Booking ID and last name.</p></header>
 <div class="bk wrap">
 <!-- ================= HOME ================= -->
   <section id="v-home">
@@ -305,14 +305,14 @@
       </div>
       <div>
         <h2>Manage booking</h2>
-        <p>To view your booking details, please enter your Booking ID Number and the surname of the person who submitted the booking form.</p>
+        <p>Enter your Booking ID and the last name used on the booking to view your details.</p>
         <div class="field">
-          <label for="mId">Booking ID number</label>
+          <label for="mId">Booking ID</label>
           <input type="text" id="mId" name="booking-id" inputmode="numeric" autocomplete="off">
           <label for="mSur">Last name</label>
           <input type="text" id="mSur" name="last-name" autocomplete="family-name">
         </div>
-        <button class="btn" id="searchBtn" style="margin-top:24px">Search</button>
+        <button class="btn" id="searchBtn" style="margin-top:24px">Find my booking</button>
         <div class="msg" id="manageMsg" role="status" aria-live="polite"></div>
       </div>
     </div>
@@ -320,34 +320,34 @@
 
   <!-- ================= BOOKING FORM ================= -->
   <section id="v-book" class="hidden">
-    <div class="banner">Success: We have the following services available for your date.</div>
+    <div class="banner">Good news: your date is available.</div>
     <div class="datebar">You are placing a booking for the <b id="bDate"></b> <button type="button" class="linkbtn" id="changeDate">Change date</button></div>
 
     <h2 class="section-title">Choose a service <span class="req">*</span></h2>
     <div class="service" id="svc"><img src="/booking/img/booth.png" alt="Mirror Me Booth" width="280" height="280"><div class="tick" id="svcTick" aria-hidden="true">&#10003;</div><div class="cap">Mirror Me Booth</div></div>
 
-    <div class="warnbar" id="pkgWarn" role="status" aria-live="polite">You have selected 1 services and 0 Packages. You must choose one package for every selected service.</div>
+    <div class="warnbar" id="pkgWarn" role="status" aria-live="polite">You have selected 1 service and 0 packages. Please choose a package to continue.</div>
     <h2 class="section-title">Choose a package <span class="req">*</span></h2>
     <div class="pkgs" id="pkgs"></div>
 
     <h2 class="section-title">Choose extras</h2>
     <div class="xgroup hidden" id="printGroup">
-      <h3>Design print-out <span class="req">*</span></h3>
-      <p>Choose your design print-out preference:</p>
+      <h3>Print design <span class="req">*</span></h3>
+      <p>Choose a print design for your event.</p>
       <div class="xrow" id="printRow"></div>
-      <div class="err" id="printErr" role="status" aria-live="polite">Please choose a print-out to continue.</div>
+      <div class="err" id="printErr" role="status" aria-live="polite">Please choose a print design to continue.</div>
     </div>
     <div class="xgroup">
-      <h3>Additional rental time</h3>
-      <p>Not sure you've booked enough time for all of those selfies? Add additional time below:</p>
+      <h3>Additional time</h3>
+      <p>Extend your rental if your event runs longer than your package hours.</p>
       <div class="xrow" id="timeRow"></div>
     </div>
 
     <div class="fs" style="margin-top:20px">
-      <h3 class="kicker">Account details</h3>
+      <h3 class="kicker">Contact details</h3>
       <div class="cols2">
         <div><label for="email">Email <span class="req">*</span></label><input type="email" id="email" name="email" autocomplete="email" spellcheck="false" required data-req>
-          <div class="help">Please enter your email address and check spelling. If you enter the wrong email address here, you will not receive your booking confirmation.</div></div>
+          <div class="help">Your confirmation, invoice and contract are sent to this address, so please check it carefully.</div></div>
         <div><label for="phone">Mobile phone number <span class="req">*</span></label><input type="tel" id="phone" name="tel" autocomplete="tel" required data-req>
           <div class="help">We use this number to reach you about your booking.</div></div>
       </div>
@@ -355,33 +355,33 @@
 
     <div class="cols3">
       <div class="fs">
-        <h3 class="kicker">Tell us about your event</h3>
+        <h3 class="kicker">Event details</h3>
         <label for="evName">Event name <span class="req">*</span></label><input type="text" id="evName" name="event-name" autocomplete="off" required data-req>
-        <div class="help">e.g. Adam and Eve's wedding</div>
-        <p class="q">What time would you like us to be there?</p>
-        <div class="help" style="margin-top:0">If you are booking multiple services, please specify the time information in the additional notes.</div>
+        <div class="help">e.g. The Smith–Johnson wedding</div>
+        <p class="q">Service hours</p>
+        <div class="help" style="margin-top:0">Setup takes place before your start time and is not counted toward your hours.</div>
         <div class="times">
           <div><label for="tStart">Start time <span class="req">*</span></label><select id="tStart" name="start-time" required data-req></select></div>
           <div><label for="tEnd">End time</label><select id="tEnd" name="end-time"></select></div>
         </div>
       </div>
       <div class="fs">
-        <h3 class="kicker">Tell us about your venue</h3>
+        <h3 class="kicker">Venue</h3>
         <label for="vName">Venue name <span class="req">*</span></label><input type="text" id="vName" name="venue-name" placeholder="e.g. The Langham, Boston…" autocomplete="off" required data-req>
         <label for="vAddr">Venue address <span class="req">*</span></label><input type="text" id="vAddr" name="venue-address" autocomplete="off" required data-req>
-        <label for="vZip">Venue postcode <span class="req">*</span></label><input type="text" id="vZip" name="venue-postcode" inputmode="numeric" autocomplete="off" required data-req>
-        <div class="help">Magic Mirror Rental Services offers free travel for up to 20 miles, and $.85 for each additional mile.</div>
+        <label for="vZip">Venue ZIP code <span class="req">*</span></label><input type="text" id="vZip" name="venue-postcode" inputmode="numeric" autocomplete="off" required data-req>
+        <div class="help">The first 20 round-trip miles are free. Each additional mile is $0.85.</div>
         <label for="vMiles">Round-trip miles (if known)</label><input type="text" id="vMiles" name="miles" inputmode="decimal" autocomplete="off" placeholder="e.g. 30…">
         <label for="vFee">Travel fee</label><div class="fee">$ <input type="text" id="vFee" value="0.00" readonly></div>
       </div>
       <div class="fs">
-        <h3 class="kicker">Tell us about you</h3>
+        <h3 class="kicker">Billing details</h3>
         <div class="cols2" style="gap:8px">
           <div><label for="fn">First name <span class="req">*</span></label><input type="text" id="fn" name="given-name" autocomplete="given-name" required data-req></div>
           <div><label for="ln">Last name <span class="req">*</span></label><input type="text" id="ln" name="family-name" autocomplete="family-name" required data-req></div>
         </div>
         <label for="street">Street address</label><input type="text" id="street" name="street-address" autocomplete="street-address">
-        <label for="zip">Postcode</label><input type="text" id="zip" name="postal-code" inputmode="numeric" autocomplete="postal-code">
+        <label for="zip">ZIP code</label><input type="text" id="zip" name="postal-code" inputmode="numeric" autocomplete="postal-code">
       </div>
     </div>
 
@@ -389,22 +389,22 @@
 
     <div class="fs">
       <h3 class="kicker">Additional details</h3>
-      <label for="ref">Service referral</label><input type="text" id="ref" name="referral" autocomplete="off">
-      <div class="help">Were you referred to our service by a specific individual? If so, please list their name and phone number in the field above. (Ex. Jane Doe - 1234567890)</div>
+      <label for="ref">Referred by</label><input type="text" id="ref" name="referral" autocomplete="off">
+      <div class="help">If someone referred you, enter their name and phone number so we can thank them (e.g. Jane Doe, 617-555-0123).</div>
       <h3 class="kicker" style="margin-top:26px">Event flyer or invitation</h3>
-      <div style="font-size:13px">Please attach the flyer or invitation for your event! For bigger files, please email us at inquiries@magicmirrorrentalservices.com</div>
-      <label for="flyer" style="font-weight:400">Add a new file</label>
+      <div style="font-size:13px">Optional. Attach your flyer or invitation so we can match your print to your theme. For larger files, email inquiries@magicmirrorrentalservices.com.</div>
+      <label for="flyer" style="font-weight:400">Upload a file</label>
       <input type="file" id="flyer" name="flyer" accept=".jpg,.jpeg,.png,.pdf,.psd">
       <div class="help">Files must be less than <b>2&nbsp;MB</b>.<br>Allowed file types: <b>jpg jpeg png pdf psd</b>.</div>
     </div>
 
-    <label for="coupon" style="margin-top:20px">Add a coupon</label>
+    <label for="coupon" style="margin-top:20px">Coupon code</label>
     <input type="text" id="coupon" name="coupon" autocomplete="off" spellcheck="false" style="max-width:300px">
-    <div class="help">If you have a coupon, add it here to validate it.</div>
+    <div class="help">Enter your code to apply it to your total.</div>
 
     <fieldset class="payfs"><legend>Payment options</legend>
     <div class="pay" id="pay"></div></fieldset>
-    <div class="help" style="margin:16px 0">Please choose whether to pay the deposit or the full balance now in order to secure your booking. Please check your details before continuing to the next step.</div>
+    <div class="help" style="margin:16px 0">Pay the deposit or the full balance to secure your date. Please review your details before continuing.</div>
 
     <div id="sumWrap" class="hidden">
       <table class="summary"><thead><tr><th>Item</th><th>Subtotal</th></tr></thead><tbody id="sumBody"></tbody></table>
@@ -416,7 +416,7 @@
 
   <!-- ================= PORTAL ================= -->
   <section id="v-portal" class="hidden">
-    <div class="banner" id="thanks">Thank you for booking. Please find your details below.</div>
+    <div class="banner" id="thanks">Thank you for your booking. Your details are below.</div>
     <div class="tabs" id="tabs" role="tablist" aria-label="Your booking"></div>
     <div class="nextstep hidden" id="nextStep"><span id="nextText"></span><button type="button" class="btn" id="nextBtn"></button></div>
 
@@ -432,7 +432,7 @@
       </div>
       <div class="card" style="margin-top:20px;text-align:center">
         <h3>Make a payment</h3>
-        <div>Enter the amount you would like to pay off your booking below:</div>
+        <div>Enter the amount you would like to pay toward your balance.</div>
         <div class="paytiles" id="payTiles"></div>
         <div>$ <label for="payAmt" class="visually-hidden">Payment amount</label><input type="text" id="payAmt" name="amount" inputmode="decimal" autocomplete="off" style="width:120px"></div>
         <button class="btn" style="margin-top:16px" id="payBtn">Make payment</button>
@@ -449,7 +449,7 @@
       <div class="doc" id="contractDoc" tabindex="0" aria-label="Contract text">Loading contract…</div>
       <div class="signed hidden" id="signedNote" role="status"></div>
     <form class="signbox hidden" id="signForm" novalidate>
-      <div class="chk"><input type="checkbox" id="modelRelease" name="model-release"><label for="modelRelease"><b>Model release (section 9):</b> I confirm.</label></div>
+      <div class="chk"><input type="checkbox" id="modelRelease" name="model-release"><label for="modelRelease"><b>Model release (section 9):</b> I agree to the model release in section 9 of the contract.</label></div>
       <p class="q">Signature <span class="req">*</span></p>
       <div class="sigmodes" role="group" aria-label="Signature method">
         <button type="button" id="modeDraw" aria-pressed="true">Draw</button>
@@ -537,13 +537,13 @@ const CFG = {
     {id:"gold",name:"Gold Package",hours:5,price:1100,lines:["Five hours of runtime","Unlimited participation & printouts per session","High-quality 4x6 printouts","Text and email sharing","Professional DSLR camera and lighting","2 friendly on-site event attendants","Creative props and accessories","Private online photo gallery"],extras:["3 custom overlay designs","Professional photo booth backdrop","USB drive of all event photos"]}
   ],
   prints: [
-    {id:"tpl",name:"Template Design Print-out",desc:"Choose from over 100 FREE professionally developed templates!",price:0,img:"/booking/img/print-template.png"},
-    {id:"cus",name:"Custom Design Print-out",desc:"We'll design a custom template print-out for your event!",price:75,img:"/booking/img/print-custom.png"}
+    {id:"tpl",name:"Template Design Print-out",desc:"Choose from over 100 professionally designed templates at no extra cost.",price:0,img:"/booking/img/print-template.png"},
+    {id:"cus",name:"Custom Design Print-out",desc:"We design a custom print layout for your event.",price:75,img:"/booking/img/print-custom.png"}
   ],
   times: [
-    {id:"t30",name:"Additional Time (30 minutes)",desc:"Add an additional half-hour of time to your rental period.",price:75,img:"/booking/img/time-30.png"},
-    {id:"t60",name:"Additional Time (1 hour)",desc:"Add an additional hour of time to your rental period.",price:100,img:"/booking/img/time-60.png"},
-    {id:"t120",name:"Additional Time (2 hour)",desc:"Add an additional two hours of time to your rental period.",price:150,img:"/booking/img/time-120.png"}
+    {id:"t30",name:"Additional Time (30 minutes)",desc:"Extend your rental by 30 minutes.",price:75,img:"/booking/img/time-30.png"},
+    {id:"t60",name:"Additional Time (1 hour)",desc:"Extend your rental by 1 hour.",price:100,img:"/booking/img/time-60.png"},
+    {id:"t120",name:"Additional Time (2 hour)",desc:"Extend your rental by 2 hours.",price:150,img:"/booking/img/time-120.png"}
   ]
 };
 
@@ -560,7 +560,7 @@ const store = {
 };
 let memBookings = store.get();
 let takenDates = new Set();
-const HEAD={ home:["Book now","Pick your date, package and extras below. A $250 deposit holds your date. Already booked? Look up your booking with your Booking ID and last name."],
+const HEAD={ home:["Book now","Choose your date, package and extras below. A $250 deposit reserves your date. Already booked? Find your booking with your Booking ID and last name."],
   book:["Book now","Choose your package and extras, then tell us about your event. You'll see the full price before you book."],
   portal:["Your booking","Your invoice, contract, print template and messages, all in one place."] };
 function show(view){ ["home","book","portal"].forEach(v=>$("v-"+v).classList.toggle("hidden",v!==view));
