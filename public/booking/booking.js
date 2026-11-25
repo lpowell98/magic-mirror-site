@@ -448,8 +448,7 @@ function drawTplPreview(){
   $("tplSlots").innerHTML=(native?"":box([x0,y0,x1,y1],"tplmat"))+tplSlots(t,n).map((r,i)=>box(r,"tplslot",CAM+"<b>Photo "+(i+1)+"</b>")).join("");
   $("tplVers").querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-checked",+c.dataset.n===n));
   $("tplVerNote").textContent=native?"This is the design's original layout.":"Mock-up: we'll adjust the artwork for "+vLabel(n)+" and show it on your proof.";
-  const chosen=S.tplPick===t.name&&S.tplN===n;
-  $("tplViewPick").textContent=chosen?"Done, use "+vLabel(n):"Choose this design, "+vLabel(n);
+  $("tplViewPick").textContent="Choose this design";
 }
 function openTplView(name){
   const t=tplByName(name); if(!t) return; S.tplViewing=name;
