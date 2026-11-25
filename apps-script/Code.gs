@@ -183,8 +183,10 @@ function portalCode_(b) {
   const code = code6_();
   cache.put('pcode:' + id, JSON.stringify({ h: sha_(code), tries: 0 }), 600);
   cache.put('pcodeSent:' + id, '1', 60);
-  sendMail_({ to: f.r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, subject: `Your booking code: ${code}`,
-    htmlBody: `<p>Hi ${esc_(f.r[COL.FN - 1])},</p><p>Your code to open booking #${esc_(id)} is:</p><p style="font-size:32px;font-weight:800;letter-spacing:4px;margin:12px 0">${code}</p><p>It expires in 10 minutes. If you didn't ask for it, you can ignore this email.</p>${portalLink_(f.r, 'Open your booking')}` });
+  sendMail_({ to: f.r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, subject: `Your booking code: ${code}`, preheader: 'It expires in 10 minutes.',
+    htmlBody: eHead_(`Booking #${esc_(id)}`, `Hi ${esc_(f.r[COL.FN - 1])}, here's your code.`, 'Enter it on our website to open your booking.') +
+      eCode_(code) + eSmall_("It expires in 10 minutes. If you didn't ask for it, you can ignore this email.") +
+      eSmall_('Or skip the code and use this button:') + portalLink_(f.r, 'Open your booking') });
   return done;
 }
 
@@ -306,38 +308,137 @@ function createBooking_(b) {
 /* ---------------- Branding (emails + contract PDF) ---------------- */
 
 const BRAND = { gold: '#fba924', purple: '#6e266c', purpleDeep: '#4f1a4d', ink: '#17121b', muted: '#4a4150', paper: '#eeece9', black: '#000000',
-  site: 'https://www.magicmirrorrentalservices.com/', instagram: 'https://www.instagram.com/magicmirrorrentalservices/' };
+  site: 'https://www.magicmirrorrentalservices.com/', instagram: 'https://www.instagram.com/magicmirrorrentalservices/',
+  dashboard: 'https://www.magicmirrorrentalservices.com/app/' };
 // Magic Mirror logo, 400×246 PNG, embedded so emails and PDFs never depend on a hosted image.
 const LOGO_PNG_B64 = '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';
 function logoBlob_() { return Utilities.newBlob(Utilities.base64Decode(LOGO_PNG_B64), 'image/png', 'magic-mirror-logo.png'); }
 
-// Wraps an email body in the Magic Mirror letterhead: black band with the logo, white card, purple footer.
-function emailHtml_(inner) {
-  const F = "font-family:Montserrat,'Helvetica Neue',Arial,sans-serif";
-  return `<div style="margin:0;padding:24px 12px;background:${BRAND.paper};${F}">
+/* ---------------- Email design ----------------
+   Every email is built from the small pieces below, so they all share one look:
+   black letterhead with a gold rule, a white card, and a black footer with the tagline.
+   Styles are inline because most mail apps (Gmail, Outlook) ignore <style> blocks. */
+const EF = "font-family:Montserrat,'Helvetica Neue',Helvetica,Arial,sans-serif";
+const EM = { ink: '#17121b', muted: '#5c5262', line: '#e7e1ea', tint: '#f8f5f9', night: '#0e0b11', lilac: '#c4bacb' };
+
+// Wraps an email body in the letterhead. pre is the one-line preview inboxes show next to the subject.
+function emailHtml_(inner, pre) {
+  const hidden = pre ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;mso-hide:all">${esc_(pre)}${'&#8199;&#65279;&#847; '.repeat(40)}</div>` : '';
+  return `${hidden}<div style="margin:0;padding:24px 6px;background:${BRAND.paper};${EF}">
   <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px;margin:0 auto;border-collapse:collapse">
-    <tr><td style="background:${BRAND.black};padding:22px 28px">
-      <a href="${BRAND.site}"><img src="cid:mmrslogo" width="150" height="92" alt="Magic Mirror Rental Services" style="display:block;border:0"></a></td></tr>
-    <tr><td style="background:#ffffff;padding:30px 28px;color:${BRAND.ink};font-size:16px;line-height:1.55;${F}">${inner}</td></tr>
-    <tr><td style="background:${BRAND.purple};padding:20px 28px;color:#ffffff;font-size:14px;line-height:1.6;${F}">
-      <b style="color:${BRAND.gold}">Providing the magic for your next event.</b><br>
-      <a href="mailto:${CONFIG.REPLY_TO}" style="color:#ffffff">${CONFIG.REPLY_TO}</a> ·
-      <a href="${BRAND.site}" style="color:#ffffff">magicmirrorrentalservices.com</a> ·
-      <a href="${BRAND.instagram}" style="color:#ffffff">Instagram</a><br>
-      <span style="color:#e6d3e5">Serving Greater Boston since 2019.</span></td></tr>
+    <tr><td align="center" style="background:${EM.night};padding:26px 32px 22px;border-bottom:3px solid ${BRAND.gold}">
+      <a href="${BRAND.site}"><img src="cid:mmrslogo" width="156" height="96" alt="Magic Mirror Rental Services" style="display:block;border:0;margin:0 auto"></a></td></tr>
+    <tr><td style="background:#ffffff;padding:32px 28px 28px;color:${EM.ink};font-size:16px;line-height:1.6;${EF}">${inner}</td></tr>
+    <tr><td align="center" style="background:${EM.night};padding:26px 32px;color:${EM.lilac};font-size:13px;line-height:1.7;${EF}">
+      <div style="color:${BRAND.gold};font-weight:800;font-size:14px;margin-bottom:6px">Providing the magic for your next event</div>
+      <a href="mailto:${CONFIG.REPLY_TO}" style="color:#ffffff;text-decoration:none">${CONFIG.REPLY_TO}</a><br>
+      <a href="${BRAND.site}" style="color:${EM.lilac};text-decoration:underline">Website</a> &nbsp;·&nbsp;
+      <a href="${BRAND.instagram}" style="color:${EM.lilac};text-decoration:underline">Instagram</a> &nbsp;·&nbsp;
+      <span>Serving Greater Boston since 2019</span></td></tr>
   </table></div>`;
+}
+
+// Small purple label, big headline, and an optional lead paragraph.
+function eHead_(label, title, lead) {
+  return (label ? `<p style="margin:0 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;color:${BRAND.purple}">${label}</p>` : '') +
+    `<h1 style="margin:0 0 14px;font-size:28px;line-height:1.2;font-weight:800;color:${EM.ink};${EF}">${title}</h1>` +
+    (lead ? `<p style="margin:0 0 24px;color:${EM.muted}">${lead}</p>` : '');
+}
+const eP_ = html => `<p style="margin:0 0 16px">${html}</p>`;
+const eSmall_ = html => `<p style="margin:0 0 12px;font-size:13px;line-height:1.6;color:${EM.muted}">${html}</p>`;
+const eSub_ = t => `<p style="margin:28px 0 10px;font-size:13px;font-weight:700;letter-spacing:.04em;color:${BRAND.purple}">${t}</p>`;
+const eSign_ = () => `<p style="margin:28px 0 0">See you soon,<br><b>The Magic Mirror team</b></p>`;
+
+// A tinted panel of label/value rows. rows: [[label, valueHtml], ...]; empty values are skipped.
+function eFacts_(rows) {
+  const tr = rows.filter(x => x && x[1] !== '' && x[1] != null).map((x, i) =>
+    `<tr><td valign="top" style="padding:${i ? '10px' : '0'} 16px 0 0;width:84px;font-size:13px;color:${EM.muted};white-space:nowrap">${x[0]}</td>` +
+    `<td valign="top" style="padding:${i ? '10px' : '0'} 0 0;font-size:15px;font-weight:600;color:${EM.ink}">${x[1]}</td></tr>`).join('');
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 24px">
+    <tr><td style="background:${EM.tint};border-left:4px solid ${BRAND.purple};padding:16px 18px">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;${EF}">${tr}</table></td></tr></table>`;
+}
+
+// The usual facts for a booking row.
+function eEventFacts_(r, extra) {
+  const t = [fmtTime_(r[COL.START - 1]), fmtTime_(r[COL.END - 1])].filter(String).join(' – ');
+  return eFacts_([['Event', esc_(r[COL.EVNAME - 1])], ['Date', esc_(longDate_(r[COL.DATE - 1]))], ['Time', esc_(t)],
+    ['Venue', esc_([r[COL.VNAME - 1], r[COL.VADDR - 1]].filter(String).join(', '))], ['Booking', '#' + esc_(r[0])]].concat(extra || []));
+}
+
+// A big amount on a black panel, e.g. a balance due.
+function eAmount_(label, n, note) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 24px">
+    <tr><td align="center" style="background:${EM.night};padding:24px 20px;${EF}">
+      <div style="font-size:13px;font-weight:700;letter-spacing:.04em;color:${EM.lilac}">${label}</div>
+      <div style="font-size:40px;line-height:1.15;font-weight:800;color:${BRAND.gold};margin:6px 0 2px">${money_(n)}</div>
+      ${note ? `<div style="font-size:14px;color:#ffffff">${note}</div>` : ''}</td></tr></table>`;
+}
+
+// A one-time code, spaced out and easy to read.
+function eCode_(code) {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:4px 0 24px">
+    <tr><td style="border:2px solid ${BRAND.gold};background:#fffaf0;padding:14px 26px;font-size:36px;font-weight:800;letter-spacing:10px;color:${EM.ink};${EF}">${esc_(code)}</td></tr></table>`;
+}
+
+// Short coloured tag, e.g. "Unconfirmed".
+function eTag_(text, bad) {
+  return `<span style="display:inline-block;padding:3px 10px;font-size:12px;font-weight:700;background:${bad ? '#fbe9e7' : '#e8f5ec'};color:${bad ? '#a1281b' : '#1d6b3a'}">${text}</span>`;
+}
+
+// Line items with a total.
+function itemsTable_(p) {
+  const td = 'padding:10px 0;border-bottom:1px solid ' + EM.line;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 24px;font-size:15px;${EF}">` +
+    p.items.map(i => `<tr><td style="${td}">${esc_(i[0])}</td><td align="right" style="${td};white-space:nowrap">${money_(i[1])}</td></tr>`).join('') +
+    `<tr><td style="padding:12px 0 0;font-weight:800">Total</td><td align="right" style="padding:12px 0 0;font-weight:800;font-size:18px">${money_(p.total)}</td></tr></table>`;
+}
+
+// Where the client is in the booking process, as a checklist. Shows what is done and what comes next.
+function eSteps_(r) {
+  const paid = num_(r[COL.PAID - 1]), owed = num_(r[COL.TOTAL - 1]) - paid;
+  // [done?, label when done, label while still to do]
+  const steps = [[true, 'Booking request sent'], [paid >= CONFIG.DEPOSIT - 0.005 || owed <= 0.005, 'Reservation fee paid', 'Pay the reservation fee'],
+    [!!r[COL.SIGNED_AT - 1], 'Contract signed', 'Sign your contract'], [!!r[COL.TEMPLATE - 1], 'Print design chosen', 'Choose your print design'],
+    [!!r[COL.DETAILS_AT - 1], 'Event details confirmed', 'Confirm your event details'], [owed <= 0.005, 'Balance paid', 'Pay the balance (due 14 days before)']];
+  let next = false;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="border-collapse:collapse;margin:0 0 8px;${EF}">` +
+    steps.map((s, i) => {
+      const isNext = !s[0] && !next; if (isNext) next = true;
+      const dot = s[0] ? `<td width="24" height="24" align="center" style="background:${BRAND.gold};color:${EM.night};font-size:13px;font-weight:800;border-radius:12px">&#10003;</td>`
+        : `<td width="20" height="20" align="center" style="border:2px solid ${isNext ? BRAND.purple : EM.line};color:${isNext ? BRAND.purple : '#a59cab'};font-size:12px;font-weight:700;border-radius:12px">${i + 1}</td>`;
+      return `<tr><td width="36" style="padding:6px 0"><table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:separate"><tr>${dot}</tr></table></td>
+        <td style="padding:6px 0;font-size:15px;color:${s[0] ? EM.muted : EM.ink};font-weight:${isNext ? 700 : 500}">${s[0] ? s[1] : s[2]}${isNext ? ` <span style="color:${BRAND.purple};font-size:13px">&nbsp;Next step</span>` : ''}</td></tr>`;
+    }).join('') + '</table>';
+}
+
+// "Saturday, January 24, 2027" from a Date or an MM/dd/yyyy string.
+function longDate_(v) {
+  let d = v;
+  if (!(v instanceof Date)) {
+    const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(String(v || '').trim());
+    if (!m) return String(v || '');
+    d = new Date(Date.UTC(+m[3], +m[1] - 1, +m[2], 17));   // midday in Boston, so the day never shifts
+  }
+  return Utilities.formatDate(d, CONFIG.TZ, 'EEEE, MMMM d, yyyy');
+}
+// "$1,250.00"
+function money_(n) {
+  const s = Math.abs(Number(n) || 0).toFixed(2).split('.');
+  return (Number(n) < 0 ? '-$' : '$') + s[0].replace(/\B(?=(\d{3})+$)/g, ',') + '.' + s[1];
 }
 
 // A gold, square-cornered button, matching the site's buttons.
 function emailButton_(url, label) {
-  return `<p style="margin:24px 0"><a href="${url}" style="display:inline-block;background:${BRAND.gold};color:#0e0b11;font-weight:700;text-decoration:none;padding:14px 24px;font-family:Montserrat,'Helvetica Neue',Arial,sans-serif">${label}</a></p>`;
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:8px 0 24px"><tr>
+    <td style="background:${BRAND.gold}"><a href="${url}" style="display:inline-block;padding:15px 28px;color:${EM.night};font-weight:800;font-size:16px;text-decoration:none;${EF}">${label}</a></td></tr></table>`;
 }
 
 // Every email goes through here so they all carry the brand.
 // Sends from CONFIG.FROM when the account running the script is that address or has it as a Gmail
 // "Send mail as" alias; otherwise sends from the running account with replies going to CONFIG.FROM.
 function sendMail_(o) {
-  const html = emailHtml_(o.htmlBody || ''), images = Object.assign({ mmrslogo: logoBlob_() }, o.inlineImages || {});
+  const html = emailHtml_(o.htmlBody || '', o.preheader), images = Object.assign({ mmrslogo: logoBlob_() }, o.inlineImages || {});
   const opts = { htmlBody: html, name: o.name || CONFIG.BUSINESS, replyTo: o.replyTo || CONFIG.FROM, inlineImages: images };
   if (o.attachments) opts.attachments = o.attachments;
   try {
@@ -384,22 +485,20 @@ function bookingView_(r) {
 
 /* ---------------- Emails ---------------- */
 
-function itemsTable_(p) {
-  return '<table style="border-collapse:collapse;width:100%;font-size:14px">' +
-    p.items.map(i => `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${esc_(i[0])}</td><td style="text-align:right;border-bottom:1px solid #eee">$${i[1].toFixed(2)}</td></tr>`).join('') +
-    `<tr><td style="padding:8px 0"><b>Total</b></td><td style="text-align:right"><b>$${p.total.toFixed(2)}</b></td></tr></table>`;
-}
-
 function notifyOwner_(id, b, p, milesNote, milesChecked) {
   const ss = SpreadsheetApp.getActive(), e = esc_;
   sendMail_({
     to: CONFIG.NOTIFY,
     subject: `New booking #${id}: ${b.evName} on ${b.date}`,
-    htmlBody: `<p><b>New booking #${id}</b> (Unconfirmed)</p>
-      <p>${e(b.fn)} ${e(b.ln)} · ${e(b.email)} · ${e(b.phone)}<br>${e(b.eventType)}: ${e(b.evName)}<br>
-      ${e(b.date)}, ${e(b.start)}${b.end ? ' – ' + e(b.end) : ''}<br>${e(b.vName)}, ${e(b.vAddr)} ${e(b.vZip)}</p>
-      ${itemsTable_(p)}<p>Payment choice: ${e(b.payOpt)}<br>Travel: ${p.miles} miles ${milesChecked ? '(Google Maps)' : '(typed by the client, not checked)'}${milesNote ? '<br>' + e(milesNote) : ''}</p>
-      <p><a href="${ss.getUrl()}">Open MMRS Bookings</a></p>`
+    preheader: `${b.fn} ${b.ln} · ${longDate_(b.date)} · ${money_(p.total)}`,
+    htmlBody: eHead_(`New booking #${id} &nbsp;${eTag_('Unconfirmed', true)}`, e(b.evName)) +
+      eFacts_([['Date', e(longDate_(b.date))], ['Time', e(b.start) + (b.end ? ' – ' + e(b.end) : '')],
+        ['Venue', `${e(b.vName)}, ${e(b.vAddr)} ${e(b.vZip)}`], ['Type', e(b.eventType)],
+        ['Client', `${e(b.fn)} ${e(b.ln)}<br><a href="mailto:${e(b.email)}" style="color:${BRAND.purple}">${e(b.email)}</a><br>${e(b.phone)}`]]) +
+      itemsTable_(p) +
+      eSmall_(`Payment choice: ${e(b.payOpt)}<br>Travel: ${p.miles} miles ${milesChecked ? '(Google Maps)' : '(typed by the client, not checked)'}${milesNote ? '<br>' + e(milesNote) : ''}`) +
+      emailButton_(BRAND.dashboard, 'Open the dashboard') +
+      eSmall_(`Or <a href="${ss.getUrl()}" style="color:${BRAND.purple}">open the MMRS Bookings sheet</a>.`)
   });
 }
 
@@ -408,18 +507,18 @@ function confirmClient_(id, b, p, r) {
     to: b.email,
     replyTo: CONFIG.REPLY_TO,
     subject: `Your booking request #${id} – ${CONFIG.BUSINESS}`,
-    htmlBody: `<h1 style="margin:0 0 16px;font-size:26px;line-height:1.15;color:#17121b">Thank you, ${esc_(b.fn)}.</h1>
-      <p>We've received your request for <b>${esc_(b.evName)}</b> on <b>${esc_(b.date)}</b> and will confirm it shortly.</p>
-      <p><b>Booking ID:</b> ${id}<br><b>Time:</b> ${esc_(b.start)}${b.end ? ' – ' + esc_(b.end) : ''}<br><b>Venue:</b> ${esc_(b.vName)}, ${esc_(b.vAddr)} ${esc_(b.vZip)}</p>
-      ${itemsTable_(p)}
-      <p>A non-refundable $${CONFIG.DEPOSIT} reservation fee secures your date. The remaining balance is due 14 days before your event.</p>
-      ${portalLink_(r, 'View your booking')}
-      <p>Keep this email: the button above opens your booking any time. You can also look it up on our website with Booking ID <b>${id}</b> and your last name, and we'll email you a code.</p>
-      <p>We look forward to celebrating with you!</p>`
+    preheader: `We've received your request for ${longDate_(b.date)}. Here's what happens next.`,
+    htmlBody: eHead_('Booking request received', `Thank you, ${esc_(b.fn)}.`,
+        `We've received your request for <b style="color:${EM.ink}">${esc_(b.evName)}</b> and will confirm it shortly.`) +
+      eEventFacts_(r) +
+      itemsTable_(p) +
+      eP_(`A non-refundable ${money_(CONFIG.DEPOSIT)} reservation fee secures your date. The remaining balance is due 14 days before your event.`) +
+      portalLink_(r, 'View your booking') +
+      eSub_('What happens next') + eSteps_(r) +
+      eSmall_(`Keep this email: the button above opens your booking any time. You can also look it up on our website with booking ID <b>${id}</b> and your last name.`) +
+      eSign_()
   });
 }
-
-/* ---------------- Contract ---------------- */
 
 function fmtStamp_(v) { return v instanceof Date ? Utilities.formatDate(v, CONFIG.TZ, 'MM/dd/yyyy h:mm a z') : String(v); }
 function esc_(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]); }
@@ -528,10 +627,16 @@ function signContract_(b, f) {
 
   const subj = `Signed contract #${id} – ${CONFIG.BUSINESS}`;
   sendMail_({ to: f.r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, name: CONFIG.BUSINESS, subject: subj,
-    htmlBody: `<p>Hi ${esc_(f.r[COL.FN - 1])},</p><p>Thank you for signing your contract for <b>${esc_(f.r[COL.EVNAME - 1])}</b> on <b>${esc_(fmtDate_(f.r[COL.DATE - 1]))}</b>. A copy is attached for your records.</p><p>${CONFIG.BUSINESS}</p>`,
+    preheader: 'Your signed copy is attached for your records.',
+    htmlBody: eHead_('Contract signed', `Thank you, ${esc_(f.r[COL.FN - 1])}.`, 'Your contract is signed and a copy is attached to this email for your records.') +
+      eEventFacts_(f.r, [['Signed', esc_(stamp) + ' by ' + esc_(name)]]) +
+      portalLink_(f.r, 'View your booking') + eSub_('Your progress') + eSteps_(Object.assign(f.r.slice(), { [COL.SIGNED_AT - 1]: now })) + eSign_(),
     attachments: [pdf] });
   sendMail_({ to: CONFIG.NOTIFY, subject: `Contract signed: #${id} ${f.r[COL.EVNAME - 1]}`,
-    htmlBody: `<p>${esc_(name)} signed the contract for booking #${id} at ${esc_(stamp)}.</p><p><a href="${file.getUrl()}">Open signed PDF in Drive</a></p>`,
+    preheader: `${name} signed at ${stamp}`,
+    htmlBody: eHead_(`Contract signed &nbsp;${eTag_('Signed')}`, esc_(f.r[COL.EVNAME - 1])) +
+      eEventFacts_(f.r, [['Signed by', esc_(name)], ['When', esc_(stamp)]]) +
+      emailButton_(file.getUrl(), 'Open signed PDF in Drive') + eSmall_('The PDF is also attached.'),
     attachments: [pdf] });
   return { ok: true, signedAt: stamp };
 }
@@ -554,7 +659,10 @@ function saveTemplate_(b, f) {
   sh.getRange(f.index, COL.TEMPLATE, 1, 2).setNumberFormat('@').setValues([[txt_(t), txt_(text)]]);
   sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Template chosen: #${f.r[0]} ${f.r[COL.EVNAME - 1]}`,
-    htmlBody: `<p>Booking #${f.r[0]} (${esc_(f.r[COL.FN - 1])} ${esc_(f.r[COL.LN - 1])}) chose <b>${esc_(t)}</b>.</p><p>Text on the print: ${esc_(text) || '(none)'}</p>` });
+    preheader: `${f.r[COL.FN - 1]} ${f.r[COL.LN - 1]} chose ${t}`,
+    htmlBody: eHead_('Print template chosen', esc_(f.r[COL.EVNAME - 1])) +
+      eEventFacts_(f.r, [['Client', esc_(f.r[COL.FN - 1] + ' ' + f.r[COL.LN - 1])], ['Template', esc_(t)], ['Print text', esc_(text) || '(none)']]) +
+      emailButton_(BRAND.dashboard, 'Open the dashboard') });
   return { ok: true };
 }
 
@@ -568,7 +676,11 @@ function saveDetails_(b, f) {
   sh.getRange(f.index, COL.DETAILS_AT).setNumberFormat('MM/dd/yyyy h:mm am/pm').setValue(now);
   sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Details confirmed: #${f.r[0]} ${f.r[COL.EVNAME - 1]}`,
-    htmlBody: `<p>Booking #${f.r[0]} confirmed their event details.</p><p>On-site contact: ${esc_(name)}, ${esc_(phone)}<br>Guests: ${esc_(clip_(b.guests, 20)) || 'not given'}<br>Setup notes: ${esc_(clip_(b.setupNotes, 2000)) || 'none'}</p>` });
+    preheader: `On-site contact: ${name}`,
+    htmlBody: eHead_('Event details confirmed', esc_(f.r[COL.EVNAME - 1])) +
+      eEventFacts_(f.r, [['On-site', esc_(name) + '<br>' + esc_(phone)], ['Guests', esc_(clip_(b.guests, 20)) || 'Not given'],
+        ['Setup notes', esc_(clip_(b.setupNotes, 2000)).replace(/\n/g, '<br>') || 'None']]) +
+      emailButton_(BRAND.dashboard, 'Open the dashboard') });
   return { ok: true, detailsAt: fmtStamp_(now) };
 }
 
@@ -597,7 +709,12 @@ function addMessage_(b, f) {
   sh.getRange(row, 1, 1, 4).setValues([[f.r[0], new Date(), 'Client', txt_(text)]]);
   sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Message from ${f.r[COL.FN - 1]} ${f.r[COL.LN - 1]} (booking #${f.r[0]})`,
-    htmlBody: `<p>${esc_(text).replace(/\n/g, '<br>')}</p><hr><p style="color:#666">Reply to this email to answer ${esc_(f.r[COL.FN - 1])} directly, or add a row to the Messages tab with From = Magic Mirror to show your reply in their portal.</p>` });
+    preheader: text.slice(0, 90),
+    htmlBody: eHead_(`Message · booking #${f.r[0]}`, `${esc_(f.r[COL.FN - 1] + ' ' + f.r[COL.LN - 1])} wrote:`) +
+      `<div style="margin:0 0 24px;padding:18px 20px;background:${EM.tint};border-left:4px solid ${BRAND.gold};font-size:16px">${esc_(text).replace(/\n/g, '<br>')}</div>` +
+      eSmall_(`${esc_(f.r[COL.EVNAME - 1])} · ${esc_(longDate_(f.r[COL.DATE - 1]))}`) +
+      eSmall_(`Reply to this email to answer ${esc_(f.r[COL.FN - 1])} directly, or reply from the dashboard so it shows in their booking.`) +
+      emailButton_(BRAND.dashboard, 'Reply in the dashboard') });
   return getMessages_(f);
 }
 
@@ -699,12 +816,12 @@ function notifyStaff_(r, staffList) {
     const s = CONFIG.STAFF.find(x => x.name === n);
     if (!s || !s.email || s.email.toLowerCase() === CONFIG.OWNER_EMAIL.toLowerCase()) return;   // no email to yourself
     sendMail_({ to: s.email, subject: `You're assigned: ${r[COL.EVNAME - 1]} on ${fmtDate_(r[COL.DATE - 1])} (#${r[0]})`,
-      htmlBody: `<p>Hi ${esc_(n)},</p><p>You've been assigned to booking #${r[0]}.</p><table cellpadding="4">
-        <tr><td><b>Date</b></td><td>${esc_(fmtDate_(r[COL.DATE - 1]))}</td></tr>
-        <tr><td><b>Event</b></td><td>${esc_(fmtTime_(r[COL.START - 1]))} – ${esc_(fmtTime_(r[COL.END - 1]))} (arrive ${esc_(fmtTime_(r[COL.ARRIVE - 1]))})</td></tr>
-        <tr><td><b>Venue</b></td><td>${esc_(r[COL.VNAME - 1])}, ${esc_(r[COL.VADDR - 1])}</td></tr>
-        <tr><td><b>Package</b></td><td>${esc_(r[COL.PKG - 1])}</td></tr>
-        <tr><td><b>Team notes</b></td><td>${esc_(r[COL.TEAM_NOTES - 1] || '—')}</td></tr></table>` });
+      preheader: `${longDate_(r[COL.DATE - 1])} at ${r[COL.VNAME - 1]}`,
+      htmlBody: eHead_("You're on the team", `Hi ${esc_(n.split(' ')[0])}, you're working ${esc_(r[COL.EVNAME - 1])}.`) +
+        eFacts_([['Date', esc_(longDate_(r[COL.DATE - 1]))], ['Event', `${esc_(fmtTime_(r[COL.START - 1]))} – ${esc_(fmtTime_(r[COL.END - 1]))}`],
+          ['Arrive', esc_(fmtTime_(r[COL.ARRIVE - 1]))], ['Venue', esc_([r[COL.VNAME - 1], r[COL.VADDR - 1]].filter(String).join(', '))],
+          ['Package', esc_(r[COL.PKG - 1])], ['Booking', '#' + esc_(r[0])], ['Team notes', esc_(r[COL.TEAM_NOTES - 1] || '—')]]) +
+        eSmall_('Questions? Reply to this email.') });
   });
 }
 
@@ -748,7 +865,10 @@ function adminReply(id, text) {
     sh.getRange(row, 1, 1, 4).setValues([[Number(id), new Date(), CONFIG.BUSINESS, text]]);
     sendMail_({ to: r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, name: CONFIG.BUSINESS,
       subject: `New message about your booking #${id}`,
-      htmlBody: `<p>Hi ${esc_(r[COL.FN - 1])},</p><p>${esc_(text).replace(/\n/g, '<br>')}</p>${portalLink_(r)}<p>— ${CONFIG.BUSINESS}</p>` });
+      preheader: text.slice(0, 90),
+      htmlBody: eHead_(`Booking #${esc_(id)}`, `Hi ${esc_(r[COL.FN - 1])},`) + eP_(esc_(text).replace(/\n/g, '<br>')) +
+        eSign_().replace('See you soon', 'Thanks') + `<div style="height:24px"></div>` +
+        eSmall_('You can reply to this email, or send a message from your booking.') + portalLink_(r, 'Open your booking') });
     return adminData();
   });
 }
@@ -764,17 +884,20 @@ function adminResend(id, kind) {
   guard_();
   const r = sheet_('Bookings').getRange(rowById_(id), 1, 1, NCOL).getValues()[0];
   const bal = num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1]);
+  const fn = esc_(r[COL.FN - 1]);
+  // [subject, label, headline, body, button]
   const ask = {
-    portal:   ['Your booking with ' + CONFIG.BUSINESS, 'Here is the link to your booking.'],
-    contract: ['Please sign your contract', 'Your contract is ready to sign. Open your booking and go to the Contract tab.'],
-    template: ['Choose your print template', 'Please choose the template for your photo print-outs. Open your booking and go to the Choose Template tab.'],
-    details:  ['Please confirm your event details', 'Please confirm your on-site contact, guest count and setup notes. Open your booking and go to the Confirm Details tab.'],
-    payment:  ['Payment reminder', `Your remaining balance is <b>$${bal.toFixed(2)}</b>, due 14 days before your event. Reply to this email if you have any questions.`]
+    portal:   ['Your booking with ' + CONFIG.BUSINESS, 'Your booking', `Hi ${fn}, here's your booking.`, 'Use the button below to see your booking, invoice and next steps any time.', 'Open your booking'],
+    contract: ['Please sign your contract', 'Action needed', `${fn}, your contract is ready.`, 'Open your booking and go to the Contract tab to read and sign it. It only takes a minute.', 'Sign your contract'],
+    template: ['Choose your print template', 'Action needed', `${fn}, choose your print design.`, 'Pick the design for your photo print-outs and add the names or date you want on them. Open your booking and go to the Choose Template tab.', 'Choose your design'],
+    details:  ['Please confirm your event details', 'Action needed', `${fn}, please confirm your event details.`, "Tell us your on-site contact, guest count and any setup notes so we arrive ready. Open your booking and go to the Confirm Details tab.", 'Confirm details'],
+    payment:  ['Payment reminder', 'Payment reminder', `Hi ${fn}, a quick reminder.`, eAmount_('Remaining balance', bal, 'Due 14 days before your event'), 'Pay your balance']
   }[kind];
   if (!ask) throw new Error('Unknown email type');
   sendMail_({ to: r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, name: CONFIG.BUSINESS,
-    subject: `${ask[0]} (booking #${r[0]})`,
-    htmlBody: `<p>Hi ${esc_(r[COL.FN - 1])},</p><p>${ask[1]}</p><p>Event: <b>${esc_(r[COL.EVNAME - 1])}</b> on ${esc_(fmtDate_(r[COL.DATE - 1]))}</p>${portalLink_(r)}<p>Booking ID: ${r[0]} · Last name: ${esc_(r[COL.LN - 1])}</p><p>— ${CONFIG.BUSINESS}</p>` });
+    subject: `${ask[0]} (booking #${r[0]})`, preheader: `${r[COL.EVNAME - 1]} · ${longDate_(r[COL.DATE - 1])}`,
+    htmlBody: eHead_(ask[1], ask[2]) + (kind === 'payment' ? ask[3] : eP_(ask[3])) + portalLink_(r, ask[4]) + eEventFacts_(r) +
+      (kind === 'payment' ? eSmall_('Questions about your balance? Just reply to this email.') : eSub_('Your progress') + eSteps_(r)) + eSign_() });
   return { ok: true, sentTo: r[COL.EMAIL - 1] };
 }
 
@@ -833,8 +956,9 @@ function adminApi_(a) {
       const code = code6_();
       cache.put('code:' + email, JSON.stringify({ h: sha_(code), tries: 0 }), 600);
       cache.put('codeSent:' + email, '1', 45);
-      sendMail_({ to: email, subject: `Your dashboard sign-in code: ${code}`,
-        htmlBody: `<p>Your Magic Mirror owner dashboard sign-in code is:</p><p style="font-size:32px;font-weight:800;letter-spacing:4px;margin:12px 0">${code}</p><p>It expires in 10 minutes. If you didn't try to sign in, you can ignore this email.</p>` });
+      sendMail_({ to: email, subject: `Your dashboard sign-in code: ${code}`, preheader: 'It expires in 10 minutes.',
+        htmlBody: eHead_('Owner dashboard', 'Your sign-in code') + eCode_(code) +
+          eSmall_("It expires in 10 minutes. If you didn't try to sign in, you can ignore this email.") });
     }
     return { ok: true };   // same answer either way, so the form can't be used to test addresses
   }
@@ -906,9 +1030,11 @@ function newSession_(email) {
   pruneSessions_(props);
   try {
     sendMail_({ to: email, subject: 'New sign-in to your Magic Mirror dashboard',
-      htmlBody: `<p>Someone just signed in to the owner dashboard as <b>${esc_(email)}</b>.</p>
-        <p>When: ${esc_(fmtStamp_(new Date()))}<br>IP address: ${esc_(REQ.ip)}<br>Browser: ${esc_(REQ.ua || 'unknown')}</p>
-        <p>If this was you, there's nothing to do. If it wasn't, open the dashboard, click <b>Sign out all</b>, then set a new password.</p>` });
+      preheader: "If this was you, there's nothing to do.",
+      htmlBody: eHead_('Security alert', 'New sign-in to your dashboard') +
+        eFacts_([['Account', esc_(email)], ['When', esc_(fmtStamp_(new Date()))], ['IP address', esc_(REQ.ip)], ['Browser', esc_(REQ.ua || 'unknown')]]) +
+        eP_("If this was you, there's nothing to do. If it wasn't, open the dashboard, click <b>Sign out all</b>, then set a new password.") +
+        emailButton_(BRAND.dashboard, 'Open the dashboard') });
   } catch (e) { Logger.log('Sign-in alert: ' + e); }
   return { ok: true, token, email };
 }
@@ -1001,13 +1127,17 @@ function applySession_(s) {
   if (!recordPayment_(id, amt, s.livemode ? 'Stripe' : 'Stripe (test)', '', note, s.id)) return false;
   const r = sheet_('Bookings').getRange(rowById_(id), 1, 1, NCOL).getValues()[0];
   const bal = num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1]);
-  const sum = `<p><b>Amount paid:</b> $${amt.toFixed(2)}<br><b>Remaining balance:</b> $${Math.max(0, bal).toFixed(2)}</p>`;
+  const full = bal <= 0.005;
   sendMail_({ to: r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, subject: `Payment received – booking #${id}`,
-    htmlBody: `<h1 style="margin:0 0 16px;font-size:26px;color:#17121b">Thank you, ${esc_(r[COL.FN - 1])}.</h1>
-      <p>We've received your payment for <b>${esc_(r[COL.EVNAME - 1])}</b> on <b>${esc_(fmtDate_(r[COL.DATE - 1]))}</b>.</p>${sum}
-      ${bal > 0.005 ? '<p>The remaining balance is due 14 days before your event.</p>' : '<p>Your booking is paid in full.</p>'}${portalLink_(r, 'View your booking')}` });
+    preheader: `${money_(amt)} received. ` + (full ? 'Your booking is paid in full.' : `Remaining balance: ${money_(bal)}.`),
+    htmlBody: eHead_('Payment received', `Thank you, ${esc_(r[COL.FN - 1])}.`, `We've received your payment for <b style="color:${EM.ink}">${esc_(r[COL.EVNAME - 1])}</b>.`) +
+      eAmount_('Amount paid', amt, full ? 'Your booking is paid in full' : `Remaining balance ${money_(bal)}, due 14 days before your event`) +
+      eEventFacts_(r) + portalLink_(r, 'View your booking') + eSign_() });
   sendMail_({ to: CONFIG.NOTIFY, subject: `Stripe payment $${amt.toFixed(2)} – #${id} ${r[COL.EVNAME - 1]}${s.livemode ? '' : ' (TEST)'}`,
-    htmlBody: `<p>${esc_(r[COL.FN - 1] + ' ' + r[COL.LN - 1])} paid <b>$${amt.toFixed(2)}</b> online for booking #${id} (${esc_(String(r[COL.STATUS - 1]))}).</p>${sum}` });
+    preheader: `${r[COL.FN - 1]} ${r[COL.LN - 1]} paid ${money_(amt)} online`,
+    htmlBody: eHead_(`Payment received${s.livemode ? '' : ' &nbsp;' + eTag_('Test mode', true)}`, `${esc_(r[COL.FN - 1] + ' ' + r[COL.LN - 1])} paid ${money_(amt)}`) +
+      eEventFacts_(r, [['Status', esc_(String(r[COL.STATUS - 1]))], ['Paid so far', money_(num_(r[COL.PAID - 1]))], ['Balance', full ? 'Paid in full' : money_(bal)]]) +
+      emailButton_(BRAND.dashboard, 'Open the dashboard') });
   return true;
 }
 
@@ -1066,7 +1196,8 @@ function dueReminders_() {
   const out = [];
   const add = (r, kind, to, subject, body) => {
     if (sent[r[0] + '|' + kind] || !to) return;
-    out.push({ id: r[0], kind, to, subject: `${subject} (booking #${r[0]})`, html: body });
+    out.push({ id: r[0], kind, to, subject: `${subject} (booking #${r[0]})`, html: body,
+      pre: `${r[COL.EVNAME - 1]} · ${longDate_(r[COL.DATE - 1])}` });
   };
   rows_().forEach(r => {
     const id = r[0], status = String(r[COL.STATUS - 1]);
@@ -1075,33 +1206,41 @@ function dueReminders_() {
     const until = ev - today, bal = num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1]);
     const imported = /imported from boothbook/i.test(String(r[COL.NOTES - 1]));
     const client = String(r[COL.EMAIL - 1]), fn = esc_(r[COL.FN - 1]);
-    const evLine = `<p>Event: <b>${esc_(r[COL.EVNAME - 1])}</b> on ${esc_(fmtDate_(r[COL.DATE - 1]))}</p>`;
-    const sign = `${portalLink_(r)}<p>Booking ID: ${id} · Last name: ${esc_(r[COL.LN - 1])}</p><p>— ${CONFIG.BUSINESS}</p>`;
+    const tail = (btn, steps) => portalLink_(r, btn) + eEventFacts_(r) + (steps ? eSub_('Your progress') + eSteps_(r) : '') + eSign_();
+    const when = until === 0 ? 'today' : until === 1 ? 'tomorrow' : 'in ' + until + ' days';
 
     if (AUTOMATIONS.contractReminder && !imported && until > 0 && !r[COL.SIGNED_AT - 1]) {
       const made = dayNum_(r[COL.CREATED - 1]);
       if (made !== null && today - made >= 3)
         add(r, 'contract', client, 'Reminder: please sign your contract',
-          `<p>Hi ${fn},</p><p>Your contract is still waiting for your signature. Please open your booking and go to the Contract tab to sign it.</p>${evLine}${sign}`);
+          eHead_('Friendly reminder', `${fn}, your contract is waiting.`,
+            'Your contract is still waiting for your signature. Open your booking and go to the Contract tab to sign it. It only takes a minute.') +
+          tail('Sign your contract', true));
     }
     if (bal > 0.005 && status !== 'Completed') {
-      const due = `<p>Your remaining balance is <b>$${bal.toFixed(2)}</b>.</p>`;
       if (AUTOMATIONS.payment14 && until <= 14 && until > 7)
-        add(r, 'pay14', client, 'Your balance is due', `<p>Hi ${fn},</p>${due}<p>It's due 14 days before your event. Reply to this email with any questions.</p>${evLine}${sign}`);
+        add(r, 'pay14', client, 'Your balance is due',
+          eHead_('Balance due', `${fn}, your event is almost here.`, `Your remaining balance is due now, 14 days before your event. Reply to this email with any questions.`) +
+          eAmount_('Remaining balance', bal, 'Due now') + tail('Pay your balance'));
       if (AUTOMATIONS.payment7 && until <= 7 && until >= 0)
-        add(r, 'pay7', client, 'Payment reminder', `<p>Hi ${fn},</p>${due}<p>Your event is ${until === 0 ? 'today' : 'in ' + until + ' day' + (until === 1 ? '' : 's')}. Please pay the balance as soon as you can.</p>${evLine}${sign}`);
+        add(r, 'pay7', client, 'Payment reminder',
+          eHead_('Payment reminder', `${fn}, your event is ${when}.`, 'Please pay your remaining balance as soon as you can so everything is set for the big day.') +
+          eAmount_('Remaining balance', bal, 'Please pay before your event') + tail('Pay your balance'));
     }
     if (AUTOMATIONS.paymentOverdue && bal > 0.005 && until <= -5 && until >= -30 && !imported)
-      add(r, 'overdue', client, 'Your balance is overdue', `<p>Hi ${fn},</p><p>Thank you for having us at your event. Our records show a remaining balance of <b>$${bal.toFixed(2)}</b>. Please pay it at your earliest convenience, or reply if you think this is a mistake.</p>${evLine}${sign}`);
+      add(r, 'overdue', client, 'Your balance is overdue',
+        eHead_('Balance overdue', `Thank you for having us, ${fn}.`, 'Our records show a remaining balance from your event. Please pay it at your earliest convenience, or reply if you think this is a mistake.') +
+        eAmount_('Balance overdue', bal) + tail('Pay your balance'));
     if (AUTOMATIONS.ownerHeadsUp && status !== 'Completed' && (until === 8 || until === 2)) {
-      const flags = [status === 'Unconfirmed' ? 'NOT CONFIRMED' : '', !r[COL.SIGNED_AT - 1] && !imported ? 'contract unsigned' : '',
-        bal > 0.005 ? `$${bal.toFixed(2)} owed` : '', !r[COL.STAFF - 1] ? 'no staff assigned' : '', !r[COL.DETAILS_AT - 1] && !imported ? 'details not confirmed' : ''].filter(String);
+      const flags = [status === 'Unconfirmed' ? 'Not confirmed' : '', !r[COL.SIGNED_AT - 1] && !imported ? 'Contract unsigned' : '',
+        bal > 0.005 ? `${money_(bal)} owed` : '', !r[COL.STAFF - 1] ? 'No staff assigned' : '', !r[COL.DETAILS_AT - 1] && !imported ? 'Details not confirmed' : ''].filter(String);
       add(r, 'owner' + until, CONFIG.NOTIFY, `In ${until} days: ${r[COL.EVNAME - 1]}`,
-        `<p><b>${esc_(r[COL.EVNAME - 1])}</b> is in ${until} days (${esc_(fmtDate_(r[COL.DATE - 1]))}).</p>
-         <p>${esc_(fmtTime_(r[COL.START - 1]))} – ${esc_(fmtTime_(r[COL.END - 1]))}, arrive ${esc_(fmtTime_(r[COL.ARRIVE - 1]))}<br>
-         ${esc_(r[COL.VNAME - 1])}, ${esc_(r[COL.VADDR - 1])}<br>${esc_(r[COL.PKG - 1])} · Staff: ${esc_(r[COL.STAFF - 1] || 'none')}<br>
-         Client: ${esc_(r[COL.FN - 1] + ' ' + r[COL.LN - 1])}, ${esc_(r[COL.PHONE - 1])}</p>
-         <p>${flags.length ? '⚠️ ' + esc_(flags.join(' · ')) : '✅ Everything is in order.'}</p>`);
+        eHead_(`Coming up in ${until} days`, esc_(r[COL.EVNAME - 1])) +
+        `<p style="margin:0 0 20px;line-height:2">${flags.length ? flags.map(f => eTag_(esc_(f), true)).join(' ') : eTag_('Everything is in order')}</p>` +
+        eEventFacts_(r, [['Arrive', esc_(fmtTime_(r[COL.ARRIVE - 1]))], ['Package', esc_(r[COL.PKG - 1])], ['Staff', esc_(r[COL.STAFF - 1] || 'None')],
+          ['Client', esc_(r[COL.FN - 1] + ' ' + r[COL.LN - 1]) + '<br>' + esc_(r[COL.PHONE - 1])],
+          ['On-site', r[COL.ONSITE_NAME - 1] ? esc_(r[COL.ONSITE_NAME - 1]) + '<br>' + esc_(r[COL.ONSITE_PHONE - 1]) : '']]) +
+        emailButton_(BRAND.dashboard, 'Open the dashboard'));
     }
   });
   return out;
@@ -1114,7 +1253,7 @@ function runAutomations() {
     const log = autoLog_();
     dueReminders_().forEach(m => {
       const isOwner = m.to === CONFIG.NOTIFY;
-      sendMail_(Object.assign({ to: m.to, subject: m.subject, htmlBody: m.html, name: CONFIG.BUSINESS },
+      sendMail_(Object.assign({ to: m.to, subject: m.subject, htmlBody: m.html, preheader: m.pre, name: CONFIG.BUSINESS },
         isOwner ? {} : { replyTo: CONFIG.REPLY_TO }));
       log.appendRow([m.id, m.kind, new Date(), m.to]);
     });
