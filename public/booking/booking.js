@@ -87,6 +87,7 @@ drawCal();
 
 /* ===== API ===== */
 async function api(params, body){
+  if(S.demo){ const a=(body||params||{}).action; return a==="template"||a==="messages" ? {ok:true,messages:[]} : {ok:false}; }
   const res = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body||params) });
   return res.json();
 }
@@ -349,7 +350,7 @@ function selectTab(id){
   if(id==="messages") loadMessages();
   if(id==="details") fillDetails();
 }
-const needLive=(el)=>{ if(live()) return true; $(el).innerHTML='<p class="sub">This is available once your booking is saved online. Please email inquiries@magicmirrorrentalservices.com.</p>'; return false; };
+const needLive=(el)=>{ if(live()) return true; $(el).innerHTML='<p class="intro">This is available once your booking is saved online. Please email inquiries@magicmirrorrentalservices.com.</p>'; return false; };
 
 /* Invoice */
 function drawInvoice(){
@@ -365,25 +366,125 @@ function drawInvoice(){
 }
 $("printInvoice").onclick=()=>window.print();
 
-/* Templates: the print designs from the site's Print templates page */
-const TEMPLATES="dec14-ny-dr-4x6-ps holiday-cheer-2-4x6-drb black-ice-2-4x6-cropped fiesta-2-drb-4x6-single-pse pot-o-gold-2-4x6-cropped midnight-watercolor-drb-4x6-pse baby-safari-1-portrait-mirror-4x6-cropped ever-after-portrait-mirror-1-4x6-cropped nov15a-dr-4x6-ps painted-leaves-portrait-mirror-1-cropped red-carpet-4x6-ps sweetheart-black-1-4x6-cropped winterreds-single boo-2-portrait-mirror-4x6-full-bleed art-deco-2-portrait-mirror-4x6-cropped b-w-grad-2-portrait-mirror-4x6-cropped birthday_vert_1 babyshowerh graduationv hope-2-portrait-mirror-4x6-cropped".split(" ");
-const tplName=f=>{ const known={"dec14-ny-dr-4x6-ps":"New Year","nov15a-dr-4x6-ps":"Autumn Glow","winterreds-single":"Winter Reds","birthday_vert_1":"Birthday","babyshowerh":"Baby Shower","graduationv":"Graduation","pot-o-gold-2-4x6-cropped":"Pot o' Gold","b-w-grad-2-portrait-mirror-4x6-cropped":"Black & White Grad"}; if(known[f]) return known[f];
-  return f.replace(/-(portrait-mirror|4x6|cropped|drb|dr|ps|pse|single|full-bleed|\d)(?=-|$)/g,"").split(/[-_]/).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join(" "); };
+/* Templates: the print designs from the site's Print templates page.
+   [file, name, shape (l = landscape, p = portrait), occasions]. Names are what gets saved to the booking. */
+const TEMPLATES=[
+  ["dec14-ny-dr-4x6-ps","New Year","l","holiday",[1200,800],[[420,40,1150,555]]],
+  ["holiday-cheer-2-4x6-drb","Holiday Cheer","l","holiday",[1200,800],[[120,39,1081,677]]],
+  ["black-ice-2-4x6-cropped","Black Ice","l","holiday corporate",[1200,800],[[133,44,1066,656]]],
+  ["fiesta-2-drb-4x6-single-pse","Fiesta","l","holiday birthday",[1200,800],[[157,27,1043,617]]],
+  ["pot-o-gold-2-4x6-cropped","Pot o' Gold","l","holiday",[1200,800],[[136,47,1063,662]]],
+  ["midnight-watercolor-drb-4x6-pse","Midnight Watercolor","l","wedding corporate",[1200,800],[[111,46,1088,692]]],
+  ["baby-safari-1-portrait-mirror-4x6-cropped","Baby Safari","l","baby",[1200,800],[[37,43,406,598],[415,43,785,598],[794,43,1163,598]]],
+  ["ever-after-portrait-mirror-1-4x6-cropped","Ever After","l","wedding birthday",[1200,800],[[42,43,409,596],[418,43,789,597],[798,43,1166,595]]],
+  ["nov15a-dr-4x6-ps","Autumn Glow","l","holiday wedding",[1200,800],[[424,20,1194,520],[424,536,794,780],[808,536,1194,780]]],
+  ["painted-leaves-portrait-mirror-1-cropped","Painted Leaves","l","wedding",[1200,800],[[40,41,410,596],[419,41,788,596],[797,41,1168,596]]],
+  ["red-carpet-4x6-ps","Red Carpet","l","corporate birthday",[1200,807],[[89,66,717,501],[829,69,1130,265],[829,303,1129,501]]],
+  ["sweetheart-black-1-4x6-cropped","Sweetheart Black","l","wedding",[1200,800],[[424,24,1173,521],[424,537,790,780],[807,537,1172,780]]],
+  ["winterreds-single","Winter Reds","p","holiday",[1200,1785],[[214,155,988,1316]]],
+  ["boo-2-portrait-mirror-4x6-full-bleed","Boo","p","holiday",[1200,1785],[[119,136,1081,1540]]],
+  ["art-deco-2-portrait-mirror-4x6-cropped","Art Deco","p","wedding corporate",[1200,1800],[[109,127,1095,1600]]],
+  ["b-w-grad-2-portrait-mirror-4x6-cropped","Black & White Grad","p","graduation",[1200,1800],[[180,280,1005,1515]]],
+  ["birthday_vert_1","Birthday","p","birthday",[750,1125],[[141,151,608,900]]],
+  ["babyshowerh","Baby Shower","p","baby",[750,1125],[[110,110,640,840]]],
+  ["graduationv","Graduation","p","graduation",[750,1125],[[86,60,666,850]]],
+  ["hope-2-portrait-mirror-4x6-cropped","Hope","p","corporate",[1200,1800],[[104,115,1093,1500]]]
+].map(([f,name,shape,occ,size,wins])=>({f,name,shape,occ:occ.split(" "),size,wins}));
+/* Photo-count versions. A design's own layout is shown as-is; other counts are a mock-up of how the
+   photos would sit in its photo area until real artwork for that version is added. */
+const VERSIONS=[1,2,3];
+const vLabel=n=>n+" photo"+(n>1?"s":"");
+const nativeN=t=>t.wins.length;
+const tplValue=(name,n)=>name+" · "+vLabel(n);
+const parseTpl=v=>{ const m=/^(.*) · (\d) photos?$/.exec(v||""); return m?[m[1],+m[2]]:[v||"",0]; };
+const OCCASIONS=[["all","All"],["wedding","Wedding"],["birthday","Birthday"],["holiday","Holiday"],["graduation","Graduation"],["baby","Baby shower"],["corporate","Corporate"]];
+const SHAPES=[["all","All shapes"],["l","Landscape"],["p","Portrait"]];
+const ZOOM='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg>';
+const tplByName=n=>TEMPLATES.find(t=>t.name===n);
+const tplSrc=(t,thumb)=>`/images/templates/${t.f}${thumb?"-thumb":""}.webp`;
+S.tplOcc="all"; S.tplShape="all";
+function drawChips(){
+  const count=(o,sh)=>TEMPLATES.filter(t=>(o==="all"||t.occ.includes(o))&&(sh==="all"||t.shape===sh)).length;
+  $("tplOcc").innerHTML=OCCASIONS.map(([id,l])=>`<button type="button" class="chip" data-v="${id}" aria-pressed="${S.tplOcc===id}">${l}<small>${count(id,S.tplShape)}</small></button>`).join("");
+  $("tplShape").innerHTML=SHAPES.map(([id,l])=>`<button type="button" class="chip" data-v="${id}" aria-pressed="${S.tplShape===id}">${l}</button>`).join("");
+  $("tplOcc").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplOcc=c.dataset.v; drawChips(); drawTplGrid(); });
+  $("tplShape").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplShape=c.dataset.v; drawChips(); drawTplGrid(); });
+}
+function drawTplGrid(){
+  const list=TEMPLATES.filter(t=>(S.tplOcc==="all"||t.occ.includes(S.tplOcc))&&(S.tplShape==="all"||t.shape===S.tplShape));
+  const tile=t=>`<div class="tpl"><button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===t.name}" data-name="${esc(t.name)}"><img src="${tplSrc(t,1)}" alt="" width="600" height="${t.shape==="p"?900:400}" loading="lazy"><span>${esc(t.name)}<small>${vLabel(nativeN(t))}</small></span><i class="tplzoom" aria-hidden="true">${ZOOM}</i></button></div>`;
+  const sec=(sh,label)=>{ const g=list.filter(t=>t.shape===sh); return g.length?`<section class="tplsec"><h4>${label} · ${g.length}</h4><div class="tplgrid ${sh==="l"?"land":"port"}">${g.map(tile).join("")}</div></section>`:""; };
+  $("tplGrid").innerHTML=sec("l","Landscape prints")+sec("p","Portrait prints");
+  $("tplEmpty").classList.toggle("hidden",list.length>0);
+  $("tplGrid").querySelectorAll(".tplopt").forEach(o=>o.onclick=()=>{ pickTpl(o.dataset.name); openTplView(o.dataset.name); });
+}
+function pickTpl(name,n){
+  const t=tplByName(name);
+  S.tplPick=t?name:""; S.tplN=t?(n||S.tplN&&S.tplPick===name&&S.tplN||nativeN(t)):0;
+  $("tplGrid").querySelectorAll(".tplopt").forEach(x=>x.setAttribute("aria-checked",x.dataset.name===S.tplPick));
+  $("tplSel").textContent=t?t.name:"None chosen yet";
+  $("tplSelImg").classList.toggle("hidden",!t); if(t) $("tplSelImg").src=tplSrc(t,1);
+  $("tplBarVers").classList.toggle("hidden",!t);
+  $("tplBarVers").innerHTML=VERSIONS.map(n=>`<button type="button" class="chip" role="radio" data-n="${n}" aria-checked="${n===S.tplN}">${vLabel(n)}</button>`).join("");
+  $("tplBarVers").querySelectorAll(".chip").forEach(c=>c.onclick=()=>pickTpl(S.tplPick,+c.dataset.n));
+  $("tplMsg").textContent=""; $("tplMsg").classList.remove("err");
+}
+/* Where the photos sit for a given count, in the design's own pixels */
+function tplSlots(t,n){
+  if(n===nativeN(t)) return t.wins;
+  const x0=Math.min(...t.wins.map(w=>w[0])), y0=Math.min(...t.wins.map(w=>w[1])), x1=Math.max(...t.wins.map(w=>w[2])), y1=Math.max(...t.wins.map(w=>w[3]));
+  const W=x1-x0, H=y1-y0, g=Math.round(Math.min(W,H)*.03);
+  if(n===1) return [[x0,y0,x1,y1]];
+  if(W>=H){ if(n===2){ const m=x0+(W-g)/2; return [[x0,y0,m,y1],[m+g,y0,x1,y1]]; }
+    const m=x0+(W-g)*.6, h=y0+(H-g)/2; return [[x0,y0,m,y1],[m+g,y0,x1,h],[m+g,h+g,x1,y1]]; }
+  const h=(H-g*(n-1))/n; return Array.from({length:n},(_,i)=>[x0,y0+i*(h+g),x1,y0+i*(h+g)+h]);
+}
+const CAM='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+function drawTplPreview(){
+  const t=tplByName(S.tplViewing), n=S.tplViewN, [W,H]=t.size, pc=(v,d)=>(v/d*100).toFixed(2)+"%";
+  const box=(r,cls,inner)=>`<div class="${cls}" style="left:${pc(r[0],W)};top:${pc(r[1],H)};width:${pc(r[2]-r[0],W)};height:${pc(r[3]-r[1],H)}">${inner||""}</div>`;
+  const native=n===nativeN(t);
+  const x0=Math.min(...t.wins.map(w=>w[0])), y0=Math.min(...t.wins.map(w=>w[1])), x1=Math.max(...t.wins.map(w=>w[2])), y1=Math.max(...t.wins.map(w=>w[3]));
+  $("tplSlots").innerHTML=(native?"":box([x0,y0,x1,y1],"tplmat"))+tplSlots(t,n).map((r,i)=>box(r,"tplslot",CAM+"<b>Photo "+(i+1)+"</b>")).join("");
+  $("tplVers").querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-checked",+c.dataset.n===n));
+  $("tplVerNote").textContent=native?"This is the design's original layout.":"Mock-up: we'll adjust the artwork for "+vLabel(n)+" and show it on your proof.";
+  $("tplViewPick").textContent="Choose this design";
+}
+function openTplView(name){
+  const t=tplByName(name); if(!t) return; S.tplViewing=name;
+  S.tplViewN = S.tplPick===name&&S.tplN ? S.tplN : nativeN(t);
+  const occ=t.occ.map(o=>OCCASIONS.find(x=>x[0]===o)[1]).join(" · ");
+  $("tplViewTags").textContent=occ+" · "+(t.shape==="p"?"Portrait":"Landscape");
+  $("tplViewName").textContent=t.name;
+  $("tplViewPrint").className="tplprint"+(t.shape==="p"?" port":"");
+  $("tplViewImg").src=tplSrc(t,0);
+  $("tplVers").innerHTML=VERSIONS.map(n=>`<button type="button" class="chip" role="radio" data-n="${n}">${vLabel(n)}</button>`).join("");
+  $("tplVers").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplViewN=+c.dataset.n; if(S.tplPick===S.tplViewing) pickTpl(S.tplPick,S.tplViewN); drawTplPreview(); });
+  $("tplViewText").value=$("tplText").value; $("tplViewOv").textContent=$("tplText").value;
+  drawTplPreview();
+  const d=$("tplView"); if(d.showModal) d.showModal(); else d.setAttribute("open","");
+}
+function closeTplView(){ const d=$("tplView"); if(d.close) d.close(); else d.removeAttribute("open"); }
+$("tplViewClose").onclick=closeTplView;
+$("tplView").addEventListener("click",e=>{ if(e.target===$("tplView")) closeTplView(); });
+$("tplViewText").oninput=()=>{ $("tplText").value=$("tplViewText").value; $("tplViewOv").textContent=$("tplViewText").value; };
+$("tplViewPick").onclick=()=>{ pickTpl(S.tplViewing,S.tplViewN); closeTplView(); const o=$("tplGrid").querySelector(`.tplopt[aria-checked="true"]`); if(o) o.focus(); };
 function drawTemplates(){
   if(!needLive("tplGrid")) return;
-  const b=S.cur; S.tplPick=S.tplPick||b.template||"";
+  const b=S.cur;
+  if(!S.tplPick){ const [n,c]=parseTpl(b.template); S.tplPick=n; S.tplN=c; }
   if(b.customPrint) $("tplIntro").textContent="You chose a custom design. Pick the closest style below as a starting point, and add your text. We'll send you a proof.";
-  $("tplGrid").innerHTML=TEMPLATES.map(f=>{ const n=tplName(f); return `<button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===n}" data-name="${n}"><img src="/images/templates/${f}-thumb.webp" alt="" width="600" height="400" loading="lazy"><span>${n}</span></button>`; }).join("");
-  $("tplGrid").querySelectorAll(".tplopt").forEach(o=>o.onclick=()=>{ S.tplPick=o.dataset.name; $("tplGrid").querySelectorAll(".tplopt").forEach(x=>x.setAttribute("aria-checked",x===o)); });
+  drawChips(); drawTplGrid(); pickTpl(S.tplPick,S.tplN);
   if(!$("tplText").value) $("tplText").value=b.templateText||"";
   $("tplMsg").textContent = b.template ? `Saved: ${b.template}.` : "";
 }
 $("tplSave").onclick=async()=>{
   const m=$("tplMsg"); m.classList.remove("err");
   if(!S.tplPick){ m.classList.add("err"); m.textContent="Please choose a template."; return; }
+  const val=tplValue(S.tplPick,S.tplN);
   const btn=$("tplSave"); btn.disabled=true; btn.textContent="Saving…";
-  try{ const r=await api(null,{action:"template",...auth(),template:S.tplPick,templateText:$("tplText").value});
-    if(r.ok){ S.cur.template=S.tplPick; S.cur.templateText=$("tplText").value; m.textContent=`Saved: ${S.tplPick}. We'll send you a proof before your event.`; renderTabs(); }
+  try{ const r=await api(null,{action:"template",...auth(),template:val,templateText:$("tplText").value});
+    if(r.ok){ S.cur.template=val; S.cur.templateText=$("tplText").value; m.textContent=`Saved: ${val}. We'll send you a proof before your event.`; renderTabs(); }
     else { m.classList.add("err"); m.textContent="We couldn't save your template. Please try again."; } }
   catch(e){ m.classList.add("err"); m.textContent="We couldn't reach the booking system. Please try again."; }
   btn.disabled=false; btn.textContent="Save template";
@@ -540,3 +641,12 @@ async function startPay(amount,btn){
     if(cancelled){ $("payBtn").scrollIntoView({block:"center"}); $("payNote").textContent="Payment cancelled. Nothing was charged."; }
   }catch(e){ $("manageMsg").textContent="We couldn't reach the booking system. Please try again."; }
 })();
+
+/* ===== Preview-only demo: on a pages.dev preview or localhost, /booking/?demo=template opens a sample
+   booking on the Choose Template tab so designs can be reviewed without a real booking. Nothing is sent
+   to the booking system. Never runs on the live domain. ===== */
+if(/\.pages\.dev$|^localhost$|^127\./.test(location.hostname) && new URLSearchParams(location.search).get("demo")){
+  S.demo=true;
+  renderPortal({id:"DEMO",key:"demo",date:"2027-06-14",start:"6:00 PM",end:"10:00 PM",arrive:"5:00 PM",depart:"10:30 PM",evName:"Sample wedding",vName:"Sample venue",vAddr:"Boston, MA",vZip:"",status:"Booked",fn:"Sample",ln:"Client",email:"",phone:"",items:[["Silver Package",850]],total:850,paid:250,signedAt:"demo"},false);
+  const t=new URLSearchParams(location.search).get("demo"); if(TABS.some(x=>x[0]===t)) selectTab(t);
+}
