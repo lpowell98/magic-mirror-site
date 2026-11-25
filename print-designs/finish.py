@@ -6,7 +6,10 @@ from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__))
 man = json.load(open(os.path.join(HERE, "out", "manifest.json")))
 FIN = os.path.join(HERE, "final"); os.makedirs(os.path.join(FIN, "web"), exist_ok=True)
+import sys
+only = sys.argv[1:]
 for m in man:
+    if only and m["id"] not in only: continue
     did, n = m["id"], m["n"]
     os.makedirs(os.path.join(FIN, did), exist_ok=True)
     src = lambda mode: Image.open(os.path.join(HERE, "out", "png", f"{did}-{n}-{mode}.png"))
@@ -18,6 +21,10 @@ for m in man:
         if sh == "a":
             d.rectangle([x * S, (y + w / 2) * S, (x + w) * S - 1, (y + h) * S - 1], fill=0)
             d.ellipse([x * S, y * S, (x + w) * S - 1, (y + w) * S - 1], fill=0)
+        elif sh == "c":
+            import build
+            pts = [(x + px, y + py) for px, py in (tuple(map(float, q.split(","))) for q in build.chamfer_pts(w, h, build.CUT).split())]
+            d.polygon([(px * S, py * S) for px, py in pts], fill=0)
         else:
             d.rectangle([x * S, y * S, (x + w) * S - 1, (y + h) * S - 1], fill=0)
     ov.putalpha(mask.resize(ov.size, Image.LANCZOS))

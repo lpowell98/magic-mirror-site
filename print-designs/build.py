@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Wedding print designs: writes one HTML page per design and photo count into out/html/.
 render.js turns them into PNGs. Every design is 4x6 at 300 dpi (1800x1200 or 1200x1800)."""
-import json, math, os, sys
+import json, math, os, re, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "out", "html")
@@ -63,17 +63,36 @@ LAYOUTS = {
         1: dict(wins=[[110, 110, 980, 1225, "r"]], text=[0, 1370, 1200, 360]),
         2: dict(wins=[[110, 110, 980, 610, "r"], [110, 770, 980, 610, "r"]], text=[0, 1405, 1200, 330]),
         3: dict(wins=[[110, 110, 980, 610, "r"], [110, 770, 465, 610, "r"], [625, 770, 465, 610, "r"]], text=[0, 1405, 1200, 330])}),
-    "arch": dict(size=P, n={
-        1: dict(wins=[[180, 150, 840, 1170, "a"]], text=[0, 1360, 1200, 370]),
-        2: dict(wins=[[125, 170, 445, 1110, "a"], [630, 170, 445, 1110, "a"]], text=[0, 1335, 1200, 395]),
-        3: dict(wins=[[420, 150, 360, 1130, "a"], [95, 500, 265, 780, "a"], [840, 500, 265, 780, "a"]], text=[0, 1335, 1200, 395])}),
+    "frame": dict(size=P, n={  # names on top; wide cut-corner windows so a whole group fits
+        1: dict(wins=[[100, 470, 1000, 1230, "c"]], text=[0, 70, 1200, 370]),
+        2: dict(wins=[[100, 430, 1000, 615, "c"], [100, 1095, 1000, 615, "c"]], text=[0, 60, 1200, 340]),
+        3: dict(wins=[[100, 400, 1000, 410, "c"], [100, 860, 1000, 410, "c"], [100, 1320, 1000, 410, "c"]], text=[0, 50, 1200, 320])}),
 }
 
 
 def win_style(x, y, w, h, shape, grow=0):
     x, y, w, h = x - grow, y - grow, w + 2 * grow, h + 2 * grow
     r = f"border-radius:{w/2}px {w/2}px 0 0/{w/2}px {w/2}px 0 0;" if shape == "a" else ""
+    if shape == "c": r = f"clip-path:polygon({chamfer_pts(w, h, CUT + grow * .4142, '%gpx %gpx', ',')});"
     return f"left:{x}px;top:{y}px;width:{w}px;height:{h}px;{r}"
+
+
+CUT = 44  # corner cut of the cut-corner windows, in px
+
+
+def chamfer_pts(w, h, c, fmt="%g,%g", sep=" ", inset=0):
+    i = inset
+    pts = [(c, i), (w - c, i), (w - i, c), (w - i, h - c), (w - c, h - i), (c, h - i), (i, h - c), (i, c)]
+    return sep.join(fmt % p for p in pts)
+
+
+def chamfer_outline(x, y, w, h, g, css):
+    """Gold outline for a cut-corner window, grown by g px (an SVG, since clipped divs can't show borders)."""
+    sw = float(re.search(r"border:([\d.]+)px", css).group(1)); col = re.search(r"solid ([^;]+)", css).group(1)
+    op = re.search(r"opacity:([\d.]+)", css); op = op.group(1) if op else "1"
+    X, Y, W, H = x - g, y - g, w + 2 * g, h + 2 * g
+    return (f'<svg class="fr" style="left:{X}px;top:{Y}px;opacity:{op}" width="{W}" height="{H}"><polygon points="'
+            f'{chamfer_pts(W, H, CUT + g * .4142, inset=sw / 2)}" fill="none" stroke="{col}" stroke-width="{sw}"/></svg>')
 
 
 def windows(wins, mode, frames=(), mat=None):
@@ -81,7 +100,8 @@ def windows(wins, mode, frames=(), mat=None):
     out = []
     for i, (x, y, w, h, s) in enumerate(wins):
         if mat: out.append(f'<div class="fr" style="{win_style(x,y,w,h,s,mat[0])}{mat[1]}"></div>')
-        for g, css in frames: out.append(f'<div class="fr" style="{win_style(x,y,w,h,s,g)}{css}"></div>')
+        for g, css in frames:
+            out.append(chamfer_outline(x, y, w, h, g, css) if s == "c" else f'<div class="fr" style="{win_style(x,y,w,h,s,g)}{css}"></div>')
         inner = f'<img src="{PHOTOS}/p{[1,4,3,2,5,9][i % 6]}.jpg">' if mode == "preview" else ""
         bg = "#EEF4F7" if mode == "blank" else "transparent" if mode == "overlay" else "#ccc"
         out.append(f'<div class="win" style="{win_style(x,y,w,h,s)}background:{bg}">{inner}</div>')
@@ -297,19 +317,19 @@ def monogram_crest(n, mode):
     return dict(bg=C["ivory"], body=paper(.12, .05) + windows(lay["wins"], mode, [(14, f'border:1px solid {C["gold"]}'), (22, f'border:1px solid {C["gold"]};opacity:.5')]) + box(lay["text"], txt))
 
 
-def grand_arch(n, mode):
-    lay = LAYOUTS["arch"]["n"][n]
-    txt = (f'<div style="font:{140 if n==1 else 132}px/1 Pinyon;color:{C["ink"]}">{T["a"]} <span style="font:italic 400 .6em Cormorant;color:{C["gold"]};margin:0 .12em">&amp;</span> {T["b"]}</div>'
+def gilded_frame(n, mode):
+    lay = LAYOUTS["frame"]["n"][n]
+    txt = (f'<div style="font:{k(n,150,140,130)}px/1 Pinyon;color:{C["ink"]}">{T["a"]} <span style="font:italic 400 .6em Cormorant;color:{C["gold"]};margin:0 .12em">&amp;</span> {T["b"]}</div>'
            f'<div style="display:flex;align-items:center;margin-top:18px">{sparkle(16, C["gold"])}'
            f'{caps(T["date_dots"], 28, C["ink"], ".3em", 500, "Cormorant", "margin:0 24px")}{sparkle(16, C["gold"])}</div>')
     return dict(bg=C["linen"], body=paper(.12, .07) + windows(lay["wins"], mode, [(16, f'border:2px solid {C["gold"]}'), (26, f'border:1px solid {C["gold"]};opacity:.55')]) + box(lay["text"], txt))
 
 
-def emerald_arch(n, mode):
-    lay = LAYOUTS["arch"]["n"][n]
+def emerald_frame(n, mode):
+    lay = LAYOUTS["frame"]["n"][n]
     gold = f"background:{GOLD_CSS};-webkit-background-clip:text;background-clip:text;color:transparent"
     txt = (caps("Forever begins", 20, C["gold_lt"], ".46em", 400, "Montserrat", "opacity:.85;margin-bottom:6px") +
-           f'<div style="font:{136}px/1.15 Pinyon;{gold};padding:0 20px">{T["a"]} <span style="font:italic 400 .58em Cormorant">&amp;</span> {T["b"]}</div>'
+           f'<div style="font:{k(n,140,134,124)}px/1.15 Pinyon;{gold};padding:0 20px">{T["a"]} <span style="font:italic 400 .58em Cormorant">&amp;</span> {T["b"]}</div>'
            + caps(T["date_long"], 32, C["gold_lt"], ".34em", 500, "Cormorant", "margin-top:8px"))
     return dict(bg=f"radial-gradient(110% 80% at 50% 35%,#2a4d41,{C['emerald']} 55%,#132620)", body=paper(.12, .10) +
                 windows(lay["wins"], mode, [(14, f'border:2px solid {C["gold_lt"]}'), (24, f'border:1px solid {C["gold_lt"]};opacity:.5')]) + box(lay["text"], txt))
@@ -324,8 +344,8 @@ DESIGNS = [  # id, name, base layout, builder
     ("blush-linen", "Blush Linen", "panel", blush_linen),
     ("modern-serif", "Modern Serif", "card", modern_serif),
     ("monogram-crest", "Monogram Crest", "card", monogram_crest),
-    ("grand-arch", "Grand Arch", "arch", grand_arch),
-    ("emerald-arch", "Emerald Arch", "arch", emerald_arch),
+    ("gilded-frame", "Gilded Frame", "frame", gilded_frame),
+    ("emerald-frame", "Emerald Frame", "frame", emerald_frame),
 ]
 
 BASE_CSS = """*{margin:0;padding:0;box-sizing:border-box}

@@ -104,10 +104,10 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.06e
       <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="11" y="11" width="98" height="122.5" fill="#d8bf86"/><rect x="25" y="148" width="70" height="6" fill="#c4bacb"/><rect x="40" y="158" width="40" height="3" fill="#c4bacb"/></svg>
       <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="11" y="11" width="98" height="61" fill="#d8bf86"/><rect x="11" y="77" width="98" height="61" fill="#d8bf86"/><rect x="25" y="151" width="70" height="6" fill="#c4bacb"/><rect x="40" y="161" width="40" height="3" fill="#c4bacb"/></svg>
       <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="11" y="11" width="98" height="61" fill="#d8bf86"/><rect x="11" y="77" width="46.5" height="61" fill="#d8bf86"/><rect x="62.5" y="77" width="46.5" height="61" fill="#d8bf86"/><rect x="25" y="151" width="70" height="6" fill="#c4bacb"/><rect x="40" y="161" width="40" height="3" fill="#c4bacb"/></svg></div></div>
-    <div class="lay"><h4>Arch</h4><p>Portrait. Arched windows, like a chapel or a mirror frame.</p><div class="d">
-      <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><path d="M18 57A42 42 0 0 1 102 57V132H18Z" fill="#d8bf86"/><rect x="25" y="145" width="70" height="6" fill="#c4bacb"/></svg>
-      <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><path d="M12.5 39.25A22.25 22.25 0 0 1 57 39.25V128H12.5Z" fill="#d8bf86"/><path d="M63 39.25A22.25 22.25 0 0 1 107.5 39.25V128H63Z" fill="#d8bf86"/><rect x="25" y="145" width="70" height="6" fill="#c4bacb"/></svg>
-      <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><path d="M42 33A18 18 0 0 1 78 33V128H42Z" fill="#d8bf86"/><path d="M9.5 63.25A13.25 13.25 0 0 1 36 63.25V128H9.5Z" fill="#d8bf86"/><path d="M84 63.25A13.25 13.25 0 0 1 110.5 63.25V128H84Z" fill="#d8bf86"/><rect x="25" y="145" width="70" height="6" fill="#c4bacb"/></svg></div></div>
+    <div class="lay"><h4>Frame</h4><p>Portrait. Names on top, wide cut-corner frames so a whole group fits.</p><div class="d">
+      <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="25" y="12" width="70" height="7" fill="#c4bacb"/><rect x="40" y="24" width="40" height="3" fill="#c4bacb"/><path d="M14.4 47H105.6L110 51.4V165.6L105.6 170H14.4L10 165.6V51.4Z" fill="#d8bf86"/></svg>
+      <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="25" y="12" width="70" height="7" fill="#c4bacb"/><rect x="40" y="24" width="40" height="3" fill="#c4bacb"/><path d="M14.4 43H105.6L110 47.4V100.1L105.6 104.5H14.4L10 100.1V47.4Z" fill="#d8bf86"/><path d="M14.4 109.5H105.6L110 113.9V166.6L105.6 171.0H14.4L10 166.6V113.9Z" fill="#d8bf86"/></svg>
+      <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="25" y="12" width="70" height="7" fill="#c4bacb"/><rect x="40" y="24" width="40" height="3" fill="#c4bacb"/><path d="M14.4 40H105.6L110 44.4V76.6L105.6 81H14.4L10 76.6V44.4Z" fill="#d8bf86"/><path d="M14.4 86H105.6L110 90.4V122.6L105.6 127H14.4L10 122.6V90.4Z" fill="#d8bf86"/><path d="M14.4 132H105.6L110 136.4V168.6L105.6 173H14.4L10 168.6V136.4Z" fill="#d8bf86"/></svg></div></div>
   </div>
 
   <h2>The ten designs</h2>
@@ -126,9 +126,9 @@ const D=[
  ["blush-linen","Blush Linen","Panel","Soft and romantic. Blush linen texture with wine-colored Bodoni italics."],
  ["modern-serif","Modern Serif","Card","Minimal and modern. White, black Bodoni capitals, a single gold ampersand."],
  ["monogram-crest","Monogram Crest","Card","Traditional. The couple's initials inside a gold laurel crest, names on either side."],
- ["grand-arch","Grand Arch","Arch","Chapel and ballroom weddings. Arched windows with double gold outlines on linen."],
- ["emerald-arch","Emerald Arch","Arch","Rich and moody. Deep emerald with gold arches and gold script."]];
-const port=b=>b==="Card"||b==="Arch";
+ ["gilded-frame","Gilded Frame","Frame","Ballroom weddings. Names across the top, wide frames with cut corners and double gold outlines on linen."],
+ ["emerald-frame","Emerald Frame","Frame","Rich and moody. Deep emerald with gold cut-corner frames and gold script."]];
+const port=b=>b==="Card"||b==="Frame";
 document.getElementById("designs").innerHTML=D.map(([id,name,base,desc])=>`<section class="design">
   <div class="dh"><h3>${name}</h3><span>${base} · ${port(base)?"Portrait":"Landscape"}</span></div><p>${desc}</p>
   <div class="vers ${port(base)?"p":"l"}">${[1,2,3].map(n=>`<figure><img src="web/${id}-${n}.webp" alt="${name}, ${n} photo version" width="${port(base)?600:900}" height="${port(base)?900:600}" loading="lazy"><figcaption>${n} photo${n>1?"s":""}</figcaption></figure>`).join("")}</div></section>`).join("");
