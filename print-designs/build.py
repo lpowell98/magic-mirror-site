@@ -54,17 +54,17 @@ LAYOUTS = {
     "band": dict(size=L, n={
         1: dict(wins=[[310, 72, 1180, 786, "r"]], text=[0, 870, 1800, 290]),
         2: dict(wins=[[90, 90, 785, 523, "r"], [925, 90, 785, 523, "r"]], text=[0, 640, 1800, 480]),
-        3: dict(wins=[[100, 85, 505, 735, "r"], [648, 85, 505, 735, "r"], [1196, 85, 505, 735, "r"]], text=[0, 838, 1800, 300])}),
+        3: dict(wins=[[145, 75, 1000, 667, "r"], [1189, 75, 467, 311, "r"], [1189, 431, 467, 311, "r"]], text=[0, 775, 1800, 370])}),
     "panel": dict(size=L, n={
         1: dict(panel=[0, 0, 560, 1200], wins=[[615, 160, 1125, 880, "r"]], text=[30, 80, 500, 1040]),
         2: dict(panel=[0, 0, 900, 1200], wins=[[950, 60, 790, 515, "r"], [950, 625, 790, 515, "r"]], text=[60, 80, 780, 1040]),
         3: dict(panel=[55, 55, 815, 520], wins=[[930, 55, 815, 520, "r"], [55, 625, 815, 520, "r"], [930, 625, 815, 520, "r"]], text=[55, 55, 815, 520])}),
     "card": dict(size=P, n={
-        1: dict(wins=[[110, 110, 980, 1225, "r"]], text=[0, 1370, 1200, 360]),
+        1: dict(wins=[[110, 110, 980, 735, "r"]], text=[0, 880, 1200, 840]),
         2: dict(wins=[[110, 110, 980, 610, "r"], [110, 770, 980, 610, "r"]], text=[0, 1405, 1200, 330]),
-        3: dict(wins=[[110, 110, 980, 610, "r"], [110, 770, 465, 610, "r"], [625, 770, 465, 610, "r"]], text=[0, 1405, 1200, 330])}),
+        3: dict(wins=[[110, 110, 980, 400, "r"], [110, 555, 980, 400, "r"], [110, 1000, 980, 400, "r"]], text=[0, 1420, 1200, 320])}),
     "frame": dict(size=P, n={  # names on top; wide cut-corner windows so a whole group fits
-        1: dict(wins=[[100, 470, 1000, 1230, "c"]], text=[0, 70, 1200, 370]),
+        1: dict(wins=[[100, 640, 1000, 750, "c"]], text=[0, 90, 1200, 500], foot=[0, 1440, 1200, 300]),
         2: dict(wins=[[100, 430, 1000, 615, "c"], [100, 1095, 1000, 615, "c"]], text=[0, 60, 1200, 340]),
         3: dict(wins=[[100, 400, 1000, 410, "c"], [100, 860, 1000, 410, "c"], [100, 1320, 1000, 410, "c"]], text=[0, 50, 1200, 320])}),
 }
@@ -298,6 +298,13 @@ def blush_linen(n, mode):
 def modern_serif(n, mode):
     lay = LAYOUTS["card"]["n"][n]
     bod = "font-family:Bodoni;font-variation-settings:'opsz' 28"
+    if n == 1:
+        nm = lambda t: f'<div style="font-size:124px;line-height:1.05;{bod};letter-spacing:.08em;padding-left:.08em;text-transform:uppercase;color:{C["black"]}">{t}</div>'
+        txt = (nm(T["a"]) + f'<div style="font:italic 400 110px/1 Bodoni;color:#8a6a2f;margin:6px 0 10px">&amp;</div>' + nm(T["b"]) +
+               f'<div style="display:flex;gap:40px;align-items:center;margin-top:56px">{caps("06", 30, C["black"], ".2em", 400)}'
+               f'<i class="hl" style="width:1.5px;height:34px;background:{C["black"]}"></i>{caps("14", 30, C["black"], ".2em", 400)}'
+               f'<i class="hl" style="width:1.5px;height:34px;background:{C["black"]}"></i>{caps("2027", 30, C["black"], ".2em", 400)}</div>')
+        return dict(bg="#FCFBF9", body=paper(.06, 0) + windows(lay["wins"], mode) + box(lay["text"], txt))
     txt = (f'<div style="font-size:78px;line-height:1;{bod};letter-spacing:.08em;padding-left:.08em;text-transform:uppercase;color:{C["black"]}">{T["a"]}'
            f'<span style="font-style:italic;text-transform:none;letter-spacing:0;margin:0 .32em 0 .24em;font-size:.92em;color:#8a6a2f">&amp;</span>{T["b"]}</div>'
            f'<div style="display:flex;gap:34px;align-items:center;margin-top:34px">{caps("06", 24, C["black"], ".2em", 400)}'
@@ -310,6 +317,11 @@ def monogram_crest(n, mode):
     lay = LAYOUTS["card"]["n"][n]
     tx, ty, tw, th = lay["text"]
     crest = laurel(300, "url(#g)", T["ini"], "font:500 104px Cormorant")
+    if n == 1:
+        txt = (laurel(400, "url(#g)", T["ini"], "font:500 138px Cormorant") +
+               f'<div style="margin-top:24px">{caps(T["a"] + " &amp; " + T["b"], 58, C["ink"], ".26em", 500, "Cormorant")}</div>' +
+               caps(T["date_long"], 24, C["taupe"], ".42em", 500, "Montserrat", "margin-top:22px"))
+        return dict(bg=C["ivory"], body=paper(.12, .05) + windows(lay["wins"], mode, [(14, f'border:1px solid {C["gold"]}'), (22, f'border:1px solid {C["gold"]};opacity:.5')]) + box(lay["text"], txt))
     txt = (f'<div style="display:flex;align-items:center;gap:40px">'
            f'<div style="text-align:right">{caps(T["a"], 50, C["ink"], ".3em", 500, "Cormorant")}</div>{crest}'
            f'<div style="text-align:left">{caps(T["b"], 50, C["ink"], ".3em", 500, "Cormorant")}</div></div>'
@@ -319,20 +331,26 @@ def monogram_crest(n, mode):
 
 def gilded_frame(n, mode):
     lay = LAYOUTS["frame"]["n"][n]
-    txt = (f'<div style="font:{k(n,150,140,130)}px/1 Pinyon;color:{C["ink"]}">{T["a"]} <span style="font:italic 400 .6em Cormorant;color:{C["gold"]};margin:0 .12em">&amp;</span> {T["b"]}</div>'
-           f'<div style="display:flex;align-items:center;margin-top:18px">{sparkle(16, C["gold"])}'
-           f'{caps(T["date_dots"], 28, C["ink"], ".3em", 500, "Cormorant", "margin:0 24px")}{sparkle(16, C["gold"])}</div>')
-    return dict(bg=C["linen"], body=paper(.12, .07) + windows(lay["wins"], mode, [(16, f'border:2px solid {C["gold"]}'), (26, f'border:1px solid {C["gold"]};opacity:.55')]) + box(lay["text"], txt))
+    names = f'<div style="font:{k(n,176,140,130)}px/1.1 Pinyon;color:{C["ink"]}">{T["a"]} <span style="font:italic 400 .6em Cormorant;color:{C["gold"]};margin:0 .12em">&amp;</span> {T["b"]}</div>'
+    date = (f'<div style="display:flex;align-items:center;margin-top:18px">{sparkle(k(n,22,16,16), C["gold"])}'
+            f'{caps(T["date_dots"], k(n,36,28,28), C["ink"], ".3em", 500, "Cormorant", "margin:0 24px")}{sparkle(k(n,22,16,16), C["gold"])}</div>')
+    if n == 1:
+        names = caps("The wedding of", 22, C["gold"], ".42em", 500, "Montserrat", "margin-bottom:22px") + names
+        text = box(lay["text"], names) + box(lay["foot"], date)
+    else:
+        text = box(lay["text"], names + date)
+    return dict(bg=C["linen"], body=paper(.12, .07) + windows(lay["wins"], mode, [(16, f'border:2px solid {C["gold"]}'), (26, f'border:1px solid {C["gold"]};opacity:.55')]) + text)
 
 
 def emerald_frame(n, mode):
     lay = LAYOUTS["frame"]["n"][n]
     gold = f"background:{GOLD_CSS};-webkit-background-clip:text;background-clip:text;color:transparent"
-    txt = (caps("Forever begins", 20, C["gold_lt"], ".46em", 400, "Montserrat", "opacity:.85;margin-bottom:6px") +
-           f'<div style="font:{k(n,140,134,124)}px/1.15 Pinyon;{gold};padding:0 20px">{T["a"]} <span style="font:italic 400 .58em Cormorant">&amp;</span> {T["b"]}</div>'
-           + caps(T["date_long"], 32, C["gold_lt"], ".34em", 500, "Cormorant", "margin-top:8px"))
+    top = (caps("Forever begins", k(n,24,20,20), C["gold_lt"], ".46em", 400, "Montserrat", "opacity:.85;margin-bottom:6px") +
+           f'<div style="font:{k(n,170,134,124)}px/1.15 Pinyon;{gold};padding:0 20px">{T["a"]} <span style="font:italic 400 .58em Cormorant">&amp;</span> {T["b"]}</div>')
+    date = caps(T["date_long"], k(n,40,32,32), C["gold_lt"], ".34em", 500, "Cormorant", "margin-top:8px")
+    text = box(lay["text"], top) + box(lay["foot"], date) if n == 1 else box(lay["text"], top + date)
     return dict(bg=f"radial-gradient(110% 80% at 50% 35%,#2a4d41,{C['emerald']} 55%,#132620)", body=paper(.12, .10) +
-                windows(lay["wins"], mode, [(14, f'border:2px solid {C["gold_lt"]}'), (24, f'border:1px solid {C["gold_lt"]};opacity:.5')]) + box(lay["text"], txt))
+                windows(lay["wins"], mode, [(14, f'border:2px solid {C["gold_lt"]}'), (24, f'border:1px solid {C["gold_lt"]};opacity:.5')]) + text)
 
 
 DESIGNS = [  # id, name, base layout, builder
