@@ -237,8 +237,8 @@
 .bk .tplopt span{display:flex;align-items:center;gap:8px;padding:10px 2px 2px;min-height:34px}
 .bk .tplopt[aria-checked="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
 .bk .tplopt[aria-checked="true"] span::before{content:"✓";display:inline-grid;place-items:center;width:20px;height:20px;background:var(--accent);color:var(--accent-ink);font-size:12px;flex:none}
-.bk .tplzoom{position:absolute;top:14px;right:14px;width:38px;height:38px;display:grid;place-items:center;background:rgba(14,11,17,.82);border:1px solid rgba(255,255,255,.25);color:#fff;cursor:pointer}
-.bk .tplzoom:hover,.bk .tplzoom:focus-visible{background:var(--purple);outline:none}
+.bk .tplzoom{pointer-events:none;position:absolute;top:14px;right:14px;width:38px;height:38px;display:grid;place-items:center;background:rgba(14,11,17,.82);border:1px solid rgba(255,255,255,.25);color:#fff;cursor:pointer}
+.bk .tplopt:hover .tplzoom{background:var(--purple)}
 .bk .tplzoom svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .bk .tplempty{color:var(--muted);padding:24px 0}
 .bk .tplbar{position:sticky;bottom:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:24px calc(-1*clamp(20px,3vw,44px)) calc(-1*clamp(20px,3vw,44px));padding:14px clamp(20px,3vw,44px);background:rgba(14,11,17,.96);border-top:1px solid #3a2f42;backdrop-filter:blur(6px)}
@@ -247,6 +247,9 @@
 .bk .tplsel small{display:block;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 .bk .tplsel b{display:block;font:700 17px var(--head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bk .tplbar+.msg{margin-top:44px}
+.bk .tplbar .chips.mini{margin-left:auto}
+.bk .chips.mini .chip{min-height:36px;padding:6px 12px;font-size:13px}
+.bk .chips.seg .chip[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);position:relative}
 .bk .tplview{border:0;padding:0;max-width:min(1100px,94vw);width:min(1100px,94vw);max-height:92vh;background:var(--surface);color:var(--ink)}
 .bk .tplview::backdrop{background:rgba(8,6,10,.82)}
 .bk .tplview-in{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:28px;padding:28px;align-items:center}
@@ -284,6 +287,11 @@
   .bk .chip{white-space:nowrap;padding:8px 13px;font-size:13px}
   .bk .tplbar .btn{padding:0 18px;font-size:15px;min-height:46px;flex:none}
   .bk .tplsel b{font-size:15px}
+  .bk .tplbar{flex-wrap:wrap;gap:10px 12px;padding-top:10px;padding-bottom:10px}
+  .bk .tplbar .chips.mini{order:3;width:100%;margin-left:0}
+  .bk .tplsel{flex:1 1 0}
+  .bk .tplsel img{width:40px;height:40px}
+  .bk .tplbar .chips.mini .chip{flex:1}
   .bk .tplview{max-width:100vw;width:100vw;max-height:100dvh;height:100dvh;margin:0}
   .bk .tplview-in{grid-template-columns:1fr;padding:56px 16px 20px;gap:18px;align-content:start}
   .bk .tplprint{padding:6px}
@@ -566,6 +574,7 @@
         <div class="help">Names, a date or a short message. Leave blank for no text.</div>
         <div class="tplbar">
           <div class="tplsel"><img id="tplSelImg" alt="" class="hidden"><div><small>Selected</small><b id="tplSel">None chosen yet</b></div></div>
+          <div class="chips seg mini hidden" id="tplBarVers" role="radiogroup" aria-label="Photos per print"></div>
           <button type="button" class="btn" id="tplSave">Save template</button>
         </div>
         <div class="msg" id="tplMsg" role="status" aria-live="polite"></div>
@@ -634,6 +643,6 @@
 </footer>
 <script src="/assets/js/main.js?v=speed1" defer></script>
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/booking/booking.js?v=4" defer></script>
+<script src="/booking/booking.js?v=5" defer></script>
 </body>
 </html>

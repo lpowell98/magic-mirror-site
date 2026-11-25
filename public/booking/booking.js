@@ -412,19 +412,21 @@ function drawChips(){
 }
 function drawTplGrid(){
   const list=TEMPLATES.filter(t=>(S.tplOcc==="all"||t.occ.includes(S.tplOcc))&&(S.tplShape==="all"||t.shape===S.tplShape));
-  const tile=t=>`<div class="tpl"><button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===t.name}" data-name="${esc(t.name)}"><img src="${tplSrc(t,1)}" alt="" width="600" height="${t.shape==="p"?900:400}" loading="lazy"><span>${esc(t.name)}<small>${vLabel(nativeN(t))}</small></span></button><button type="button" class="tplzoom" data-name="${esc(t.name)}" aria-label="Preview ${esc(t.name)} larger and choose photo count">${ZOOM}</button></div>`;
+  const tile=t=>`<div class="tpl"><button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===t.name}" data-name="${esc(t.name)}"><img src="${tplSrc(t,1)}" alt="" width="600" height="${t.shape==="p"?900:400}" loading="lazy"><span>${esc(t.name)}<small>${vLabel(nativeN(t))}</small></span><i class="tplzoom" aria-hidden="true">${ZOOM}</i></button></div>`;
   const sec=(sh,label)=>{ const g=list.filter(t=>t.shape===sh); return g.length?`<section class="tplsec"><h4>${label} · ${g.length}</h4><div class="tplgrid ${sh==="l"?"land":"port"}">${g.map(tile).join("")}</div></section>`:""; };
   $("tplGrid").innerHTML=sec("l","Landscape prints")+sec("p","Portrait prints");
   $("tplEmpty").classList.toggle("hidden",list.length>0);
-  $("tplGrid").querySelectorAll(".tplopt").forEach(o=>o.onclick=()=>pickTpl(o.dataset.name));
-  $("tplGrid").querySelectorAll(".tplzoom").forEach(z=>z.onclick=()=>openTplView(z.dataset.name));
+  $("tplGrid").querySelectorAll(".tplopt").forEach(o=>o.onclick=()=>{ pickTpl(o.dataset.name); openTplView(o.dataset.name); });
 }
 function pickTpl(name,n){
   const t=tplByName(name);
   S.tplPick=t?name:""; S.tplN=t?(n||S.tplN&&S.tplPick===name&&S.tplN||nativeN(t)):0;
   $("tplGrid").querySelectorAll(".tplopt").forEach(x=>x.setAttribute("aria-checked",x.dataset.name===S.tplPick));
-  $("tplSel").textContent=t?tplValue(t.name,S.tplN):"None chosen yet";
+  $("tplSel").textContent=t?t.name:"None chosen yet";
   $("tplSelImg").classList.toggle("hidden",!t); if(t) $("tplSelImg").src=tplSrc(t,1);
+  $("tplBarVers").classList.toggle("hidden",!t);
+  $("tplBarVers").innerHTML=VERSIONS.map(n=>`<button type="button" class="chip" role="radio" data-n="${n}" aria-checked="${n===S.tplN}">${vLabel(n)}</button>`).join("");
+  $("tplBarVers").querySelectorAll(".chip").forEach(c=>c.onclick=()=>pickTpl(S.tplPick,+c.dataset.n));
   $("tplMsg").textContent=""; $("tplMsg").classList.remove("err");
 }
 /* Where the photos sit for a given count, in the design's own pixels */
@@ -447,7 +449,7 @@ function drawTplPreview(){
   $("tplVers").querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-checked",+c.dataset.n===n));
   $("tplVerNote").textContent=native?"This is the design's original layout.":"Mock-up: we'll adjust the artwork for "+vLabel(n)+" and show it on your proof.";
   const chosen=S.tplPick===t.name&&S.tplN===n;
-  $("tplViewPick").textContent=chosen?"✓ Chosen":"Choose this design, "+vLabel(n);
+  $("tplViewPick").textContent=chosen?"Done, use "+vLabel(n):"Choose this design, "+vLabel(n);
 }
 function openTplView(name){
   const t=tplByName(name); if(!t) return; S.tplViewing=name;
@@ -458,7 +460,7 @@ function openTplView(name){
   $("tplViewPrint").className="tplprint"+(t.shape==="p"?" port":"");
   $("tplViewImg").src=tplSrc(t,0);
   $("tplVers").innerHTML=VERSIONS.map(n=>`<button type="button" class="chip" role="radio" data-n="${n}">${vLabel(n)}</button>`).join("");
-  $("tplVers").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplViewN=+c.dataset.n; drawTplPreview(); });
+  $("tplVers").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplViewN=+c.dataset.n; if(S.tplPick===S.tplViewing) pickTpl(S.tplPick,S.tplViewN); drawTplPreview(); });
   $("tplViewText").value=$("tplText").value; $("tplViewOv").textContent=$("tplText").value;
   drawTplPreview();
   const d=$("tplView"); if(d.showModal) d.showModal(); else d.setAttribute("open","");
