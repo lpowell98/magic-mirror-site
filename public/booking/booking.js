@@ -87,6 +87,7 @@ drawCal();
 
 /* ===== API ===== */
 async function api(params, body){
+  if(S.demo){ const a=(body||params||{}).action; return a==="template"||a==="messages" ? {ok:true,messages:[]} : {ok:false}; }
   const res = await fetch(API_URL, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body||params) });
   return res.json();
 }
@@ -605,3 +606,12 @@ async function startPay(amount,btn){
     if(cancelled){ $("payBtn").scrollIntoView({block:"center"}); $("payNote").textContent="Payment cancelled. Nothing was charged."; }
   }catch(e){ $("manageMsg").textContent="We couldn't reach the booking system. Please try again."; }
 })();
+
+/* ===== Preview-only demo: on a pages.dev preview or localhost, /booking/?demo=template opens a sample
+   booking on the Choose Template tab so designs can be reviewed without a real booking. Nothing is sent
+   to the booking system. Never runs on the live domain. ===== */
+if(/\.pages\.dev$|^localhost$|^127\./.test(location.hostname) && new URLSearchParams(location.search).get("demo")){
+  S.demo=true;
+  renderPortal({id:"DEMO",key:"demo",date:"2027-06-14",start:"6:00 PM",end:"10:00 PM",arrive:"5:00 PM",depart:"10:30 PM",evName:"Sample wedding",vName:"Sample venue",vAddr:"Boston, MA",vZip:"",status:"Booked",fn:"Sample",ln:"Client",email:"",phone:"",items:[["Silver Package",850]],total:850,paid:250,signedAt:"demo"},false);
+  const t=new URLSearchParams(location.search).get("demo"); if(TABS.some(x=>x[0]===t)) selectTab(t);
+}
