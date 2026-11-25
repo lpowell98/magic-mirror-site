@@ -79,10 +79,12 @@ form?.addEventListener('submit', async (e) => {
     const res = await fetch(form.action, { method: 'POST', body: new FormData(form) });
     if (!res.ok) throw new Error();
     form.reset();
+    window.mmTS?.reset(form.querySelector('.ts-box'));
     status.textContent = 'Thank you! We will be in touch soon.';
   } catch {
     status.innerHTML = 'Sorry, that did not send. Please email <a href="mailto:inquiries@magicmirrorrentalservices.com">inquiries@magicmirrorrentalservices.com</a>.';
   } finally {
+    if (!status.textContent.startsWith('Thank')) window.mmTS?.reset(form.querySelector('.ts-box'));
     button.disabled = false;
   }
 });

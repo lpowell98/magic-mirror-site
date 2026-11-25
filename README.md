@@ -6,7 +6,7 @@ Static copy of www.magicmirrorrentalservices.com (previously on Squarespace), re
 
 - `public/` is the site. Each page is `public/<page>/index.html`; shared styles and scripts are in `public/assets/`.
 - `public/_redirects` sends the old `/our-photobooth` URL to `/magic-mirror/`.
-- `functions/api/contact.js` handles the contact form (Cloudflare Pages Function).
+- `functions/api/contact.js` handles the contact form and `functions/api/booking.js` forwards booking and dashboard requests to Apps Script (Cloudflare Pages Functions).
 - `src-images/` holds the original full-size photos. They are not deployed.
 - `public/images/` holds the web versions (WebP, resized, with small `-thumb` versions for the gallery grids).
 
@@ -55,15 +55,34 @@ BoothBook is retired. Bookings, payments and the owner dashboard all run on our 
 
 - Google Sheet "MMRS Bookings" with tabs Bookings, Blocked Dates, Messages, Payments, Automation Log.
 - `apps-script/Code.gs` is the sheet's bound Apps Script (Extensions > Apps Script). New booking IDs continue after `CONFIG.FIRST_ID` (150).
-- One deployment serves both pages: Web app, Execute as **Me**, access **Anyone**. Its URL is `API_URL` in `public/booking/index.html` and `public/app/index.html`.
+- One deployment serves both pages: Web app, Execute as **Me**, access **Anyone**.
+- The pages never call Apps Script directly. They post to `/api/booking` (`functions/api/booking.js`), which checks Turnstile, adds the visitor's IP and browser plus a shared secret, and forwards to the Apps Script URL.
 - To ship a code change: paste `Code.gs`, save, then Deploy > Manage deployments > edit (pencil) > Version: New version > Deploy. The URL stays the same.
 - `CONFIG` at the top of `Code.gs`: `NOTIFY` (who gets new-booking alerts), `ADMINS` (who can sign in to the dashboard), `FROM` / `REPLY_TO` (client emails are sent as inquiries@).
 
+### Security settings
+
+| Where | Name | What it does |
+|---|---|---|
+| Cloudflare Pages > Settings > Variables and secrets | `BOOKING_PROXY_SECRET` (secret) | Shared secret sent to Apps Script with every request |
+| Apps Script > Project Settings > Script properties | `PROXY_SECRET` | Same value. Once set, Apps Script refuses requests that didn't come through the site |
+| Cloudflare Pages | `TURNSTILE_SITE_KEY` (plain) and `TURNSTILE_SECRET` (secret) | Turnstile bot check on bookings, booking-code requests, dashboard sign-in and the contact form. Off until both are set |
+| Apps Script Script properties | `BASE_ADDRESS` | Travel miles come from Google Maps driving distance from this address, not from what the client typed |
+
+Pages variables take effect on the next deploy. `functions/_middleware.js` adds a strict Content-Security-Policy and no-referrer to `/booking/` and `/app/`; their scripts live in `public/booking/booking.js` and `public/app/app.js` because inline scripts are blocked.
+
+### Client portal
+
+- Each booking has a private key (Bookings column AU, "Portal Key"). Email links carry it: `/booking/?id=151&k=<key>`. The browser remembers keys it has opened.
+- Typing Booking ID + last name emails a 6-digit code to the address on the booking; the code opens the portal. Older bookings get a key the first time one is needed.
+- Limits per visitor: 5 bookings an hour (30 a day overall), 6 code requests an hour, 20 wrong keys an hour, 10 messages an hour per booking.
+
 ### Dashboard sign-in
 
-- Only emails in `CONFIG.ADMINS` can sign in, with a password or a 6-digit code emailed to them.
-- Each person sets their own password from the dashboard's Password button. Passwords are stored salted and hashed in Script Properties, never in this repo.
-- Sessions last 30 days. 5 wrong passwords locks sign-in for a while.
+- Only emails in `CONFIG.ADMINS` can sign in, with a password (10+ characters) or a 6-digit code emailed to them.
+- Passwords are stored salted and stretched in Script Properties, never in this repo. Older hashes upgrade at the next sign-in.
+- Sessions last 7 days. Every sign-in emails that admin with the IP and browser. "Sign out all" ends every session for that admin.
+- 5 wrong passwords for an account, or 15 from one IP, locks password sign-in for 15 minutes.
 
 ### Payments (Stripe)
 

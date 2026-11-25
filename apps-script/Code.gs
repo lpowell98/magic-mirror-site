@@ -2,6 +2,13 @@
  * Magic Mirror Rental Services — booking back end
  * Bound to the "MMRS Bookings" Google Sheet (Extensions > Apps Script).
  * Deploy: Deploy > New deployment > Web app > Execute as: Me > Who has access: Anyone.
+ *
+ * Script properties (Project Settings > Script properties). None of these go in this file or on GitHub.
+ *   PROXY_SECRET       a long random phrase, the same as BOOKING_PROXY_SECRET in Cloudflare Pages.
+ *                      Once set, the back end only answers requests that came through the website.
+ *   BASE_ADDRESS       where travel is measured from (e.g. your home or storage address). When set, the
+ *                      travel fee uses Google Maps driving miles instead of the miles the client typed.
+ *   STRIPE_SECRET_KEY  see "Stripe payments" below.
  */
 
 const CONFIG = {
@@ -28,43 +35,69 @@ const COL = { ID:1, CREATED:2, STATUS:3, DATE:4, TYPE:5, EVNAME:6, START:7, END:
   PKG:22, PRINT:23, XTIME:24, COUPON:25, REF:26, PAYOPT:27, TOTAL:28, PAID:29, BALANCE:30, NOTES:31,
   SIGNED_AT:32, SIGNER:33, SIGN_IP:34, CONTRACT_PDF:35, MODEL_RELEASE:36,
   TEMPLATE:37, TEMPLATE_TEXT:38, ONSITE_NAME:39, ONSITE_PHONE:40, GUESTS:41, SETUP_NOTES:42, DETAILS_AT:43,
-  STAFF:44, ADMIN_NOTES:45, TEAM_NOTES:46 };
-const NCOL = 46;
+  STAFF:44, ADMIN_NOTES:45, TEAM_NOTES:46, KEY:47 };
+const NCOL = 47;
 
-/* ---------------- HTTP ---------------- */
+/* ---------------- HTTP ----------------
+   Every request comes through the website's /api/booking (functions/api/booking.js), which checks
+   Turnstile and adds the visitor's IP, browser and the shared PROXY_SECRET. */
+
+const REQ = { ip: '', ua: '', verified: false };   // who is calling, filled in per request
 
 function doGet(e) {
   const p = e.parameter || {};
   if (p.admin !== undefined) return adminPage_();
   try {
-    if (p.action === 'dates')  return json({ ok: true, taken: takenDates_() });
-    if (p.action === 'lookup') return json(lookup_(p.id, p.ln));
-    if (p.action === 'contract') return json(getContract_(p.id, p.ln));
-    if (p.action === 'messages') return json(getMessages_(p.id, p.ln));
+    if (p.action === 'dates') return json({ ok: true, taken: takenDates_() });
     return json({ ok: true, service: CONFIG.BUSINESS });
-  } catch (err) { return json({ ok: false, error: String(err) }); }
+  } catch (err) { Logger.log(err); return json({ ok: false, error: 'Something went wrong' }); }
 }
 
+// Client-portal actions: each needs the booking ID plus its private key (from the email link or an emailed code).
+const PORTAL_READS = {
+  lookup: (b, f) => ({ ok: true, booking: bookingView_(f.r) }),
+  contract: (b, f) => getContract_(f),
+  messages: (b, f) => getMessages_(f)
+};
+const PORTAL_WRITES = {
+  sign: signContract_, template: saveTemplate_, details: saveDetails_, message: addMessage_,
+  pay: startPayment_, confirmPay: confirmPayment_
+};
+
 function doPost(e) {
+  let b;
+  try { b = JSON.parse(e.postData.contents); } catch (err) { return json({ ok: false, error: 'Bad request' }); }
+  if (!b || typeof b !== 'object') return json({ ok: false, error: 'Bad request' });
+  const secret = PropertiesService.getScriptProperties().getProperty('PROXY_SECRET');
+  REQ.verified = !!secret && String(b.proxy || '') === secret;
+  if (secret && !REQ.verified) return json({ ok: false, error: 'FORBIDDEN' });
+  REQ.ip = clip_(b.ip, 64) || 'unknown'; REQ.ua = clip_(b.ua, 300);
+  const action = String(b.action || '');
+
   // Owner dashboard on app.magicmirrorrentalservices.com (handles its own locking)
+  if (action.indexOf('admin') === 0) {
+    try { return json(adminApi_(b)); } catch (err) { return json({ ok: false, error: String(err.message || err) }); }
+  }
   try {
-    const a = JSON.parse(e.postData.contents);
-    if (String(a.action || '').indexOf('admin') === 0) return json(adminApi_(a));
-  } catch (err) { return json({ ok: false, error: String(err.message || err) }); }
+    if (action === 'dates') return json({ ok: true, taken: takenDates_() });
+    if (action === 'portalCode') return json(portalCode_(b));
+    if (action === 'portalVerify') return json(portalVerify_(b));
+    if (PORTAL_READS[action]) {
+      const f = authRow_(b); if (!f) return json(authError_());
+      return json(PORTAL_READS[action](b, f));
+    }
+    if (action !== 'book' && !PORTAL_WRITES[action]) return json({ ok: false, error: 'Unknown action' });
+  } catch (err) { Logger.log(err); return json({ ok: false, error: 'Something went wrong. Please try again.' }); }
+
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(15000);
-    const b = JSON.parse(e.postData.contents);
-    if (b.action === 'book') return json(createBooking_(b));
-    if (b.action === 'sign') return json(signContract_(b));
-    if (b.action === 'template') return json(saveTemplate_(b));
-    if (b.action === 'details') return json(saveDetails_(b));
-    if (b.action === 'message') return json(addMessage_(b));
-    if (b.action === 'pay') return json(startPayment_(b));
-    if (b.action === 'confirmPay') return json(confirmPayment_(b));
-    return json({ ok: false, error: 'Unknown action' });
+    if (action === 'book') return json(createBooking_(b));
+    const f = authRow_(b); if (!f) return json(authError_());
+    return json(PORTAL_WRITES[action](b, f));
   } catch (err) {
-    return json({ ok: false, error: String(err) });
+    Logger.log(err);
+    return json({ ok: false, error: 'Something went wrong. Please try again.' });
   } finally {
     lock.releaseLock();
   }
@@ -77,8 +110,96 @@ function json(o) { return ContentService.createTextOutput(JSON.stringify(o)).set
 function sheet_(name) { return SpreadsheetApp.getActive().getSheetByName(name); }
 function fmtDate_(v) { return v instanceof Date ? Utilities.formatDate(v, CONFIG.TZ, 'MM/dd/yyyy') : String(v || '').trim(); }
 function rows_() {
+  ensureCols_();
   const sh = sheet_('Bookings'); const n = sh.getLastRow();
   return n < 2 ? [] : sh.getRange(2, 1, n - 1, NCOL).getValues();
+}
+
+// Adds the dashboard columns (Staff, Admin Notes, Team Notes, Portal Key) if the sheet doesn't have them yet.
+let colsChecked_ = false;
+function ensureCols_() {
+  if (colsChecked_) return; colsChecked_ = true;
+  const sh = sheet_('Bookings');
+  if (sh.getMaxColumns() < NCOL) sh.insertColumnsAfter(sh.getMaxColumns(), NCOL - sh.getMaxColumns());
+  const head = sh.getRange(1, COL.STAFF, 1, 4), h = head.getValues()[0];
+  if (!h[0] || !h[3]) head.setValues([['Staff', 'Admin Notes', 'Team Notes', 'Portal Key']]).setFontWeight('bold');
+}
+
+/* ---------------- Safety helpers ---------------- */
+
+const has_ = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+// Text typed by a visitor, made safe to store: a leading = + - @ would make Sheets treat it as a formula.
+const txt_ = v => { const t = String(v == null ? '' : v); return /^[=+\-@]/.test(t) ? "'" + t : t; };
+
+// Counts requests in fixed time windows. Returns true (and counts nothing) once max is reached.
+function limited_(key, max, secs) {
+  const c = CacheService.getScriptCache(), k = 'rl:' + key + ':' + Math.floor(Date.now() / 1000 / secs);
+  const n = Number(c.get(k) || 0);
+  if (n >= max) return true;
+  c.put(k, String(n + 1), Math.min(21600, secs + 60));
+  return false;
+}
+function tooMany_() { return { ok: false, error: 'TOO_MANY' }; }
+
+// A random value from Google's UUID generator (cryptographically random).
+function newKey_() { return (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').slice(0, 40); }
+function code6_() { const h = Utilities.getUuid().replace(/-/g, ''); return String(100000 + parseInt(h.slice(0, 12), 16) % 900000); }
+
+// The booking's private key, created the first time it is needed (older bookings don't have one yet).
+function keyOf_(r) {
+  if (r[COL.KEY - 1]) return String(r[COL.KEY - 1]);
+  const k = newKey_();
+  sheet_('Bookings').getRange(rowById_(r[0]), COL.KEY).setNumberFormat('@').setValue(k);
+  r[COL.KEY - 1] = k;
+  return k;
+}
+
+// Finds the booking for a portal request by ID + private key. Wrong keys are counted per visitor.
+function authRow_(b) {
+  if (limited_('badauth-check:' + REQ.ip, 300, 3600)) return null;
+  if (Number(CacheService.getScriptCache().get('badauth:' + REQ.ip) || 0) >= 20) return null;
+  const id = String(b.id || '').trim(), key = String(b.key || '').trim();
+  if (/^\d{1,7}$/.test(id) && key.length >= 30) {
+    const rows = rows_(), i = rows.findIndex(x => String(x[0]) === id);
+    if (i !== -1 && rows[i][COL.KEY - 1] && String(rows[i][COL.KEY - 1]) === key) return { index: i + 2, r: rows[i] };
+  }
+  const c = CacheService.getScriptCache(), n = Number(c.get('badauth:' + REQ.ip) || 0);
+  c.put('badauth:' + REQ.ip, String(n + 1), 3600);
+  return null;
+}
+function authError_() {
+  return Number(CacheService.getScriptCache().get('badauth:' + REQ.ip) || 0) >= 20 ? tooMany_() : { ok: false, error: 'NOT_FOUND' };
+}
+
+/* ---------------- Portal sign-in by emailed code ----------------
+   For clients who look up their booking with Booking ID + last name instead of the email link. */
+
+function portalCode_(b) {
+  const done = { ok: true };   // same answer whether or not the booking exists
+  if (limited_('pcode-ip:' + REQ.ip, 6, 3600)) return tooMany_();
+  const f = findRow_(b.id, b.ln); if (!f) return done;
+  const id = String(f.r[0]), cache = CacheService.getScriptCache();
+  if (cache.get('pcodeSent:' + id) || limited_('pcode-id:' + id, 4, 3600)) return done;
+  const code = code6_();
+  cache.put('pcode:' + id, JSON.stringify({ h: sha_(code), tries: 0 }), 600);
+  cache.put('pcodeSent:' + id, '1', 60);
+  sendMail_({ to: f.r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, subject: `Your booking code: ${code}`,
+    htmlBody: `<p>Hi ${esc_(f.r[COL.FN - 1])},</p><p>Your code to open booking #${esc_(id)} is:</p><p style="font-size:32px;font-weight:800;letter-spacing:4px;margin:12px 0">${code}</p><p>It expires in 10 minutes. If you didn't ask for it, you can ignore this email.</p>${portalLink_(f.r, 'Open your booking')}` });
+  return done;
+}
+
+function portalVerify_(b) {
+  const id = String(b.id || '').trim(), cache = CacheService.getScriptCache(), k = 'pcode:' + id;
+  if (limited_('pverify-ip:' + REQ.ip, 30, 3600)) return tooMany_();
+  const raw = /^\d{1,7}$/.test(id) && cache.get(k);
+  if (!raw) return { ok: false, error: 'CODE_EXPIRED' };
+  const c = JSON.parse(raw);
+  if (c.tries >= 5) { cache.remove(k); return { ok: false, error: 'CODE_EXPIRED' }; }
+  if (sha_(String(b.code || '').trim()) !== c.h) { c.tries++; cache.put(k, JSON.stringify(c), 600); return { ok: false, error: 'CODE_WRONG' }; }
+  cache.remove(k);
+  const r = sheet_('Bookings').getRange(rowById_(id), 1, 1, NCOL).getValues()[0];
+  keyOf_(r);
+  return { ok: true, booking: bookingView_(r) };
 }
 
 function takenDates_() {
@@ -91,9 +212,9 @@ function takenDates_() {
 
 function price_(b) {
   const items = [];
-  if (b.print && CONFIG.PRINTS[b.print]) items.push(CONFIG.PRINTS[b.print]);
-  if (b.pkg && CONFIG.PACKAGES[b.pkg]) items.push(['Mirror Me Booth - ' + CONFIG.PACKAGES[b.pkg][0], CONFIG.PACKAGES[b.pkg][1]]);
-  (b.times || []).forEach(t => { if (CONFIG.TIMES[t]) items.push(CONFIG.TIMES[t]); });
+  if (has_(CONFIG.PRINTS, b.print)) items.push(CONFIG.PRINTS[b.print]);
+  if (has_(CONFIG.PACKAGES, b.pkg)) items.push(['Mirror Me Booth - ' + CONFIG.PACKAGES[b.pkg][0], CONFIG.PACKAGES[b.pkg][1]]);
+  (b.times || []).forEach(t => { if (has_(CONFIG.TIMES, t)) items.push(CONFIG.TIMES[t]); });
   const miles = Math.max(0, parseFloat(b.miles) || 0);
   const fee = Math.round(Math.max(0, miles - CONFIG.FREE_MILES) * CONFIG.PER_MILE * 100) / 100;
   if (fee > 0) items.push(['Travel', fee]);
@@ -103,37 +224,83 @@ function price_(b) {
 
 /* ---------------- Create booking ---------------- */
 
+// A real MM/DD/YYYY date from today up to four years ahead, or ''.
+function cleanDate_(v) {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(v || '').trim()); if (!m) return '';
+  const d = new Date(+m[3], +m[1] - 1, +m[2]);
+  if (d.getFullYear() !== +m[3] || d.getMonth() !== +m[1] - 1 || d.getDate() !== +m[2]) return '';
+  const day = dayNum_(m[0]), today = dayNum_(new Date());
+  return day >= today && day <= today + 4 * 366 ? m[0] : '';
+}
+
+// Driving miles from BASE_ADDRESS (Script properties) to the venue, or null if not set up or not found.
+function routeMiles_(dest) {
+  const base = PropertiesService.getScriptProperties().getProperty('BASE_ADDRESS');
+  if (!base) return null;
+  try {
+    const d = Maps.newDirectionFinder().setOrigin(base).setDestination(dest).setMode(Maps.DirectionFinder.Mode.DRIVING).getDirections();
+    const leg = d && d.routes && d.routes[0] && d.routes[0].legs && d.routes[0].legs[0];
+    return leg && leg.distance ? Math.round(leg.distance.value / 1609.344 * 10) / 10 : null;
+  } catch (e) { Logger.log('Maps: ' + e); return null; }
+}
+
 function createBooking_(b) {
-  const need = ['date', 'pkg', 'print', 'email', 'phone', 'evName', 'start', 'vName', 'vAddr', 'vZip', 'fn', 'ln'];
-  const miss = need.filter(k => !String(b[k] || '').trim());
+  const today = Utilities.formatDate(new Date(), CONFIG.TZ, 'yyyyMMdd');
+  if (limited_('book-ip:' + REQ.ip, 5, 3600) || limited_('book-day:' + today, 30, 86400)) return tooMany_();
+
+  // Only known fields, trimmed and size-limited. Prices always come from CONFIG, never from the browser.
+  const LEN = { eventType: 80, evName: 150, start: 20, end: 20, arrive: 20, depart: 20, vName: 150, vAddr: 300, vZip: 20,
+    fn: 80, ln: 80, email: 200, phone: 40, street: 200, zip: 20, coupon: 60, ref: 150 };
+  const c = {};
+  Object.keys(LEN).forEach(k => c[k] = clip_(b[k], LEN[k]));
+  c.pkg = String(b.pkg || ''); c.print = String(b.print || '');
+  c.times = Array.isArray(b.times) ? b.times.map(String).filter((t, i, a) => has_(CONFIG.TIMES, t) && a.indexOf(t) === i) : [];
+  c.payOpt = ['later', 'deposit', 'full'].indexOf(b.payOpt) !== -1 ? b.payOpt : 'later';
+  c.date = cleanDate_(b.date);
+
+  const need = ['pkg', 'print', 'email', 'phone', 'evName', 'start', 'vName', 'vAddr', 'vZip', 'fn', 'ln'];
+  const miss = need.filter(k => !c[k]);
   if (miss.length) return { ok: false, error: 'Missing: ' + miss.join(', ') };
+  if (!c.date) return { ok: false, error: 'Please choose a valid event date.' };
+  if (!has_(CONFIG.PACKAGES, c.pkg) || !has_(CONFIG.PRINTS, c.print)) return { ok: false, error: 'Please choose a package and a print option.' };
+  if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(c.email)) return { ok: false, error: 'Please enter a valid email address.' };
   if (!b.terms) return { ok: false, error: 'Terms not accepted' };
-  if (takenDates_().indexOf(b.date) !== -1) return { ok: false, error: 'DATE_TAKEN' };
+  if (takenDates_().indexOf(c.date) !== -1) return { ok: false, error: 'DATE_TAKEN' };
+
+  // Travel: Google Maps driving miles when BASE_ADDRESS is set; otherwise the miles the client typed.
+  const typed = Math.min(500, Math.max(0, parseFloat(b.miles) || 0));
+  const mapped = routeMiles_(c.vAddr + ', ' + c.vZip);
+  c.miles = mapped === null ? typed : mapped;
+  const milesNote = mapped === null ? (PropertiesService.getScriptProperties().getProperty('BASE_ADDRESS') ? 'Miles typed by client (Google Maps could not find the venue)' : '')
+    : (Math.abs(mapped - typed) > 2 ? `Miles from Google Maps: ${mapped} (client typed ${typed})` : '');
 
   const sh = sheet_('Bookings');
   const ids = rows_().map(r => Number(r[0]) || 0);
   const id = Math.max(CONFIG.FIRST_ID, ...ids) + 1;
-  const p = price_(b);
+  const p = price_(c);
   const row = sh.getLastRow() + 1;
+  const key = newKey_();
 
   const values = [
-    id, new Date(), 'Unconfirmed', b.date, b.eventType || '', b.evName, b.start, b.end || '', b.arrive || '', b.depart || '',
-    b.vName, b.vAddr, b.vZip, p.miles || '', p.fee, b.fn, b.ln, b.email, b.phone, b.street || '', b.zip || '',
-    CONFIG.PACKAGES[b.pkg][0], CONFIG.PRINTS[b.print][0],
-    (b.times || []).map(t => CONFIG.TIMES[t] && CONFIG.TIMES[t][0]).filter(String).join(', '),
-    b.coupon || '', b.ref || '', b.payOpt || 'later', p.total, 0, '=AB' + row + '-AC' + row, ''
+    id, new Date(), 'Unconfirmed', c.date, txt_(c.eventType), txt_(c.evName), txt_(c.start), txt_(c.end), txt_(c.arrive), txt_(c.depart),
+    txt_(c.vName), txt_(c.vAddr), txt_(c.vZip), p.miles || '', p.fee, txt_(c.fn), txt_(c.ln), txt_(c.email), txt_(c.phone), txt_(c.street), txt_(c.zip),
+    CONFIG.PACKAGES[c.pkg][0], CONFIG.PRINTS[c.print][0],
+    c.times.map(t => CONFIG.TIMES[t][0]).join(', '),
+    txt_(c.coupon), txt_(c.ref), c.payOpt, p.total, 0, '=AB' + row + '-AC' + row, milesNote
   ];
   // Store as plain text so Sheets keeps "02201", "11/27/2026" and "7:00 pm" exactly as typed
   sh.getRange(row, 1, 1, 31).setNumberFormat('@');
   sh.getRange(row, COL.ID).setNumberFormat('0');
   sh.getRange(row, COL.CREATED).setNumberFormat('MM/dd/yyyy h:mm am/pm');
   sh.getRange(row, COL.MILES).setNumberFormat('0.0');
-  [COL.FEE, COL.TOTAL, COL.PAID, COL.BALANCE].forEach(c => sh.getRange(row, c).setNumberFormat('$#,##0.00'));
+  [COL.FEE, COL.TOTAL, COL.PAID, COL.BALANCE].forEach(col => sh.getRange(row, col).setNumberFormat('$#,##0.00'));
   sh.getRange(row, 1, 1, values.length).setValues([values]);
+  sh.getRange(row, COL.KEY).setNumberFormat('@').setValue(key);
 
-  notifyOwner_(id, b, p);
-  confirmClient_(id, b, p);
-  return { ok: true, booking: lookup_(id, b.ln).booking };
+  const r = sh.getRange(row, 1, 1, NCOL).getValues()[0];
+  notifyOwner_(id, c, p, milesNote, mapped !== null);
+  confirmClient_(id, c, p, r);
+  return { ok: true, booking: bookingView_(r) };
 }
 
 /* ---------------- Branding (emails + contract PDF) ---------------- */
@@ -193,10 +360,8 @@ function canSendAs_() {
 
 /* ---------------- Lookup (client portal) ---------------- */
 
-function lookup_(id, ln) {
-  const r = rows_().find(x => String(x[0]) === String(id).trim() &&
-                             String(x[COL.LN - 1]).toLowerCase() === String(ln || '').trim().toLowerCase());
-  if (!r) return { ok: false, error: 'NOT_FOUND' };
+// What the client portal sees for one booking row (includes its private key).
+function bookingView_(r) {
   const g = c => r[c - 1];
   const items = [];
   const byName = (tbl, name) => Object.keys(tbl).find(k => tbl[k][0] === name);
@@ -204,8 +369,8 @@ function lookup_(id, ln) {
   const pr = byName(CONFIG.PRINTS, g(COL.PRINT)); if (pr) items.push(CONFIG.PRINTS[pr]);
   String(g(COL.XTIME) || '').split(', ').filter(String).forEach(n => { const t = byName(CONFIG.TIMES, n); if (t) items.push(CONFIG.TIMES[t]); });
   if (Number(g(COL.FEE)) > 0) items.push(['Travel', Number(g(COL.FEE))]);
-  return { ok: true, booking: {
-    id: g(COL.ID), date: fmtDate_(g(COL.DATE)), status: g(COL.STATUS), start: g(COL.START), end: g(COL.END),
+  return {
+    id: g(COL.ID), key: keyOf_(r), date: fmtDate_(g(COL.DATE)), status: g(COL.STATUS), start: g(COL.START), end: g(COL.END),
     arrive: g(COL.ARRIVE), depart: g(COL.DEPART), evName: g(COL.EVNAME), vName: g(COL.VNAME), vAddr: g(COL.VADDR),
     vZip: g(COL.VZIP), fn: g(COL.FN), ln: g(COL.LN), email: g(COL.EMAIL), phone: g(COL.PHONE),
     items, total: Number(g(COL.TOTAL)) || 0, paid: Number(g(COL.PAID)) || 0,
@@ -214,31 +379,31 @@ function lookup_(id, ln) {
     template: g(COL.TEMPLATE) || '', templateText: g(COL.TEMPLATE_TEXT) || '', customPrint: g(COL.PRINT) === CONFIG.PRINTS.cus[0],
     onsiteName: g(COL.ONSITE_NAME) || '', onsitePhone: g(COL.ONSITE_PHONE) || '', guests: g(COL.GUESTS) || '',
     setupNotes: g(COL.SETUP_NOTES) || '', detailsAt: g(COL.DETAILS_AT) ? fmtStamp_(g(COL.DETAILS_AT)) : ''
-  }};
+  };
 }
 
 /* ---------------- Emails ---------------- */
 
 function itemsTable_(p) {
   return '<table style="border-collapse:collapse;width:100%;font-size:14px">' +
-    p.items.map(i => `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${i[0]}</td><td style="text-align:right;border-bottom:1px solid #eee">$${i[1].toFixed(2)}</td></tr>`).join('') +
+    p.items.map(i => `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${esc_(i[0])}</td><td style="text-align:right;border-bottom:1px solid #eee">$${i[1].toFixed(2)}</td></tr>`).join('') +
     `<tr><td style="padding:8px 0"><b>Total</b></td><td style="text-align:right"><b>$${p.total.toFixed(2)}</b></td></tr></table>`;
 }
 
-function notifyOwner_(id, b, p) {
-  const ss = SpreadsheetApp.getActive();
+function notifyOwner_(id, b, p, milesNote, milesChecked) {
+  const ss = SpreadsheetApp.getActive(), e = esc_;
   sendMail_({
     to: CONFIG.NOTIFY,
     subject: `New booking #${id}: ${b.evName} on ${b.date}`,
     htmlBody: `<p><b>New booking #${id}</b> (Unconfirmed)</p>
-      <p>${b.fn} ${b.ln} · ${b.email} · ${b.phone}<br>${b.eventType || ''}: ${b.evName}<br>
-      ${b.date}, ${b.start}${b.end ? ' – ' + b.end : ''}<br>${b.vName}, ${b.vAddr} ${b.vZip}</p>
-      ${itemsTable_(p)}<p>Payment choice: ${b.payOpt || 'later'}</p>
+      <p>${e(b.fn)} ${e(b.ln)} · ${e(b.email)} · ${e(b.phone)}<br>${e(b.eventType)}: ${e(b.evName)}<br>
+      ${e(b.date)}, ${e(b.start)}${b.end ? ' – ' + e(b.end) : ''}<br>${e(b.vName)}, ${e(b.vAddr)} ${e(b.vZip)}</p>
+      ${itemsTable_(p)}<p>Payment choice: ${e(b.payOpt)}<br>Travel: ${p.miles} miles ${milesChecked ? '(Google Maps)' : '(typed by the client, not checked)'}${milesNote ? '<br>' + e(milesNote) : ''}</p>
       <p><a href="${ss.getUrl()}">Open MMRS Bookings</a></p>`
   });
 }
 
-function confirmClient_(id, b, p) {
+function confirmClient_(id, b, p, r) {
   sendMail_({
     to: b.email,
     replyTo: CONFIG.REPLY_TO,
@@ -248,8 +413,8 @@ function confirmClient_(id, b, p) {
       <p><b>Booking ID:</b> ${id}<br><b>Time:</b> ${esc_(b.start)}${b.end ? ' – ' + esc_(b.end) : ''}<br><b>Venue:</b> ${esc_(b.vName)}, ${esc_(b.vAddr)} ${esc_(b.vZip)}</p>
       ${itemsTable_(p)}
       <p>A non-refundable $${CONFIG.DEPOSIT} reservation fee secures your date. The remaining balance is due 14 days before your event.</p>
-      ${portalLink_([id], 'View your booking', b.ln)}
-      <p>Use Booking ID <b>${id}</b> and your last name to look up your booking any time.</p>
+      ${portalLink_(r, 'View your booking')}
+      <p>Keep this email: the button above opens your booking any time. You can also look it up on our website with Booking ID <b>${id}</b> and your last name, and we'll email you a code.</p>
       <p>We look forward to celebrating with you!</p>`
   });
 }
@@ -304,9 +469,7 @@ function contractHash_(html) {
     .map(b => ('0' + (b & 0xff).toString(16)).slice(-2)).join('');
 }
 
-function getContract_(id, ln) {
-  const f = findRow_(id, ln);
-  if (!f) return { ok: false, error: 'NOT_FOUND' };
+function getContract_(f) {
   const signedAt = f.r[COL.SIGNED_AT - 1];
   const on = signedAt ? fmtStamp_(signedAt) : Utilities.formatDate(new Date(), CONFIG.TZ, 'MM/dd/yyyy');
   const html = contractHtml_(f.r, on);
@@ -316,12 +479,10 @@ function getContract_(id, ln) {
 
 const CONSENT_TEXT = 'By signing, you agree to use an electronic signature and to receive this contract electronically. Your electronic signature is legally binding, and your name, IP address, date and time are recorded as proof of your intent to sign (US ESIGN Act and UETA).';
 
-function signContract_(b) {
-  const f = findRow_(b.id, b.ln);
-  if (!f) return { ok: false, error: 'NOT_FOUND' };
+function signContract_(b, f) {
   if (f.r[COL.SIGNED_AT - 1]) return { ok: false, error: 'ALREADY_SIGNED' };
   if (String(f.r[COL.STATUS - 1]) === 'Cancelled') return { ok: false, error: 'CANCELLED' };
-  const name = String(b.signerName || '').trim(), title = String(b.signerTitle || '').trim();
+  const name = clip_(b.signerName, 120), title = clip_(b.signerTitle, 120);
   if (!name || !title) return { ok: false, error: 'Missing signer name or title' };
   if (!b.consent) return { ok: false, error: 'Consent to sign electronically is required' };
   const m = /^data:image\/png;base64,([A-Za-z0-9+\/=]+)$/.exec(String(b.signature || ''));
@@ -330,7 +491,7 @@ function signContract_(b) {
   const now = new Date(), stamp = fmtStamp_(now);
   const body = contractHtml_(f.r, stamp);
   const hash = contractHash_(body);
-  const ip = String(b.ip || 'not captured'), ua = String(b.ua || '').slice(0, 300);
+  const ip = REQ.ip && REQ.ip !== 'unknown' ? REQ.ip + (REQ.verified ? '' : ' (not verified)') : 'not captured', ua = REQ.ua;
   const id = f.r[0];
 
   const doc = `<html><head><meta charset="utf-8"><style>
@@ -362,7 +523,8 @@ function signContract_(b) {
 
   const sh = sheet_('Bookings');
   sh.getRange(f.index, COL.SIGNED_AT).setNumberFormat('MM/dd/yyyy h:mm am/pm');
-  sh.getRange(f.index, COL.SIGNED_AT, 1, 5).setValues([[now, name + ' (' + title + ')', ip, file.getUrl(), b.modelRelease ? 'Yes' : 'No']]);
+  sh.getRange(f.index, COL.SIGNER, 1, 2).setNumberFormat('@');
+  sh.getRange(f.index, COL.SIGNED_AT, 1, 5).setValues([[now, txt_(name + ' (' + title + ')'), txt_(ip), file.getUrl(), b.modelRelease ? 'Yes' : 'No']]);
 
   const subj = `Signed contract #${id} – ${CONFIG.BUSINESS}`;
   sendMail_({ to: f.r[COL.EMAIL - 1], replyTo: CONFIG.REPLY_TO, name: CONFIG.BUSINESS, subject: subj,
@@ -384,25 +546,25 @@ function contractsFolder_() {
 
 const clip_ = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
 
-function saveTemplate_(b) {
-  const f = findRow_(b.id, b.ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+function saveTemplate_(b, f) {
+  if (limited_('tpl:' + f.r[0], 10, 3600)) return tooMany_();
   const t = clip_(b.template, 120); if (!t) return { ok: false, error: 'Choose a template' };
   const text = clip_(b.templateText, 300);
   const sh = sheet_('Bookings');
-  sh.getRange(f.index, COL.TEMPLATE, 1, 2).setNumberFormat('@').setValues([[t, text]]);
+  sh.getRange(f.index, COL.TEMPLATE, 1, 2).setNumberFormat('@').setValues([[txt_(t), txt_(text)]]);
   sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Template chosen: #${f.r[0]} ${f.r[COL.EVNAME - 1]}`,
     htmlBody: `<p>Booking #${f.r[0]} (${esc_(f.r[COL.FN - 1])} ${esc_(f.r[COL.LN - 1])}) chose <b>${esc_(t)}</b>.</p><p>Text on the print: ${esc_(text) || '(none)'}</p>` });
   return { ok: true };
 }
 
-function saveDetails_(b) {
-  const f = findRow_(b.id, b.ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+function saveDetails_(b, f) {
+  if (limited_('details:' + f.r[0], 10, 3600)) return tooMany_();
   const name = clip_(b.onsiteName, 120), phone = clip_(b.onsitePhone, 40);
   if (!name || !phone) return { ok: false, error: 'On-site contact name and phone are required' };
   if (!b.confirm) return { ok: false, error: 'Please confirm the details' };
   const now = new Date(), sh = sheet_('Bookings');
-  sh.getRange(f.index, COL.ONSITE_NAME, 1, 4).setNumberFormat('@').setValues([[name, phone, clip_(b.guests, 20), clip_(b.setupNotes, 2000)]]);
+  sh.getRange(f.index, COL.ONSITE_NAME, 1, 4).setNumberFormat('@').setValues([[txt_(name), txt_(phone), txt_(clip_(b.guests, 20)), txt_(clip_(b.setupNotes, 2000))]]);
   sh.getRange(f.index, COL.DETAILS_AT).setNumberFormat('MM/dd/yyyy h:mm am/pm').setValue(now);
   sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Details confirmed: #${f.r[0]} ${f.r[COL.EVNAME - 1]}`,
@@ -419,8 +581,7 @@ function messagesSheet_() {
   return sh;
 }
 
-function getMessages_(id, ln) {
-  const f = findRow_(id, ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+function getMessages_(f) {
   const sh = messagesSheet_(), n = sh.getLastRow();
   const list = n < 2 ? [] : sh.getRange(2, 1, n - 1, 4).getValues()
     .filter(r => String(r[0]) === String(f.r[0]))
@@ -428,16 +589,16 @@ function getMessages_(id, ln) {
   return { ok: true, messages: list };
 }
 
-function addMessage_(b) {
-  const f = findRow_(b.id, b.ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+function addMessage_(b, f) {
   const text = clip_(b.text, 2000); if (!text) return { ok: false, error: 'Message is empty' };
+  if (limited_('msg:' + f.r[0], 10, 3600) || limited_('msg-ip:' + REQ.ip, 30, 3600)) return tooMany_();
   const sh = messagesSheet_(), row = sh.getLastRow() + 1;
   sh.getRange(row, 4).setNumberFormat('@');
-  sh.getRange(row, 1, 1, 4).setValues([[f.r[0], new Date(), 'Client', text]]);
+  sh.getRange(row, 1, 1, 4).setValues([[f.r[0], new Date(), 'Client', txt_(text)]]);
   sendMail_({ to: CONFIG.NOTIFY, replyTo: f.r[COL.EMAIL - 1],
     subject: `Message from ${f.r[COL.FN - 1]} ${f.r[COL.LN - 1]} (booking #${f.r[0]})`,
     htmlBody: `<p>${esc_(text).replace(/\n/g, '<br>')}</p><hr><p style="color:#666">Reply to this email to answer ${esc_(f.r[COL.FN - 1])} directly, or add a row to the Messages tab with From = Magic Mirror to show your reply in their portal.</p>` });
-  return getMessages_(b.id, b.ln);
+  return getMessages_(f);
 }
 
 /* ---------------- Owner dashboard ----------------
@@ -466,13 +627,7 @@ function paymentsSheet_() {
   return sh;
 }
 
-// Adds the dashboard columns (Staff, Admin Notes, Team Notes) if the sheet doesn't have them yet.
-function ensureAdminCols_() {
-  const sh = sheet_('Bookings');
-  if (sh.getMaxColumns() < NCOL) sh.insertColumnsAfter(sh.getMaxColumns(), NCOL - sh.getMaxColumns());
-  const head = sh.getRange(1, COL.STAFF, 1, 3);
-  if (!head.getValues()[0][0]) head.setValues([['Staff', 'Admin Notes', 'Team Notes']]).setFontWeight('bold');
-}
+function ensureAdminCols_() { ensureCols_(); }
 
 function num_(v) { const n = Number(v); return isFinite(n) ? n : 0; }
 
@@ -598,10 +753,10 @@ function adminReply(id, text) {
   });
 }
 
-function portalLink_(r, label, ln) {
+// The private "open your booking" button for emails. The key in the link is what lets the client in.
+function portalLink_(r, label) {
   if (!CONFIG.PORTAL_URL) return '';
-  const url = CONFIG.PORTAL_URL + '?id=' + encodeURIComponent(r[0]) + '&amp;ln=' + encodeURIComponent(ln || r[COL.LN - 1]);
-  return emailButton_(url, label || 'Open your booking');
+  return emailButton_(esc_(portalUrl_(r[0], keyOf_(r))), label || 'Open your booking');
 }
 
 // kind: 'portal' | 'contract' | 'template' | 'details' | 'payment'
@@ -647,11 +802,12 @@ function adminUnblock(date) {
 }
 
 /* ---------------- Dashboard API (app.magicmirrorrentalservices.com) ----------------
-   Sign-in: the admin enters their email, gets a 6-digit code by email, and receives a session token
-   valid for 30 days. Tokens are stored hashed in Script Properties. */
+   Sign-in: the admin enters a password, or their email and a 6-digit code sent to it, and receives a
+   session token valid for 7 days. Tokens are stored hashed in Script Properties. Every new sign-in
+   is emailed to that admin, and "Sign out all" ends all of their sessions. */
 
 const ADMIN_FNS = { adminData, adminUpdate, adminAddPayment, adminReply, adminResend, adminBlock, adminUnblock };
-const SESSION_DAYS = 30;
+const SESSION_DAYS = 7;
 
 function sha_(t) {
   return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(t), Utilities.Charset.UTF_8)
@@ -672,8 +828,9 @@ function adminApi_(a) {
   const cache = CacheService.getScriptCache();
   if (a.action === 'adminCode') {
     const email = isAdminEmail_(a.email);
+    if (limited_('acode-ip:' + REQ.ip, 6, 900)) return tooMany_();
     if (email && !cache.get('codeSent:' + email)) {
-      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const code = code6_();
       cache.put('code:' + email, JSON.stringify({ h: sha_(code), tries: 0 }), 600);
       cache.put('codeSent:' + email, '1', 45);
       sendMail_({ to: email, subject: `Your dashboard sign-in code: ${code}`,
@@ -694,23 +851,36 @@ function adminApi_(a) {
     return newSession_(email);
   }
   if (a.action === 'adminLogin') {
-    const email = isAdminEmail_(a.email), lockKey = 'pwfail:' + String(a.email || '').toLowerCase();
-    const fails = Number(cache.get(lockKey) || 0);
-    if (fails >= 5) return { ok: false, error: 'Too many tries. Wait 15 minutes, or sign in with an emailed code.' };
-    const stored = email && PropertiesService.getScriptProperties().getProperty('pw:' + email);
-    if (!stored || !checkPassword_(String(a.password || ''), stored)) {
-      cache.put(lockKey, String(fails + 1), 900);
+    const email = isAdminEmail_(a.email), lockKey = 'pwfail:' + String(a.email || '').toLowerCase().slice(0, 200);
+    const ipKey = 'pwfail-ip:' + REQ.ip;
+    const fails = Number(cache.get(lockKey) || 0), ipFails = Number(cache.get(ipKey) || 0);
+    if (fails >= 5 || ipFails >= 15) return { ok: false, error: 'Too many tries. Wait 15 minutes, or sign in with an emailed code.' };
+    const props = PropertiesService.getScriptProperties();
+    const stored = email && props.getProperty('pw:' + email), pw = String(a.password || '').slice(0, 200);
+    if (!stored || !checkPassword_(pw, stored)) {
+      cache.put(lockKey, String(fails + 1), 900); cache.put(ipKey, String(ipFails + 1), 900);
       return { ok: false, error: stored || !email ? 'Email or password is not right.' : 'No password set for this account yet. Use an emailed code, then set one.' };
     }
     cache.remove(lockKey);
+    if (String(stored).indexOf('v2$') !== 0) props.setProperty('pw:' + email, hashPassword_(pw));   // upgrade older hashes
     return newSession_(email);
   }
   if (a.action === 'adminSetPassword') {
     const email = sessionEmail_(a.token);
     if (!email) return { ok: false, error: 'SIGNED_OUT' };
     const pw = String(a.password || '');
-    if (pw.length < 8) return { ok: false, error: 'Use at least 8 characters.' };
+    if (pw.length < 10) return { ok: false, error: 'Use at least 10 characters.' };
+    if (pw.length > 200) return { ok: false, error: 'Use 200 characters or fewer.' };
     PropertiesService.getScriptProperties().setProperty('pw:' + email, hashPassword_(pw));
+    return { ok: true };
+  }
+  if (a.action === 'adminSignOutAll') {
+    const email = sessionEmail_(a.token);
+    if (!email) return { ok: false, error: 'SIGNED_OUT' };
+    const props = PropertiesService.getScriptProperties(), all = props.getProperties();
+    Object.keys(all).filter(k => k.indexOf('sess:') === 0).forEach(k => {
+      try { if (JSON.parse(all[k]).email === email) props.deleteProperty(k); } catch (e) { props.deleteProperty(k); }
+    });
     return { ok: true };
   }
   if (a.action === 'adminLogout') {
@@ -732,21 +902,35 @@ function adminApi_(a) {
 function newSession_(email) {
   const token = Utilities.getUuid() + Utilities.getUuid().replace(/-/g, '');
   const props = PropertiesService.getScriptProperties();
-  props.setProperty('sess:' + sha_(token), JSON.stringify({ email, exp: Date.now() + SESSION_DAYS * 864e5 }));
+  props.setProperty('sess:' + sha_(token), JSON.stringify({ email, exp: Date.now() + SESSION_DAYS * 864e5, ip: REQ.ip, at: Date.now() }));
   pruneSessions_(props);
+  try {
+    sendMail_({ to: email, subject: 'New sign-in to your Magic Mirror dashboard',
+      htmlBody: `<p>Someone just signed in to the owner dashboard as <b>${esc_(email)}</b>.</p>
+        <p>When: ${esc_(fmtStamp_(new Date()))}<br>IP address: ${esc_(REQ.ip)}<br>Browser: ${esc_(REQ.ua || 'unknown')}</p>
+        <p>If this was you, there's nothing to do. If it wasn't, open the dashboard, click <b>Sign out all</b>, then set a new password.</p>` });
+  } catch (e) { Logger.log('Sign-in alert: ' + e); }
   return { ok: true, token, email };
 }
 
-// Salted, stretched hash: "salt$hash". The plain password is never stored.
+// Salted, stretched hash: "v2$salt$hash". The plain password is never stored.
+const PW_ROUNDS = 5000;
 function hashPassword_(pw, salt) {
-  salt = salt || Utilities.getUuid().replace(/-/g, '');
+  salt = salt || newKey_();
+  const A = Utilities.DigestAlgorithm.SHA_256, s = Utilities.newBlob(salt).getBytes();
+  let h = Utilities.computeDigest(A, salt + pw, Utilities.Charset.UTF_8);
+  for (let i = 0; i < PW_ROUNDS; i++) h = Utilities.computeDigest(A, h.concat(s));
+  return 'v2$' + salt + '$' + Utilities.base64Encode(h);
+}
+// Older format, kept so existing passwords still work; they are upgraded at the next sign-in.
+function hashPasswordV1_(pw, salt) {
   let h = salt + pw;
   for (let i = 0; i < 1000; i++) h = sha_(h + salt);
   return salt + '$' + h;
 }
 function checkPassword_(pw, stored) {
-  const salt = String(stored).split('$')[0];
-  return hashPassword_(pw, salt) === stored;
+  const parts = String(stored).split('$');
+  return parts[0] === 'v2' ? hashPassword_(pw, parts[1]) === stored : hashPasswordV1_(pw, parts[0]) === stored;
 }
 
 function pruneSessions_(props) {
@@ -778,18 +962,18 @@ function stripe_(method, path, payload) {
   return body;
 }
 
-function portalUrl_(id, ln) {
-  return CONFIG.PORTAL_URL + '?id=' + encodeURIComponent(id) + '&ln=' + encodeURIComponent(ln);
+function portalUrl_(id, key) {
+  return CONFIG.PORTAL_URL + '?id=' + encodeURIComponent(id) + '&k=' + encodeURIComponent(key);
 }
 
 // b: { id, ln, amount } → { ok, url } of a Stripe Checkout page for that amount.
-function startPayment_(b) {
-  const f = findRow_(b.id, b.ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+function startPayment_(b, f) {
+  if (limited_('pay:' + f.r[0], 20, 3600)) return tooMany_();
   const r = f.r, bal = Math.round((num_(r[COL.TOTAL - 1]) - num_(r[COL.PAID - 1])) * 100) / 100;
   const amt = Math.round(Number(b.amount) * 100) / 100;
   if (!(bal > 0)) return { ok: false, error: 'Your booking is already paid in full.' };
   if (!(amt >= 1) || amt > bal + 0.001) return { ok: false, error: `Enter an amount between $1.00 and $${bal.toFixed(2)}.` };
-  const id = String(r[0]), back = portalUrl_(id, r[COL.LN - 1]);
+  const id = String(r[0]), back = portalUrl_(id, keyOf_(r));
   const s = stripe_('post', 'checkout/sessions', {
     mode: 'payment',
     success_url: back + '&paid={CHECKOUT_SESSION_ID}',
@@ -828,13 +1012,14 @@ function applySession_(s) {
 }
 
 // b: { id, ln, session } — called by the portal when Stripe sends the client back.
-function confirmPayment_(b) {
-  const f = findRow_(b.id, b.ln); if (!f) return { ok: false, error: 'NOT_FOUND' };
+function confirmPayment_(b, f) {
+  if (limited_('confirm:' + f.r[0], 20, 3600)) return tooMany_();
   const s = stripe_('get', 'checkout/sessions/' + encodeURIComponent(String(b.session || '').slice(0, 200)));
   if (!s.metadata || String(s.metadata.booking_id) !== String(f.r[0])) return { ok: false, error: 'This payment is for a different booking.' };
   if (s.payment_status !== 'paid') return { ok: false, error: 'Payment not completed.' };
   const isNew = applySession_(s);
-  return { ok: true, recorded: isNew, amount: s.amount_total / 100, booking: lookup_(b.id, b.ln).booking };
+  const r = sheet_('Bookings').getRange(f.index, 1, 1, NCOL).getValues()[0];
+  return { ok: true, recorded: isNew, amount: s.amount_total / 100, booking: bookingView_(r) };
 }
 
 // Catches payments whose clients never came back to the portal.

@@ -15,13 +15,17 @@ const FIELDS = {
 export async function onRequestPost({ request, env }) {
   const data = await request.formData();
   if (data.get('company')) return new Response('ok'); // honeypot: silently drop bots
+  if (env.TURNSTILE_SECRET && !(await turnstileOk(env.TURNSTILE_SECRET, data.get('cf-turnstile-response'), request.headers.get('CF-Connecting-IP')))) {
+    return new Response('Bot check failed', { status: 403 });
+  }
 
   const values = {};
   for (const key of Object.keys(FIELDS)) {
-    const v = String(data.get(key) || '').trim().slice(0, 5000);
+    const v = String(data.get(key) || '').trim().slice(0, key === 'message' ? 5000 : 200);
     if (!v) return new Response(`Missing ${FIELDS[key]}`, { status: 400 });
     values[key] = v;
   }
+  if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(values.email)) return new Response('Invalid email', { status: 400 });
   if (!env.RESEND_API_KEY) return new Response('Email is not configured', { status: 503 });
 
   const text = Object.entries(FIELDS).map(([k, label]) => `${label}: ${values[k]}`).join('\n');
@@ -32,7 +36,7 @@ export async function onRequestPost({ request, env }) {
       from,
       to: [env.CONTACT_TO || 'inquiries@magicmirrorrentalservices.com'],
       reply_to: values.email,
-      subject: `Website inquiry: ${values.event_type} on ${values.event_date}`,
+      subject: `Website inquiry: ${values.event_type} on ${values.event_date}`.replace(/[\r\n]+/g, ' '),
       text,
     }),
   });
@@ -41,4 +45,15 @@ export async function onRequestPost({ request, env }) {
   if (res.status === 403) res = await send('Magic Mirror website <onboarding@resend.dev>');
   if (!res.ok) return new Response('Could not send', { status: 502 });
   return new Response('ok');
+}
+
+async function turnstileOk(secret, token, ip) {
+  if (!token || String(token).length > 2048) return false;
+  const form = new FormData();
+  form.append('secret', secret); form.append('response', String(token));
+  if (ip) form.append('remoteip', ip);
+  try {
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+    return !!(await r.json()).success;
+  } catch { return false; }
 }
