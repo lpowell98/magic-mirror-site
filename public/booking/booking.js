@@ -349,7 +349,7 @@ function selectTab(id){
   if(id==="messages") loadMessages();
   if(id==="details") fillDetails();
 }
-const needLive=(el)=>{ if(live()) return true; $(el).innerHTML='<p class="sub">This is available once your booking is saved online. Please email inquiries@magicmirrorrentalservices.com.</p>'; return false; };
+const needLive=(el)=>{ if(live()) return true; $(el).innerHTML='<p class="intro">This is available once your booking is saved online. Please email inquiries@magicmirrorrentalservices.com.</p>'; return false; };
 
 /* Invoice */
 function drawInvoice(){
@@ -365,16 +365,81 @@ function drawInvoice(){
 }
 $("printInvoice").onclick=()=>window.print();
 
-/* Templates: the print designs from the site's Print templates page */
-const TEMPLATES="dec14-ny-dr-4x6-ps holiday-cheer-2-4x6-drb black-ice-2-4x6-cropped fiesta-2-drb-4x6-single-pse pot-o-gold-2-4x6-cropped midnight-watercolor-drb-4x6-pse baby-safari-1-portrait-mirror-4x6-cropped ever-after-portrait-mirror-1-4x6-cropped nov15a-dr-4x6-ps painted-leaves-portrait-mirror-1-cropped red-carpet-4x6-ps sweetheart-black-1-4x6-cropped winterreds-single boo-2-portrait-mirror-4x6-full-bleed art-deco-2-portrait-mirror-4x6-cropped b-w-grad-2-portrait-mirror-4x6-cropped birthday_vert_1 babyshowerh graduationv hope-2-portrait-mirror-4x6-cropped".split(" ");
-const tplName=f=>{ const known={"dec14-ny-dr-4x6-ps":"New Year","nov15a-dr-4x6-ps":"Autumn Glow","winterreds-single":"Winter Reds","birthday_vert_1":"Birthday","babyshowerh":"Baby Shower","graduationv":"Graduation","pot-o-gold-2-4x6-cropped":"Pot o' Gold","b-w-grad-2-portrait-mirror-4x6-cropped":"Black & White Grad"}; if(known[f]) return known[f];
-  return f.replace(/-(portrait-mirror|4x6|cropped|drb|dr|ps|pse|single|full-bleed|\d)(?=-|$)/g,"").split(/[-_]/).filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join(" "); };
+/* Templates: the print designs from the site's Print templates page.
+   [file, name, shape (l = landscape, p = portrait), occasions]. Names are what gets saved to the booking. */
+const TEMPLATES=[
+  ["dec14-ny-dr-4x6-ps","New Year","l","holiday"],
+  ["holiday-cheer-2-4x6-drb","Holiday Cheer","l","holiday"],
+  ["black-ice-2-4x6-cropped","Black Ice","l","holiday corporate"],
+  ["fiesta-2-drb-4x6-single-pse","Fiesta","l","holiday birthday"],
+  ["pot-o-gold-2-4x6-cropped","Pot o' Gold","l","holiday"],
+  ["midnight-watercolor-drb-4x6-pse","Midnight Watercolor","l","wedding corporate"],
+  ["baby-safari-1-portrait-mirror-4x6-cropped","Baby Safari","l","baby"],
+  ["ever-after-portrait-mirror-1-4x6-cropped","Ever After","l","wedding birthday"],
+  ["nov15a-dr-4x6-ps","Autumn Glow","l","holiday wedding"],
+  ["painted-leaves-portrait-mirror-1-cropped","Painted Leaves","l","wedding"],
+  ["red-carpet-4x6-ps","Red Carpet","l","corporate birthday"],
+  ["sweetheart-black-1-4x6-cropped","Sweetheart Black","l","wedding"],
+  ["winterreds-single","Winter Reds","p","holiday"],
+  ["boo-2-portrait-mirror-4x6-full-bleed","Boo","p","holiday"],
+  ["art-deco-2-portrait-mirror-4x6-cropped","Art Deco","p","wedding corporate"],
+  ["b-w-grad-2-portrait-mirror-4x6-cropped","Black & White Grad","p","graduation"],
+  ["birthday_vert_1","Birthday","p","birthday"],
+  ["babyshowerh","Baby Shower","p","baby"],
+  ["graduationv","Graduation","p","graduation"],
+  ["hope-2-portrait-mirror-4x6-cropped","Hope","p","corporate"]
+].map(([f,name,shape,occ])=>({f,name,shape,occ:occ.split(" ")}));
+const OCCASIONS=[["all","All"],["wedding","Wedding"],["birthday","Birthday"],["holiday","Holiday"],["graduation","Graduation"],["baby","Baby shower"],["corporate","Corporate"]];
+const SHAPES=[["all","All shapes"],["l","Landscape"],["p","Portrait"]];
+const ZOOM='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg>';
+const tplByName=n=>TEMPLATES.find(t=>t.name===n);
+const tplSrc=(t,thumb)=>`/images/templates/${t.f}${thumb?"-thumb":""}.webp`;
+S.tplOcc="all"; S.tplShape="all";
+function drawChips(){
+  const count=(o,sh)=>TEMPLATES.filter(t=>(o==="all"||t.occ.includes(o))&&(sh==="all"||t.shape===sh)).length;
+  $("tplOcc").innerHTML=OCCASIONS.map(([id,l])=>`<button type="button" class="chip" data-v="${id}" aria-pressed="${S.tplOcc===id}">${l}<small>${count(id,S.tplShape)}</small></button>`).join("");
+  $("tplShape").innerHTML=SHAPES.map(([id,l])=>`<button type="button" class="chip" data-v="${id}" aria-pressed="${S.tplShape===id}">${l}</button>`).join("");
+  $("tplOcc").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplOcc=c.dataset.v; drawChips(); drawTplGrid(); });
+  $("tplShape").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplShape=c.dataset.v; drawChips(); drawTplGrid(); });
+}
+function drawTplGrid(){
+  const list=TEMPLATES.filter(t=>(S.tplOcc==="all"||t.occ.includes(S.tplOcc))&&(S.tplShape==="all"||t.shape===S.tplShape));
+  const tile=t=>`<div class="tpl"><button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===t.name}" data-name="${esc(t.name)}"><img src="${tplSrc(t,1)}" alt="" width="600" height="${t.shape==="p"?900:400}" loading="lazy"><span>${esc(t.name)}</span></button><button type="button" class="tplzoom" data-name="${esc(t.name)}" aria-label="Preview ${esc(t.name)} larger">${ZOOM}</button></div>`;
+  const sec=(sh,label)=>{ const g=list.filter(t=>t.shape===sh); return g.length?`<section class="tplsec"><h4>${label} · ${g.length}</h4><div class="tplgrid ${sh==="l"?"land":"port"}">${g.map(tile).join("")}</div></section>`:""; };
+  $("tplGrid").innerHTML=sec("l","Landscape prints")+sec("p","Portrait prints");
+  $("tplEmpty").classList.toggle("hidden",list.length>0);
+  $("tplGrid").querySelectorAll(".tplopt").forEach(o=>o.onclick=()=>pickTpl(o.dataset.name));
+  $("tplGrid").querySelectorAll(".tplzoom").forEach(z=>z.onclick=()=>openTplView(z.dataset.name));
+}
+function pickTpl(name){
+  S.tplPick=name;
+  $("tplGrid").querySelectorAll(".tplopt").forEach(x=>x.setAttribute("aria-checked",x.dataset.name===name));
+  const t=tplByName(name);
+  $("tplSel").textContent=name||"None chosen yet";
+  $("tplSelImg").classList.toggle("hidden",!t); if(t) $("tplSelImg").src=tplSrc(t,1);
+  $("tplMsg").textContent=""; $("tplMsg").classList.remove("err");
+}
+function openTplView(name){
+  const t=tplByName(name); if(!t) return; S.tplViewing=name;
+  const occ=t.occ.map(o=>OCCASIONS.find(x=>x[0]===o)[1]).join(" · ");
+  $("tplViewTags").textContent=occ+" · "+(t.shape==="p"?"Portrait":"Landscape");
+  $("tplViewName").textContent=t.name;
+  $("tplViewPrint").className="tplprint"+(t.shape==="p"?" port":"");
+  $("tplViewImg").src=tplSrc(t,0);
+  $("tplViewText").value=$("tplText").value; $("tplViewOv").textContent=$("tplText").value;
+  $("tplViewPick").textContent=S.tplPick===name?"✓ Chosen":"Choose this design";
+  const d=$("tplView"); if(d.showModal) d.showModal(); else d.setAttribute("open","");
+}
+function closeTplView(){ const d=$("tplView"); if(d.close) d.close(); else d.removeAttribute("open"); }
+$("tplViewClose").onclick=closeTplView;
+$("tplView").addEventListener("click",e=>{ if(e.target===$("tplView")) closeTplView(); });
+$("tplViewText").oninput=()=>{ $("tplText").value=$("tplViewText").value; $("tplViewOv").textContent=$("tplViewText").value; };
+$("tplViewPick").onclick=()=>{ pickTpl(S.tplViewing); closeTplView(); const o=$("tplGrid").querySelector(`.tplopt[aria-checked="true"]`); if(o) o.focus(); };
 function drawTemplates(){
   if(!needLive("tplGrid")) return;
   const b=S.cur; S.tplPick=S.tplPick||b.template||"";
   if(b.customPrint) $("tplIntro").textContent="You chose a custom design. Pick the closest style below as a starting point, and add your text. We'll send you a proof.";
-  $("tplGrid").innerHTML=TEMPLATES.map(f=>{ const n=tplName(f); return `<button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===n}" data-name="${n}"><img src="/images/templates/${f}-thumb.webp" alt="" width="600" height="400" loading="lazy"><span>${n}</span></button>`; }).join("");
-  $("tplGrid").querySelectorAll(".tplopt").forEach(o=>o.onclick=()=>{ S.tplPick=o.dataset.name; $("tplGrid").querySelectorAll(".tplopt").forEach(x=>x.setAttribute("aria-checked",x===o)); });
+  drawChips(); drawTplGrid(); pickTpl(S.tplPick);
   if(!$("tplText").value) $("tplText").value=b.templateText||"";
   $("tplMsg").textContent = b.template ? `Saved: ${b.template}.` : "";
 }
