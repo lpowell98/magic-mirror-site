@@ -247,14 +247,27 @@
 .bk .tplsel small{display:block;font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 .bk .tplsel b{display:block;font:700 17px var(--head);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bk .tplbar+.msg{margin-top:44px}
-.bk .tplview{border:0;padding:0;max-width:min(1100px,94vw);width:100%;max-height:92vh;background:var(--surface);color:var(--ink)}
+.bk .tplview{border:0;padding:0;max-width:min(1100px,94vw);width:min(1100px,94vw);max-height:92vh;background:var(--surface);color:var(--ink)}
 .bk .tplview::backdrop{background:rgba(8,6,10,.82)}
 .bk .tplview-in{display:grid;grid-template-columns:minmax(0,2fr) minmax(280px,1fr);gap:28px;padding:28px;align-items:center}
 .bk .tplx{position:absolute;top:8px;right:8px;width:44px;height:44px;font-size:28px;line-height:1;background:none;border:0;color:var(--ink);cursor:pointer;z-index:2}
-.bk .tplprint{position:relative;margin:0 auto;background:#fff;padding:10px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
-.bk .tplprint img{display:block;max-width:100%;max-height:72vh;width:auto;height:auto}
-.bk .tplov{position:absolute;left:10px;right:10px;bottom:7%;text-align:center;font:700 clamp(13px,2vw,22px)/1.2 var(--head);color:#fff;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.7),0 0 14px rgba(0,0,0,.6);padding:0 8%}
+.bk .tplprint{position:relative;margin:0 auto;width:100%;background:#fff;padding:10px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.bk .tplprint img{display:block;width:100%;height:auto}
+.bk .tplprint.port{width:fit-content;max-width:100%}
+.bk .tplprint.port img{width:auto;height:72vh;max-width:100%}
+.bk .tplov{position:absolute;left:0;right:0;bottom:7%;text-align:center;font:700 clamp(13px,2vw,22px)/1.2 var(--head);color:#fff;letter-spacing:.04em;text-shadow:0 1px 2px rgba(0,0,0,.7),0 0 14px rgba(0,0,0,.6);padding:0 8%}
 .bk .tplov:empty{display:none}
+.bk .tplart{position:relative;line-height:0}
+.bk .tplslots{position:absolute;inset:0}
+.bk .tplmat,.bk .tplslot{position:absolute}
+.bk .tplmat{background:#f3fbfd}
+.bk .tplslot{background:linear-gradient(140deg,#e7e1ec,#c9bfd3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#6e5d7c;font:700 clamp(10px,1.2vw,14px)/1 var(--body);overflow:hidden}
+.bk .tplslot svg{width:clamp(20px,3vw,40px);height:auto;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linejoin:round}
+.bk .tplvlabel{margin:16px 0 8px;font:600 15px var(--body);color:var(--ink)}
+.bk .tplview .chips.seg .chip[aria-checked="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);position:relative}
+.bk .tplopt span small{margin-left:auto;font:500 12px var(--body);color:var(--muted)}
+.bk .tplov{line-height:1.2}
+
 .bk .tplview input[type=text]{background:var(--bg);color:var(--ink);color-scheme:dark;border:2px solid #3a2f42}
 .bk .tplview input[type=text]:focus-visible{border-color:var(--accent)}
 .bk .tplview label{color:var(--ink)}
@@ -271,10 +284,10 @@
   .bk .chip{white-space:nowrap;padding:8px 13px;font-size:13px}
   .bk .tplbar .btn{padding:0 18px;font-size:15px;min-height:46px;flex:none}
   .bk .tplsel b{font-size:15px}
-  .bk .tplview{max-width:100vw;max-height:100dvh;height:100dvh;margin:0}
+  .bk .tplview{max-width:100vw;width:100vw;max-height:100dvh;height:100dvh;margin:0}
   .bk .tplview-in{grid-template-columns:1fr;padding:56px 16px 20px;gap:18px;align-content:start}
   .bk .tplprint{padding:6px}
-  .bk .tplprint img{max-height:52vh}
+  .bk .tplprint.port img{height:52vh}
 }
 /* messages */
 .bk .thread{display:flex;flex-direction:column;gap:10px;margin:0 0 18px;max-width:760px}
@@ -560,10 +573,13 @@
       <dialog class="tplview" id="tplView" aria-labelledby="tplViewName">
         <button type="button" class="tplx" id="tplViewClose" aria-label="Close preview">×</button>
         <div class="tplview-in">
-          <div class="tplprint" id="tplViewPrint"><img id="tplViewImg" alt=""><div class="tplov" id="tplViewOv" aria-hidden="true"></div></div>
+          <div class="tplprint" id="tplViewPrint"><div class="tplart"><img id="tplViewImg" alt=""><div class="tplslots" id="tplSlots" aria-hidden="true"></div><div class="tplov" id="tplViewOv" aria-hidden="true"></div></div></div>
           <div class="tplside">
             <p class="tpltags" id="tplViewTags"></p>
             <h4 id="tplViewName"></h4>
+            <p class="tplvlabel" id="tplVersLabel">Photos per print</p>
+            <div class="chips seg" id="tplVers" role="radiogroup" aria-labelledby="tplVersLabel"></div>
+            <p class="help" id="tplVerNote"></p>
             <label for="tplViewText">Text on your print</label>
             <input type="text" id="tplViewText" maxlength="300" autocomplete="off" placeholder="e.g. Jane &amp; Sam · 06.14.2027">
             <p class="help">This preview shows your words on the design. We'll place them to suit it and email you a proof before your event.</p>
@@ -618,6 +634,6 @@
 </footer>
 <script src="/assets/js/main.js?v=speed1" defer></script>
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/booking/booking.js?v=3" defer></script>
+<script src="/booking/booking.js?v=4" defer></script>
 </body>
 </html>
