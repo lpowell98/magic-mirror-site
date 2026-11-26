@@ -1,0 +1,127 @@
+# Event gallery list. One line per print, NEWEST FIRST (put a new event at the top).
+#
+#   photo file | event name | month and year | event type
+#
+# - Photo file: the original in src-images/gallery/ (jpg or png).
+# - Event name: shown as the caption, e.g. "Alla and Ibrahim’s wedding". Leave empty for an unnamed print.
+# - Month and year: e.g. "May 2026". Optional.
+# - Event type: one of Weddings, Birthdays, Graduations & proms, Galas & balls, Campus nights,
+#   Corporate, Baby showers. Optional; it puts the print in that tab of "Your event, on paper".
+# - Add "| hide" at the end to keep a print in the gallery but off the home page, /links and brochure.
+#
+# After any change, the site update (GitHub Actions) rebuilds: the gallery, the home page
+# print wall and "Your event, on paper", /links Latest Events, and the brochure PDF (page 5).
+# Run it yourself with:  python3 scripts/build-events.py
+
+1788655192435.jpg | Laury and Heroldens’ baby shower | September 2026 | Baby showers
+1779667313735.jpg | Alla and Ibrahim’s wedding | May 2026 | Weddings
+1775354153323.jpg | NBSA’s Evening of Elegance | April 2026 | Galas & balls
+1774571504860.jpg | Junior Tassel | March 2026 | Graduations & proms
+1759971807860.jpg | Medicine Design Symposium | October 2025 | Corporate
+1747349931066.jpg | Suffolk Law Barrister’s Ball | May 2025 | Galas & balls
+1746924575810.jpg | a Suffolk Law School Class of 2025 graduation |  | Graduations & proms
+1746311941352.jpg | Enchanted Ball junior prom | May 2025 | Graduations & proms
+1745969084417.jpg | Moonlight Breakfast | April 2025 | Campus nights
+1745716809043.jpg
+1744931386736.jpg | Alumni gala | April 2025 | Galas & balls
+1744585918216.jpg
+1744482023234.jpg
+1741496342004.jpg | Nikki’s 50th birthday | March 2025 | Birthdays
+1740191202384.jpg
+1732232898214.jpg
+1731546447435.jpg
+1731199989581.jpg | Sydney and Matthew’s wedding | November 2024 | Weddings
+1729171651661.jpg
+1728159085514.jpg
+1727650719170.jpg | Danielle and Jamal’s wedding |  | Weddings
+1727052215597.jpg | Vennhi and Jeffrey’s wedding |  | Weddings
+1725413415799.jpg
+1722735607305.jpg | Zayla’s graduation, 2024 |  | Graduations & proms
+1718491239117.jpg | Liana’s Sweet 16 | June 2024 | Birthdays
+1718408234820.jpg
+1717552281910.jpg | Class of 2024 masquerade prom |  | Graduations & proms
+1716678023162.jpg | Regine and Duwan’s wedding | May 2024 | Weddings
+1716595503511.jpg | a Night Under the Stars prom |  | Graduations & proms
+1715993791560.jpg | Senior prom 2024 |  | Graduations & proms
+1715916052182.jpg | Suffolk Law Barrister’s Ball, Fairmont Copley Plaza | May 2024 | Galas & balls
+1714609444914.jpg | Moonlight Breakfast 2024, Wild West theme |  | Campus nights
+1714263100147---copy.jpg
+1713661859848.jpg
+1713046913831.jpg | Virginia and Jamel’s wedding | April 2024 | Weddings
+1712965751799.jpg | Suffolk University Law School Honor Ball 2024 |  | Galas & balls
+1710536553702.jpg
+1708828639871.jpg
+1707612796991.jpg | Masquerade Ball | February 2024 | Galas & balls
+1700180229131.jpg | Big and Little Reveal Night | November 2023 | Campus nights
+1700274892482.jpg
+1698546270491.jpg
+1698463725935.jpg
+1698341555456.jpg
+1697908421523.jpg
+1697850442060.jpg
+1697247975963.jpg
+1697153195196.jpg
+1696653293544.jpg
+1695607208114.jpg
+1694911887448.jpg
+1694041052753.jpg | EC Beach Fest | September 2023 | Campus nights
+1693962508553.jpg
+1693014448013.jpg
+1692570811899.jpg
+1689554115476.jpg | Gaby’s graduation celebration | July 2023 | Graduations & proms
+1688274601189.jpg
+1687043308393.jpg
+1686975571484.jpg
+1686618869909.jpg
+1685833864079.jpg
+1684629112585.jpg
+moonlight-breakfast-2023-overlay-v2.png
+1682829101559.jpg
+1682198941713.jpg
+1681611101617.jpg
+1681505281697.jpg | Emmanuel College presidential inauguration | April 2023 | Corporate
+1677989552649.jpg
+1676698041714.jpg
+1674158172670.jpg | Brooks Automation Winterfest | January 2023 | Corporate
+1670981182220.jpg
+1670038344348.png
+1669594429801.jpg
+1668821739205.jpg
+1668734329637.jpg
+1668217732970.jpg
+1667696575462.jpg | Nia’s 30th birthday | November 2022 | Birthdays
+lawn-on-ec-2.png
+1663374189262.jpg
+1662848299613.jpg
+1660428781686.jpg
+1659829116187.jpg | Client appreciation soirée | August 2022 | Corporate
+1655591889335.jpg | Jada and Kevin’s baby shower | June 2022 | Baby showers
+1651259770929.jpg
+1650753932079.jpg
+1649560641031.jpg
+1649459790936.jpg
+1639532748553.jpg
+1638666329912.jpg
+1636768862802.jpg
+1636174311505.jpg | the BU African Student Organization Soirée |  | Campus nights
+1635651055592.jpg | Kairo’s first birthday |  | Birthdays
+1635565877277.jpg
+1635043884938.jpg
+1634332938377.jpg
+1632090138605.jpg
+1631401042973.jpg
+1630877365295.jpg
+1630274207629.jpg
+kylie-s-main-picture-edited.png
+1625971843417.jpg
+1625290473397.jpg
+3051-4x6-wedding-final-.png | Carla and Luis Ribeiro’s wedding |  | Weddings
+1581131559653.jpg
+1715296634642.jpg
+1702428937638.jpg
+1668992181666.jpg
+1655078408660.jpg
+1657938341998.jpg
+1648345284608.jpg
+1637114658906.jpg
+1581831560652.jpg

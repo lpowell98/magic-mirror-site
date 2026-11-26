@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write   # to save pages rebuilt from content/events.txt back to the branch
 
 concurrency:
   group: deploy-${{ github.ref_name }}
@@ -23,6 +23,37 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+
+      # Event prints: rebuild the gallery, /links, the brochure PDF (and the home page every 4 new events)
+      # from content/events.txt, then save the result back to the branch so the repo matches the site.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Build event prints
+        id: events
+        env:
+          EVENTS_PDF: skip
+        run: |
+          pip install --quiet pillow
+          python3 scripts/build-events.py
+
+      - name: Rebuild brochure PDF
+        if: steps.events.outputs.pdf == '1'
+        continue-on-error: true   # a PDF problem never blocks the site update
+        run: |
+          npm install --no-save --no-package-lock playwright@1.49.1
+          npx playwright install --with-deps chromium
+          python3 scripts/build-events.py
+
+      - name: Save rebuilt pages
+        run: |
+          git add -A public content brochure
+          if git diff --cached --quiet; then echo "Nothing to save"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898699+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Rebuild event prints from content/events.txt"
+          git push || echo "Could not save the rebuilt pages (the branch moved). The next push will rebuild them."
 
       - name: Create Pages project (first run only)
         env:
