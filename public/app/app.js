@@ -26,7 +26,7 @@ function fail(e){ toast("That didn't save: "+(e&&e.message||e)+". Click Refresh 
 
 function setAuthed(on){
   document.querySelector("header nav").classList.toggle("hidden",!on);
-  ["refresh","signout","signoutAll","who","pwBtn"].forEach(id=>$(id).classList.toggle("hidden",!on));
+  ["refresh","acctBtn"].forEach(id=>$(id).classList.toggle("hidden",!on));
   $("v-login").classList.toggle("hidden",on);
   if(!on){ document.querySelectorAll("main>section:not(#v-login)").forEach(s=>s.classList.add("hidden")); $("loading").classList.add("hidden"); }
 }
@@ -77,12 +77,19 @@ $("codeForm").onsubmit=async e=>{ e.preventDefault(); const btn=e.target.querySe
 $("backBtn").onclick=()=>{ $("codeForm").classList.add("hidden"); $("pwForm").classList.remove("hidden"); $("lMsg").textContent=""; $("lEmail").focus(); };
 function setData(d){ D=d; draw(); if(cur) openBooking(cur, true); }
 
+/* ---------- account menu ---------- */
+function menu(open){ $("acctMenu").classList.toggle("hidden",!open); $("acctBtn").setAttribute("aria-expanded",String(open)); }
+$("acctBtn").onclick=e=>{ e.stopPropagation(); menu($("acctMenu").classList.contains("hidden")); };
+$("acctMenu").addEventListener("click",e=>{ if(e.target.closest("button")) menu(false); });
+document.addEventListener("click",e=>{ if(!e.target.closest(".acct")) menu(false); });
+
 let didSetup=false;
 function setup(){
   if(didSetup) return; didSetup=true;
   D.statuses.forEach(s=>$("fstatus").add(new Option(s,s)));
   [...new Set(D.bookings.map(b=>b.type).filter(Boolean))].sort().forEach(t=>$("ftype").add(new Option(t,t)));
   D.staff.forEach(s=>$("fstaff").add(new Option(s,s)));
+  METHODS.forEach(m=>$("qMethod").add(new Option(m,m)));
   const t=key(D.today); calM=new Date(Math.floor(t/10000),Math.floor(t/100)%100-1,1);
 }
 
@@ -90,7 +97,7 @@ function show(v){
   view=v; document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
   document.querySelectorAll("main>section").forEach(s=>s.classList.toggle("hidden",s.id!=="v-"+v));
 }
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{ show(b.dataset.v); draw(); saveState(); });
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{ show(b.dataset.v); draw(); saveState(); window.scrollTo(0,0); });
 $("refresh").onclick=async()=>{ $("refresh").disabled=true; try{ setData(await run("adminData")); toast("Up to date"); }catch(e){fail(e);} $("refresh").disabled=false; };
 
 /* ---------- derived ---------- */
@@ -104,21 +111,75 @@ function convos(){
 }
 const byId=id=>D.bookings.find(b=>b.id===Number(id));
 const daysTo=b=>Math.round((fromKey(key(b.date))-fromKey(today()))/864e5);
+const inDays=n=>n===0?"Today":n===1?"Tomorrow":n<0?`${-n} days ago`:`In ${n} days`;
+const waiting=()=>{ const s=new Set(); convos().forEach(c=>{ if(c.needs) s.add(c.id); }); return s; };
 
 function draw(){
   $("loading").classList.add("hidden");
-  const n=convos().filter(c=>c.needs).length; $("msgBadge").innerHTML=n?`<span class="badge">${n}</span>`:"";
-  ({overview:drawOverview,bookings:drawBookings,calendar:drawCal,messages:drawMessages,blocked:drawBlocked})[view]();
+  const n=waiting().size; $("msgBadge").innerHTML=n?`<span class="badge" aria-label="${n} waiting">${n}</span>`:"";
+  ({overview:drawOverview,bookings:drawBookings,calendar:drawCal,messages:drawMessages,money:drawMoney,blocked:drawBlocked})[view]();
   show(view);
 }
 
-function rowHtml(b,sub){
-  return `<button type="button" class="row" data-id="${b.id}"><span class="when">${esc(pretty(b.date).replace(/, \d{4}$/,""))}</span>
-    <span class="what"><b>${esc(b.evName||"(no name)")}</b><small>${esc(sub||(b.fn+" "+b.ln+" · "+b.pkg))}</small></span>
-    <span class="pill s-${esc(b.status)}">${esc(b.status)}</span></button>`;
+/* ---------- rows + quick actions ---------- */
+// One-tap actions shown next to a booking: Confirm, Mark paid, Reply.
+function quick(b,opts){
+  opts=opts||{}; const out=[];
+  if(b.status==="Unconfirmed") out.push(`<button type="button" class="qa go" data-act="confirm" data-bid="${b.id}">Confirm</button>`);
+  if(bal(b)>0 && live(b)) out.push(`<button type="button" class="qa" data-act="pay" data-bid="${b.id}">Mark paid</button>`);
+  if(opts.reply) out.push(`<button type="button" class="qa" data-act="reply" data-bid="${b.id}">Reply</button>`);
+  return out.join("");
 }
-function bindRows(el){ el.querySelectorAll("[data-id]").forEach(r=>r.onclick=()=>openBooking(Number(r.dataset.id))); }
+function rowHtml(b,sub,o){
+  o=o||{};
+  const d=pretty(b.date).replace(/, \d{4}$/,"");
+  return `<div class="row"><button type="button" class="rowmain" data-id="${b.id}"${o.focus?` data-focus="${o.focus}"`:""}>
+    <span class="when">${esc(d)}${o.soon?`<em>${esc(o.soon)}</em>`:""}</span>
+    <span class="what"><b>${esc(b.evName||"(no name)")}</b>${sub?`<small>${esc(sub)}</small>`:""}${o.tags||""}</span>
+    ${o.pill===false?"":`<span class="pill s-${esc(b.status)}">${esc(b.status)}</span>`}</button>
+    ${o.actions?`<div class="side">${o.actions}</div>`:""}</div>`;
+}
+function bindRows(el){
+  el.querySelectorAll("[data-id]").forEach(r=>r.onclick=()=>openBooking(Number(r.dataset.id),false,r.dataset.focus));
+  el.querySelectorAll("[data-act]").forEach(btn=>btn.onclick=e=>{ e.stopPropagation(); act(btn.dataset.act,Number(btn.dataset.bid),btn); });
+}
+async function act(what,id,btn){
+  const b=byId(id); if(!b) return;
+  if(what==="reply") return openBooking(id,false,"msgs");
+  if(what==="pay") return payDialog(b);
+  if(what==="confirm"){ btn.disabled=true;
+    try{ setData(await run("adminUpdate",id,{status:"Confirmed"})); toast(`#${id} confirmed`); }catch(e){ fail(e); btn.disabled=false; } }
+}
+function payDialog(b){
+  $("payFor").textContent=`#${b.id} · ${b.evName} · ${money(bal(b))} still owed`;
+  $("qAmt").value=bal(b)>0?bal(b):""; $("qMethod").selectedIndex=0;
+  $("qDate").value=`${D.today.slice(6)}-${D.today.slice(0,2)}-${D.today.slice(3,5)}`;
+  $("qPayForm").dataset.id=b.id; $("payDlg").showModal(); $("qAmt").focus();
+}
+$("qCancel").onclick=()=>$("payDlg").close();
+$("qPayForm").onsubmit=async e=>{ e.preventDefault(); const id=Number(e.target.dataset.id), [py,pm,pd]=($("qDate").value||"").split("-");
+  $("qSave").disabled=true;
+  try{ setData(await run("adminAddPayment",id,{amount:$("qAmt").value,method:$("qMethod").value,date:py?`${pm}/${pd}/${py}`:"",note:""})); $("payDlg").close(); toast("Payment saved"); }
+  catch(err){ fail(err); } $("qSave").disabled=false; };
 
+/* ---------- overview ---------- */
+// Collects every open issue per upcoming booking, so each booking shows once with tags.
+function issues(){
+  const wait=waiting(), out=[];
+  upcoming().forEach(b=>{
+    const t=[], d=daysTo(b); let score=1000-d;
+    if(wait.has(b.id)){ t.push(["msg","Message waiting"]); score+=2000; }
+    if(b.status==="Unconfirmed") t.push(["","Not confirmed"]);
+    if(!b.signedAt && !/imported/i.test(b.notes)) t.push(["","Contract not signed"]);
+    if(bal(b)>0 && d<=14){ t.push(["hot",`${money(bal(b))} due`]); score+=500; }
+    if(!b.staff && d<=21) t.push([d<=7?"hot":"","No staff"]);
+    if(d<=7) score+=800;
+    if(t.length) out.push({b,t,score,d});
+  });
+  // a message on a past or unknown booking still needs a reply
+  convos().filter(c=>c.needs&&!out.some(x=>x.b.id===c.id)).forEach(c=>{ const b=byId(c.id); if(b) out.push({b,t:[["msg","Message waiting"]],score:3000,d:daysTo(b)}); });
+  return out.sort((a,b)=>b.score-a.score);
+}
 function drawOverview(){
   const up=upcoming(), yr=String(today()).slice(0,4);
   const thisYear=D.bookings.filter(b=>live(b)&&String(key(b.date)).slice(0,4)===yr);
@@ -126,19 +187,16 @@ function drawOverview(){
   const owed=up.reduce((s,b)=>s+Math.max(0,bal(b)),0);
   const next30=up.filter(b=>daysTo(b)<=30).length;
   $("stats").innerHTML=[
-    [up.length,"Upcoming events"],[next30,"In the next 30 days"],[unconf,"Unconfirmed upcoming"],
-    [money(owed),"Balance owed (upcoming)"],[money(thisYear.reduce((s,b)=>s+b.paid,0)),yr+" collected"],[thisYear.length,yr+" bookings"]
-  ].map(([v,l])=>`<div class="stat"><b>${v}</b><span>${l}</span></div>`).join("");
-  $("nextList").innerHTML=up.slice(0,8).map(b=>rowHtml(b,`${b.start}–${b.end} · ${b.vName}`)).join("")||`<div class="empty">No upcoming events.</div>`;
-  const attn=[];
-  up.forEach(b=>{
-    if(b.status==="Unconfirmed") attn.push([b,"Not confirmed yet"]);
-    if(!b.signedAt && !/imported/i.test(b.notes)) attn.push([b,"Contract not signed"]);
-    if(bal(b)>0 && daysTo(b)<=14) attn.push([b,`${money(bal(b))} due — event in ${daysTo(b)} days`]);
-    if(!b.staff && daysTo(b)<=21) attn.push([b,"No staff assigned"]);
-  });
-  convos().filter(c=>c.needs).forEach(c=>{ const b=byId(c.id); if(b) attn.unshift([b,"Message waiting: "+c.last.text.slice(0,60)]); });
-  $("attnList").innerHTML=attn.slice(0,12).map(([b,t])=>rowHtml(b,t)).join("")||`<div class="empty">All caught up.</div>`;
+    [up.length,"Upcoming events","hero"],[next30,"In the next 30 days",""],[unconf,"Unconfirmed",""],
+    [money(owed),"Still owed (upcoming)","gold"],[money(thisYear.reduce((s,b)=>s+b.paid,0)),yr+" collected",""],[thisYear.length,yr+" bookings",""]
+  ].map(([v,l,c])=>`<div class="stat ${c}"><b>${v}</b><span>${l}</span></div>`).join("");
+  const list=issues();
+  $("attnCount").textContent=list.length?`${list.length} booking${list.length===1?"":"s"}`:"";
+  $("attnList").innerHTML=list.slice(0,10).map(({b,t,d})=>rowHtml(b,"",{
+    soon:inDays(d), focus:t.some(x=>x[0]==="msg")?"msgs":"", pill:false,
+    tags:`<span class="tags">${t.map(([c,l])=>`<span class="tag ${c}">${esc(l)}</span>`).join("")}</span>`,
+    actions:quick(b,{reply:t.some(x=>x[0]==="msg")})})).join("")||`<div class="empty">All caught up.</div>`;
+  $("nextList").innerHTML=up.slice(0,8).map(b=>rowHtml(b,`${b.start}–${b.end} · ${b.vName}`,{soon:daysTo(b)<=7?inDays(daysTo(b)):""})).join("")||`<div class="empty">No upcoming events.</div>`;
   bindRows($("nextList")); bindRows($("attnList"));
 }
 
@@ -161,47 +219,102 @@ function drawBookings(){
     <td class="num">${money(b.total)}</td><td class="num ${bal(b)>0?"owe":""}">${money(bal(b))}</td><td>${esc(b.staff||"—")}</td></tr>`).join("")
     ||`<tr><td colspan="9" class="empty">No bookings match.</td></tr>`;
   $("tbody").querySelectorAll("tr[data-id]").forEach(r=>{ r.onclick=()=>openBooking(Number(r.dataset.id)); });
+  // phone view: the same list as cards
+  $("bcards").innerHTML=list.map(b=>rowHtml(b,`#${b.id} · ${b.fn} ${b.ln} · ${b.pkg.replace(" Package","")}`,{
+    tags:`<span class="tags">${bal(b)>0?`<span class="tag hot">${money(bal(b))} owed</span>`:`<span class="tag">Paid in full</span>`}<span class="tag">${esc(b.staff||"No staff")}</span></span>`,
+    actions:quick(b)})).join("")||`<div class="empty">No bookings match.</div>`;
+  bindRows($("bcards"));
   $("count").textContent=`${list.length} booking${list.length===1?"":"s"} · ${money(list.reduce((s,b)=>s+b.total,0))} total · ${money(list.reduce((s,b)=>s+Math.max(0,bal(b)),0))} owed`;
 }
 
 /* ---------- calendar ---------- */
 const MONTH=new Intl.DateTimeFormat("en-US",{month:"long",year:"numeric"});
+const DOW=new Intl.DateTimeFormat("en-US",{weekday:"short"});
 $("calPrev").onclick=()=>{ calM.setMonth(calM.getMonth()-1); drawCal(); };
 $("calNext").onclick=()=>{ calM.setMonth(calM.getMonth()+1); drawCal(); };
 $("calToday").onclick=()=>{ const t=today(); calM=new Date(Math.floor(t/10000),Math.floor(t/100)%100-1,1); drawCal(); };
 const k8=d=>d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
-const COLORS={Unconfirmed:"#4a3a12;color:#ffd27a",Confirmed:"#123a2a;color:#7be0b0",Completed:"#2a2a35;color:#bdb6c6",Cancelled:"#3d1517;color:#ff9a9d"};
 function drawCal(){
   $("calTitle").textContent=MONTH.format(calM);
   const start=new Date(calM); start.setDate(1-start.getDay());
   const blocked={}; D.blocked.forEach(x=>blocked[key(x.date)]=x.reason||"Blocked");
   const byDay={}; D.bookings.forEach(b=>{ (byDay[key(b.date)]=byDay[key(b.date)]||[]).push(b); });
+  const chip=(b,long)=>`<button type="button" class="chip s-${esc(b.status)}" data-id="${b.id}" title="${esc(b.evName)}">${esc(b.start)} ${esc(b.evName)}${long?` · ${esc(b.vName)}`:""}</button>`;
   let h=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d=>`<div class="dow">${d}</div>`).join("");
   for(let i=0;i<42;i++){
     const d=new Date(start); d.setDate(start.getDate()+i); const k=k8(d);
     const cls=["day"]; if(d.getMonth()!==calM.getMonth()) cls.push("out"); if(k===today()) cls.push("today"); if(blocked[k]) cls.push("blocked");
-    h+=`<div class="${cls.join(" ")}" ${blocked[k]?`title="${esc(blocked[k])}"`:""}><span class="n">${d.getDate()}</span>${(byDay[k]||[]).map(b=>
-      `<button type="button" class="chip" style="background:${COLORS[b.status]}" data-id="${b.id}" title="${esc(b.evName)}">${esc(b.start)} ${esc(b.evName)}</button>`).join("")}
-      ${blocked[k]?`<span class="chip" style="background:none;color:var(--muted)">⛔ ${esc(blocked[k])}</span>`:""}</div>`;
+    h+=`<div class="${cls.join(" ")}" ${blocked[k]?`title="${esc(blocked[k])}"`:""}><span class="n">${d.getDate()}</span>${(byDay[k]||[]).map(b=>chip(b)).join("")}
+      ${blocked[k]?`<span class="chip" style="background:none;color:var(--muted);cursor:default">⛔ ${esc(blocked[k])}</span>`:""}</div>`;
   }
   $("cal").innerHTML=h; bindRows($("cal"));
+  // phone view: only the days in this month that have something on them
+  const days=[], last=new Date(calM.getFullYear(),calM.getMonth()+1,0).getDate();
+  for(let i=1;i<=last;i++){ const d=new Date(calM.getFullYear(),calM.getMonth(),i), k=k8(d); if(byDay[k]||blocked[k]) days.push([d,k]); }
+  $("agenda").innerHTML=days.map(([d,k])=>`<div class="aday${k===today()?" today":""}"><div class="d"><small>${DOW.format(d)}</small><b>${d.getDate()}</b></div><div class="evs">
+    ${(byDay[k]||[]).map(b=>chip(b,true)).join("")}${blocked[k]?`<span class="chip" style="background:none;color:var(--muted);cursor:default">⛔ Blocked · ${esc(blocked[k])}</span>`:""}</div></div>`).join("")
+    ||`<div class="empty">Nothing booked or blocked in ${esc(MONTH.format(calM))}.</div>`;
+  bindRows($("agenda"));
 }
 
 /* ---------- messages ---------- */
 function drawMessages(){
   const cs=convos();
   $("convList").innerHTML=cs.map(c=>{ const b=byId(c.id)||{id:c.id,evName:"Booking #"+c.id,fn:"",ln:"",date:"",status:""};
-    return `<button type="button" class="row" data-id="${c.id}"><span class="when">${esc(c.last.at.split(" ")[0])}</span>
-      <span class="what"><b>${esc(b.fn+" "+b.ln)} · #${c.id} ${esc(b.evName)}</b><small>${esc((c.last.from==="Client"?"":"You: ")+c.last.text)}</small></span>
-      ${c.needs?`<span class="pill s-Unconfirmed">Needs reply</span>`:""}</button>`; }).join("")||`<div class="empty">No messages yet. Clients can message you from their booking portal.</div>`;
-  $("convList").querySelectorAll("[data-id]").forEach(r=>r.onclick=()=>openBooking(Number(r.dataset.id),false,"msgs"));
+    return `<div class="row"><button type="button" class="rowmain" data-id="${c.id}" data-focus="msgs"><span class="when">${esc(c.last.at.split(" ")[0])}</span>
+      <span class="what"><b>${esc((b.fn+" "+b.ln).trim()||"Client")} · #${c.id} ${esc(b.evName)}</b><small>${esc((c.last.from==="Client"?"":"You: ")+c.last.text)}</small></span>
+      ${c.needs?`<span class="pill s-Unconfirmed">Needs reply</span>`:""}</button></div>`; }).join("")||`<div class="empty">No messages yet. Clients can message you from their booking portal.</div>`;
+  bindRows($("convList"));
 }
+
+/* ---------- money ---------- */
+const MON=new Intl.DateTimeFormat("en-US",{month:"short"});
+const MONY=new Intl.DateTimeFormat("en-US",{month:"long",year:"numeric"});
+function drawMoney(){
+  const t=today(), y=Math.floor(t/10000), m=Math.floor(t/100)%100-1;
+  // 12 months: the 5 before this one, this one, and the 6 after
+  const months=[]; for(let i=-5;i<=6;i++){ const d=new Date(y,m+i,1); months.push({d,ym:d.getFullYear()*100+d.getMonth()+1,paid:0,owed:0,n:0}); }
+  const idx={}; months.forEach((x,i)=>idx[x.ym]=i);
+  D.bookings.filter(live).forEach(b=>{ const i=idx[Math.floor(key(b.date)/100)]; if(i===undefined) return;
+    months[i].paid+=Math.min(b.paid,b.total); months[i].owed+=Math.max(0,bal(b)); months[i].n++; });
+  const max=Math.max(1,...months.map(x=>x.paid+x.owed));
+  const step=[100,250,500,1000,2500,5000,10000].find(s=>max/s<=4)||Math.ceil(max/4/1000)*1000, top=Math.ceil(max/step)*step;
+  let grid=""; for(let v=step;v<=top;v+=step) grid+=`<div class="gridline" style="bottom:${v/top*100}%"><span>${money(v).replace(".00","")}</span></div>`;
+  $("chart").innerHTML=grid+months.map((x,i)=>`<div class="bar${i===5?" now":""}" tabindex="0" data-i="${i}" aria-label="${MONYformat(x)}">
+    ${x.paid?`<i class="p" style="height:${x.paid/top*100}%"></i>`:""}${x.owed?`<i class="o" style="height:${x.owed/top*100}%"></i>`:""}</div>`).join("");
+  $("months").innerHTML=months.map((x,i)=>`<span class="${i===5?"now":""}">${MON.format(x.d)}</span>`).join("");
+  $("chartTbl").innerHTML=`<thead><tr><th>Month</th><th class="num">Events</th><th class="num">Paid</th><th class="num">Still owed</th></tr></thead><tbody>`+
+    months.map(x=>`<tr style="cursor:default"><td>${MONY.format(x.d)}</td><td class="num">${x.n}</td><td class="num">${money(x.paid)}</td><td class="num">${money(x.owed)}</td></tr>`).join("")+`</tbody>`;
+  const tip=$("tip"), card=$("chart").parentElement;
+  $("chart").querySelectorAll(".bar").forEach(bar=>{
+    const x=months[Number(bar.dataset.i)];
+    const showTip=()=>{ tip.innerHTML=`<b>${MONY.format(x.d)}</b><div><span><i style="background:var(--c-paid)"></i>Paid</span><span>${money(x.paid)}</span></div><div><span><i style="background:var(--c-owed)"></i>Still owed</span><span>${money(x.owed)}</span></div><div><span>Events</span><span>${x.n}</span></div>`;
+      tip.classList.remove("hidden"); const r=bar.getBoundingClientRect(), c=card.getBoundingClientRect();
+      const left=Math.min(Math.max(8,r.left-c.left+r.width/2-tip.offsetWidth/2),c.width-tip.offsetWidth-8);
+      tip.style.left=left+"px"; tip.style.top=Math.max(8,r.top-c.top+r.height-(x.paid+x.owed)/top*r.height-tip.offsetHeight-10)+"px"; };
+    bar.onmouseenter=showTip; bar.onfocus=showTip; bar.onclick=showTip;
+    bar.onmouseleave=()=>tip.classList.add("hidden"); bar.onblur=()=>tip.classList.add("hidden");
+  });
+  const up=upcoming(), yr=String(y);
+  const owed=up.reduce((s,b)=>s+Math.max(0,bal(b)),0), soon=up.filter(b=>daysTo(b)<=30).reduce((s,b)=>s+Math.max(0,bal(b)),0);
+  const ytd=D.bookings.filter(b=>live(b)&&String(key(b.date)).slice(0,4)===yr);
+  $("mStats").innerHTML=[[money(owed),"Still owed (all upcoming)","hero"],[money(soon),"Due in the next 30 days","gold"],
+    [money(ytd.reduce((s,b)=>s+b.paid,0)),yr+" collected",""],[money(ytd.reduce((s,b)=>s+b.total,0)),yr+" booked",""]]
+    .map(([v,l,c])=>`<div class="stat ${c}"><b>${v}</b><span>${l}</span></div>`).join("");
+  const due=up.filter(b=>bal(b)>0);
+  $("dueCount").textContent=due.length?`${due.length} booking${due.length===1?"":"s"}`:"";
+  $("dueList").innerHTML=due.map(b=>{ const d=daysTo(b);
+    return rowHtml(b,`${b.fn} ${b.ln} · ${money(b.paid)} of ${money(b.total)} paid`,{soon:inDays(d),
+      tags:`<span class="tags"><span class="tag ${d<=14?"hot":""}">${money(bal(b))} owed</span></span>`,actions:quick(b)}); }).join("")||`<div class="empty">Every upcoming booking is paid in full.</div>`;
+  bindRows($("dueList"));
+}
+function MONYformat(x){ return `${MONY.format(x.d)}: ${money(x.paid)} paid, ${money(x.owed)} still owed, ${x.n} event${x.n===1?"":"s"}`; }
 
 /* ---------- blocked ---------- */
 function drawBlocked(){
   const list=[...D.blocked].sort((a,b)=>key(a.date)-key(b.date)).filter(x=>key(x.date)>=today());
-  $("blockList").innerHTML=list.map(x=>`<div class="row" style="cursor:default"><span class="when">${esc(x.date)}</span><span class="what"><b>${esc(pretty(x.date))}</b><small>${esc(x.reason||"—")}</small></span>
-    <button type="button" class="btn ghost" data-un="${esc(x.date)}">Unblock</button></div>`).join("")||`<div class="empty">No upcoming blocked dates.</div>`;
+  $("blockList").innerHTML=list.map(x=>`<div class="row"><div class="rowmain" style="cursor:default"><span class="when">${esc(pretty(x.date).replace(/, \d{4}$/,""))}</span><span class="what"><b>${esc(x.reason||"Blocked")}</b><small>${esc(pretty(x.date))}</small></span></div>
+    <div class="side"><button type="button" class="qa" data-un="${esc(x.date)}">Unblock</button></div></div>`).join("")||`<div class="empty">No upcoming blocked dates.</div>`;
   $("blockList").querySelectorAll("[data-un]").forEach(b=>b.onclick=async()=>{ if(!confirm(`Unblock ${b.dataset.un}? Clients will be able to book it again.`)) return; b.disabled=true; try{ setData(await run("adminUnblock",b.dataset.un)); toast("Date unblocked"); }catch(e){fail(e); b.disabled=false;} });
 }
 $("blockForm").onsubmit=async e=>{ e.preventDefault(); const v=$("bDate").value; if(!v) return;
@@ -214,15 +327,16 @@ const METHODS=["Credit card (Square)","PayPal","Stripe","Cash","Check","Zelle","
 let opener=null;
 function openBooking(id,keep,focus){
   const b=byId(id); if(!b) return; if(!keep){ opener=document.activeElement; } cur=id; if(!keep) saveState();
-  document.querySelector("header").inert=true; document.querySelector("main").inert=true;
-  const scroll=keep?$("drawer").scrollTop:0;
+  menu(false); document.querySelector("header").inert=true; document.querySelector("main").inert=true;
+  const scroll=keep&&$("dscroll")?$("dscroll").scrollTop:0;
   const pays=D.payments.filter(p=>p.id===id), thread=D.messages.filter(m=>m.id===id).sort((a,c)=>a.ts-c.ts);
   const staff=b.staff.split(",").map(s=>s.trim()).filter(Boolean);
   const [y,m,d]=[D.today.slice(6),D.today.slice(0,2),D.today.slice(3,5)];
-  $("drawer").innerHTML=`
-    <div class="dh"><div><h2 id="dTitle">#${b.id} · ${esc(b.evName)}</h2><p>${esc(pretty(b.date))} · ${esc(b.start)}–${esc(b.end)} · ${esc(b.type)}</p></div>
+  const dd=daysTo(b);
+  $("drawer").innerHTML=`<div class="dscroll" id="dscroll">
+    <div class="dh"><div><h2 id="dTitle">#${b.id} · ${esc(b.evName)}</h2><p>${esc(pretty(b.date))} · ${esc(b.start)}–${esc(b.end)} · ${esc(b.type)}${dd>=0&&dd<=60?` · <b style="color:var(--accent)">${esc(inDays(dd))}</b>`:""}</p></div>
       <button type="button" class="x" id="dClose" aria-label="Close">×</button></div>
-    <div class="f" style="margin-bottom:14px">
+    <div class="f" style="margin-bottom:4px;gap:16px">
       <label>Status<select id="dStatus">${D.statuses.map(s=>`<option ${s===b.status?"selected":""}>${s}</option>`).join("")}</select></label>
       <fieldset><legend>Staff</legend><div class="checks">${D.staff.map(s=>`<label><input type="checkbox" class="dStaff" value="${esc(s)}" ${staff.includes(s)?"checked":""}> ${esc(s)}</label>`).join("")}</div></fieldset>
     </div>
@@ -237,17 +351,17 @@ function openBooking(id,keep,focus){
       <dt>Booked</dt><dd>${esc(b.created)}</dd>
       ${b.notes?`<dt>Notes</dt><dd>${esc(b.notes)}</dd>`:""}
     </dl></div>
-    <div class="sec"><h3>Payments</h3>
+    <div class="sec" id="pays"><h3>Payments</h3>
       <div class="money"><div><b>${money(b.total)}</b><span>Total</span></div><div><b>${money(b.paid)}</b><span>Paid</span></div><div><b class="${bal(b)>0?"owe":""}">${money(bal(b))}</b><span>Balance</span></div></div>
-      ${pays.length?`<table style="margin-bottom:10px"><tbody>${pays.map(p=>`<tr style="cursor:default"><td>${esc(p.date)}</td><td>${esc(p.method)}</td><td class="ev">${esc(p.note)}</td><td class="num">${money(p.amount)}</td></tr>`).join("")}</tbody></table>`:""}
+      ${pays.length?`<table class="paytbl" style="margin-bottom:10px"><tbody>${pays.map(p=>`<tr style="cursor:default"><td>${esc(p.date)}</td><td>${esc(p.method)}</td><td>${esc(p.note)}</td><td class="num">${money(p.amount)}</td></tr>`).join("")}</tbody></table>`:""}
       <form class="f" id="payForm">
-        <label>Amount<input type="number" id="pAmt" name="payment-amount" min="0.01" step="0.01" inputmode="decimal" style="width:110px" required value="${bal(b)>0?bal(b):""}"></label>
-        <label>Method<select id="pMethod">${METHODS.map(x=>`<option>${x}</option>`).join("")}</select></label>
-        <label>Date<input type="date" id="pDate" name="payment-date" value="${y}-${m}-${d}"></label>
-        <label style="flex:1;min-width:140px">Note<input type="text" id="pNote" name="payment-note" autocomplete="off" maxlength="300"></label>
+        <label style="flex:1 1 100px">Amount<input type="number" id="pAmt" name="payment-amount" min="0.01" step="0.01" inputmode="decimal" style="width:100%" required value="${bal(b)>0?bal(b):""}"></label>
+        <label style="flex:1 1 150px">Method<select id="pMethod" style="width:100%">${METHODS.map(x=>`<option>${x}</option>`).join("")}</select></label>
+        <label style="flex:1 1 140px">Date<input type="date" id="pDate" name="payment-date" value="${y}-${m}-${d}" style="width:100%"></label>
+        <label style="flex:1 1 140px">Note<input type="text" id="pNote" name="payment-note" autocomplete="off" maxlength="300" style="width:100%"></label>
         <button class="btn" type="submit">Add payment</button>
       </form></div>
-    <div class="sec"><h3>Contract</h3>${b.signedAt?`<p>Signed by <b>${esc(b.signer)}</b> on ${esc(b.signedAt)}${b.pdf?` · <a href="${esc(b.pdf)}" target="_blank" rel="noopener">Open signed PDF</a>`:""}</p>`:`<p style="color:var(--muted)">Not signed${/imported/i.test(b.notes)?" here (signed in BoothBook if it was a past booking)":""}.</p>`}</div>
+    <div class="sec"><h3>Contract</h3>${b.signedAt?`<p style="margin:0">Signed by <b>${esc(b.signer)}</b> on ${esc(b.signedAt)}${b.pdf?` · <a href="${esc(b.pdf)}" target="_blank" rel="noopener">Open signed PDF</a>`:""}</p>`:`<p style="color:var(--muted);margin:0">Not signed${/imported/i.test(b.notes)?" here (signed in BoothBook if it was a past booking)":""}.</p>`}</div>
     <div class="sec"><h3>Template & details</h3><dl>
       <dt>Template</dt><dd>${esc(b.template||"Not chosen")}${b.templateText?`<br><small style="color:var(--muted)">${esc(b.templateText)}</small>`:""}</dd>
       <dt>On-site contact</dt><dd>${esc([b.onsiteName,b.onsitePhone].filter(Boolean).join(" · ")||"—")}</dd>
@@ -267,12 +381,22 @@ function openBooking(id,keep,focus){
     <div class="sec" id="msgs"><h3>Messages</h3>
       <div class="thread">${thread.map(x=>`<div class="bubble ${x.from==="Client"?"":"me"}"><small>${esc(x.from==="Client"?b.fn:"You")} · ${esc(x.at)}</small>${esc(x.text)}</div>`).join("")||`<div class="empty">No messages.</div>`}</div>
       <div class="f"><label style="width:100%">Reply (emails ${esc(b.email)} and shows in their portal)<textarea id="rText" name="reply" maxlength="2000"></textarea></label>
-      <button type="button" class="btn" id="rSend">Send reply</button></div></div>`;
+      <button type="button" class="btn" id="rSend">Send reply</button></div></div>
+    </div>
+    <div class="dbar">
+      ${b.status==="Unconfirmed"?`<button type="button" class="btn" id="bConfirm">Confirm booking</button>`:""}
+      ${bal(b)>0&&live(b)?`<button type="button" class="btn ${b.status==="Unconfirmed"?"ghost":""}" id="bPay">Record payment</button>`:""}
+      <button type="button" class="btn ghost" id="bReply">Reply</button>
+      <a class="btn ghost" href="tel:${esc(b.phone.replace(/[^\d+]/g,""))}" style="text-decoration:none;text-align:center">Call</a>
+    </div>`;
   $("drawer").classList.remove("hidden"); $("scrim").classList.remove("hidden"); document.body.style.overflow="hidden";
-  $("drawer").scrollTop=scroll;
-  if(focus==="msgs") $("msgs").scrollIntoView(); else if(!keep) $("dClose").focus();
+  $("dscroll").scrollTop=scroll;
+  if(focus==="msgs"){ $("msgs").scrollIntoView(); if(!keep) $("rText").focus({preventScroll:true}); } else if(!keep) $("dClose").focus();
   $("dClose").onclick=closeDrawer;
   const busy=async(btn,fn)=>{ btn.disabled=true; try{ await fn(); }catch(e){ fail(e); } btn.disabled=false; };
+  if($("bConfirm")) $("bConfirm").onclick=e=>busy(e.target,async()=>{ setData(await run("adminUpdate",id,{status:"Confirmed"})); toast(`#${id} confirmed`); });
+  if($("bPay")) $("bPay").onclick=()=>{ $("pays").scrollIntoView({behavior:"smooth"}); $("pAmt").focus({preventScroll:true}); };
+  $("bReply").onclick=()=>{ $("msgs").scrollIntoView({behavior:"smooth"}); $("rText").focus({preventScroll:true}); };
   $("dStatus").onchange=e=>{ if(e.target.value==="Cancelled"&&!confirm(`Cancel booking #${id}? The date ${b.date} will open up for new bookings.`)){ e.target.value=b.status; return; } busy(e.target,async()=>{ setData(await run("adminUpdate",id,{status:e.target.value})); toast("Status: "+e.target.value); }); };
   document.querySelectorAll(".dStaff").forEach(c=>c.onchange=()=>busy(c,async()=>{
     const v=[...document.querySelectorAll(".dStaff:checked")].map(x=>x.value).join(", ");
@@ -294,6 +418,6 @@ function closeDrawer(){ cur=null; $("drawer").classList.add("hidden"); $("scrim"
 function saveState(){ const q=new URLSearchParams(); if(view!=="overview") q.set("v",view); if(cur) q.set("b",String(cur)); const s=q.toString(); try{ history.replaceState(null,"",location.pathname+(s?"?"+s:"")); }catch(e){} }
 function restore(){ const p=new URLSearchParams(location.search); const v=p.get("v"); if(v&&v!=="login"&&$("v-"+v)) view=v; draw(); const b=p.get("b"); if(b&&byId(b)) openBooking(Number(b)); }
 $("scrim").onclick=closeDrawer;
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&cur) closeDrawer(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ if(cur) closeDrawer(); menu(false); } });
 
 load();

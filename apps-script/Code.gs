@@ -732,7 +732,7 @@ function guard_() { if (!apiAdmin_ && !isOwner_()) throw new Error('Not authoris
 
 function adminPage_() {
   if (!isOwner_()) return HtmlService.createHtmlOutput('<p style="font-family:sans-serif">Not authorised.</p>');
-  return HtmlService.createHtmlOutputFromFile('Admin').setTitle('Magic Mirror · Owner dashboard')
+  return HtmlService.createHtmlOutputFromFile('Admin').setTitle('Magic Mirror · Dashboard')
     .setFaviconUrl('https://www.magicmirrorrentalservices.com/images/brand/apple-touch-icon.png')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
@@ -957,7 +957,7 @@ function adminApi_(a) {
       cache.put('code:' + email, JSON.stringify({ h: sha_(code), tries: 0 }), 600);
       cache.put('codeSent:' + email, '1', 45);
       sendMail_({ to: email, subject: `Your dashboard sign-in code: ${code}`, preheader: 'It expires in 10 minutes.',
-        htmlBody: eHead_('Owner dashboard', 'Your sign-in code') + eCode_(code) +
+        htmlBody: eHead_('Dashboard', 'Your sign-in code') + eCode_(code) +
           eSmall_("It expires in 10 minutes. If you didn't try to sign in, you can ignore this email.") });
     }
     return { ok: true };   // same answer either way, so the form can't be used to test addresses
