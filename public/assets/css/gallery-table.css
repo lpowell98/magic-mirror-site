@@ -43,3 +43,25 @@
 .table-port .print { width: 220px; }
 @media (max-width: 900px) { .table-port { max-width: calc(4 * (150px + 16px) + 8px); } .table-port .print { width: 150px; } }
 @media (max-width: 640px) { .table-port { max-width: none; } .table-port .print { width: 21vw; } }
+
+/* Reviews: one compact strip so the prints show on the first screen */
+.page-head { padding-block: clamp(24px, 3vw, 48px) clamp(16px, 2vw, 24px); }
+.print-table { padding-top: clamp(20px, 3vw, 40px); }
+.quote-carousel { display: flex; align-items: center; justify-content: center; gap: 16px; max-width: 980px; margin: 0 auto clamp(20px, 3vw, 32px); padding-block: 12px; border-block: 1px solid rgba(251, 169, 36, .35); }
+.quote-carousel .quote-slides { flex: 1; max-width: none; margin: 0; }
+.quote-carousel blockquote { font: italic 500 clamp(14px, 1.2vw, 16px)/1.45 var(--body); }
+.quote-carousel footer { margin-top: 4px; font-size: 13px; font-style: normal; }
+.quote-carousel .quote-nav { margin: 0; gap: 8px; flex: none; }
+.quote-carousel .quote-nav button { width: 32px; height: 32px; font-size: 18px; }
+@media (max-width: 640px) {
+  .page-head p { font-size: 16px !important; line-height: 1.5; margin-top: 12px; }
+  .page-head .actions { margin-top: 16px; }
+  .page-head { padding-top: 24px; }
+  .page-head h1 { font-size: 36px; }
+  .quote-carousel { gap: 6px; padding-block: 8px; margin-bottom: 16px; }
+  .quote-carousel blockquote { font-size: 13px; }
+  .quote-carousel footer { font-size: 12px; }
+  .quote-carousel .quote-nav { flex-direction: column; gap: 6px; }
+  .quote-carousel .q-count { display: none; }
+  .print-table { padding-top: 20px; }
+}
