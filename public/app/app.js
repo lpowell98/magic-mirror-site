@@ -49,7 +49,10 @@ $("signoutAll").onclick=async()=>{
   try{ await post({action:"adminSignOutAll",token:TOKEN}); }catch(e){}
   signOut(true); $("lMsg").textContent="You're signed out everywhere. Sign in again to continue.";
 };
-function signedIn(r){ TOKEN=r.token; store.set("mmrsToken",r.token); store.set("mmrsEmail",r.email); $("lMsg").textContent=""; $("lCode").value=""; $("lPw").value=""; load(); }
+// The sign-in answer usually carries the dashboard data too, so it opens without a second request.
+function signedIn(r){ TOKEN=r.token; store.set("mmrsToken",r.token); store.set("mmrsEmail",r.email); $("lMsg").textContent=""; $("lCode").value=""; $("lPw").value="";
+  if(!r.data){ load(); return; }
+  setAuthed(true); $("who").textContent=r.email||""; D=r.data; $("loading").classList.add("hidden"); setup(); restore(); }
 $("pwForm").onsubmit=async e=>{ e.preventDefault(); const btn=e.target.querySelector("button[type=submit]"); btn.disabled=true; $("lMsg").textContent="Signing in…";
   try{ const r=await post({action:"adminLogin",email:$("lEmail").value,password:$("lPw").value,ts:await mmTS.token($("tsLogin"))}); mmTS.reset($("tsLogin")); if(r.ok) signedIn(r); else $("lMsg").textContent=loginError(r); }
   catch(err){ $("lMsg").textContent="Couldn't reach the booking system. Try again."; } btn.disabled=false; };
