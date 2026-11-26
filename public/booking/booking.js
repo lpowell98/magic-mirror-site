@@ -366,30 +366,6 @@ function drawInvoice(){
 }
 $("printInvoice").onclick=()=>window.print();
 
-/* Templates: the print designs from the site's Print templates page.
-   [file, name, shape (l = landscape, p = portrait), occasions]. Names are what gets saved to the booking. */
-const TEMPLATES=[
-  ["dec14-ny-dr-4x6-ps","New Year","l","holiday",[1200,800],[[420,40,1150,555]]],
-  ["holiday-cheer-2-4x6-drb","Holiday Cheer","l","holiday",[1200,800],[[120,39,1081,677]]],
-  ["black-ice-2-4x6-cropped","Black Ice","l","holiday corporate",[1200,800],[[133,44,1066,656]]],
-  ["fiesta-2-drb-4x6-single-pse","Fiesta","l","holiday birthday",[1200,800],[[157,27,1043,617]]],
-  ["pot-o-gold-2-4x6-cropped","Pot o' Gold","l","holiday",[1200,800],[[136,47,1063,662]]],
-  ["midnight-watercolor-drb-4x6-pse","Midnight Watercolor","l","wedding corporate",[1200,800],[[111,46,1088,692]]],
-  ["baby-safari-1-portrait-mirror-4x6-cropped","Baby Safari","l","baby",[1200,800],[[37,43,406,598],[415,43,785,598],[794,43,1163,598]]],
-  ["ever-after-portrait-mirror-1-4x6-cropped","Ever After","l","wedding birthday",[1200,800],[[42,43,409,596],[418,43,789,597],[798,43,1166,595]]],
-  ["nov15a-dr-4x6-ps","Autumn Glow","l","holiday wedding",[1200,800],[[424,20,1194,520],[424,536,794,780],[808,536,1194,780]]],
-  ["painted-leaves-portrait-mirror-1-cropped","Painted Leaves","l","wedding",[1200,800],[[40,41,410,596],[419,41,788,596],[797,41,1168,596]]],
-  ["red-carpet-4x6-ps","Red Carpet","l","corporate birthday",[1200,807],[[89,66,717,501],[829,69,1130,265],[829,303,1129,501]]],
-  ["sweetheart-black-1-4x6-cropped","Sweetheart Black","l","wedding",[1200,800],[[424,24,1173,521],[424,537,790,780],[807,537,1172,780]]],
-  ["winterreds-single","Winter Reds","p","holiday",[1200,1785],[[214,155,988,1316]]],
-  ["boo-2-portrait-mirror-4x6-full-bleed","Boo","p","holiday",[1200,1785],[[119,136,1081,1540]]],
-  ["art-deco-2-portrait-mirror-4x6-cropped","Art Deco","p","wedding corporate",[1200,1800],[[109,127,1095,1600]]],
-  ["b-w-grad-2-portrait-mirror-4x6-cropped","Black & White Grad","p","graduation",[1200,1800],[[180,280,1005,1515]]],
-  ["birthday_vert_1","Birthday","p","birthday",[750,1125],[[141,151,608,900]]],
-  ["babyshowerh","Baby Shower","p","baby",[750,1125],[[110,110,640,840]]],
-  ["graduationv","Graduation","p","graduation",[750,1125],[[86,60,666,850]]],
-  ["hope-2-portrait-mirror-4x6-cropped","Hope","p","corporate",[1200,1800],[[104,115,1093,1500]]]
-].map(([f,name,shape,occ,size,wins])=>({f,name,shape,occ:occ.split(" "),size,wins}));
 /* New wedding, birthday, holiday, graduation, baby shower and corporate collections (print-designs/): real artwork for each photo count, files <f>-<n>.webp.
    [file prefix, name, shape, occasions, size, windows [x0,y0,x1,y1] per photo count, window corners: 1 = cut, "r" = rounded] */
 const SETS=[
@@ -454,7 +430,9 @@ const SETS=[
   ["corporate-leather-folio","Leather Folio","p","corporate",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
   ["corporate-brass-plaque","Brass Plaque","p","corporate",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}]
 ].map(([f,name,shape,occ,size,vers,cut])=>({f,name,shape,occ:occ.split(" "),size,vers,cut:cut===1,round:cut==="r",wins:vers[2]}));
-TEMPLATES.unshift(...SETS);
+/* The print designs offered in Choose Template. Names are what gets saved to the booking.
+   The older designs were retired from the picker on 2026-11-25 (their images still exist for the Print templates page). */
+const TEMPLATES=SETS;
 /* Photo-count versions. A design's own layout is shown as-is; other counts are a mock-up of how the
    photos would sit in its photo area until real artwork for that version is added. */
 const VERSIONS=[1,2,3];
