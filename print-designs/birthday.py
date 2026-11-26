@@ -455,6 +455,71 @@ def starburst(n, mode):  # 30th to 70th
     return dict(bg=C["cream"], body=paper(.10, .04) + panel + windows(lay["wins"], mode, [(12, f'border:2px solid {C["gold"]}')]) + badge_box + below_box)
 
 
+def _age_text(s, name_col, date_col, gap=14):
+    return (f'<div style="font:{104*s}px/1 Yellowtail;color:{name_col}">Marcus</div>' +
+            caps("March 8, 2027", 20 * s, date_col, ".4em", 600, "Montserrat", f"margin-top:{gap*s}px"))
+
+
+def color_block(n, mode):  # 30th to 70th, modern
+    lay = LAYOUTS["age"]["n"][n]
+    px, py, pw, ph = lay["panel"]
+    s = k(n, .82, 1.05, .5)
+    u = k(n, 150, 170, 72)  # grid unit
+    ox, oy = (pw - 2 * u) / 2, k(n, 130, 110, 40)
+    shapes = (f'<rect x="{ox}" y="{oy}" width="{u}" height="{u}" fill="{C["gold"]}"/>'
+              f'<path d="M{ox+u} {oy} L{ox+2*u} {oy} A{u} {u} 0 0 1 {ox+u} {oy+u}Z" fill="{C["rose"]}"/>'
+              f'<path d="M{ox} {oy+u} A{u} {u} 0 0 0 {ox+u} {oy+2*u} L{ox+u} {oy+u}Z" fill="{C["orchid"]}"/>'
+              f'<rect x="{ox+u}" y="{oy+u}" width="{u}" height="{u}" fill="{C["plum"]}"/>'
+              f'<circle cx="{ox+1.5*u}" cy="{oy+1.5*u}" r="{u*.3}" fill="{C["honey"]}"/>')
+    art = f'<svg class="tex" width="{pw}" height="{ph}">{shapes}</svg>'
+    panel = f'<div class="fr" style="left:{px}px;top:{py}px;width:{pw}px;height:{ph}px;background:{C["cream"]};overflow:hidden">{paper(.10, .05)}{art}</div>'
+    top = py + oy + 2 * u
+    below = (f'<div style="{fr(250*s, 900, 0, 0, opsz=72)};color:{C["ink"]};line-height:.9;letter-spacing:-.03em">40</div>' +
+             f'<div style="{fr(84*s, 600, 100, 0, True)};color:{C["plum"]};margin-top:{6*s}px">Marcus</div>' +
+             caps("March 8, 2027", 20 * s, C["amber"], ".4em", 700, "Montserrat", f"margin-top:{14*s}px"))
+    return dict(bg="#EDE6DA", body=paper(.10, .05) + panel + windows(lay["wins"], mode) + box([px, top, pw, py + ph - top - k(n, 40, 40, 6)], below))
+
+
+def party_awning(n, mode):  # 30th to 70th, festive
+    lay = LAYOUTS["age"]["n"][n]
+    px, py, pw, ph = lay["panel"]
+    s = k(n, .82, 1.05, .56)
+    nst = k(n, 6, 9, 9)
+    sw = pw / nst
+    ah = ph * k(n, .3, .3, .34)
+    st = "".join(f'<rect x="{i*sw:.1f}" y="0" width="{sw:.1f}" height="{ah:.1f}" fill="{C["plum"] if i % 2 == 0 else C["cream"]}"/>' for i in range(nst))
+    sc = "".join(f'<path d="M{i*sw:.1f} {ah:.1f} A{sw/2:.1f} {sw/2:.1f} 0 0 0 {(i+1)*sw:.1f} {ah:.1f}Z" fill="{C["plum"] if i % 2 == 0 else C["cream"]}"/>' for i in range(nst))
+    shade = f'<rect x="0" y="{ah-6:.1f}" width="{pw}" height="6" fill="#000" opacity=".08"/>'
+    art = f'<svg class="tex" width="{pw}" height="{ph}">{st}{shade}{sc}</svg>'
+    panel = f'<div class="fr" style="left:{px}px;top:{py}px;width:{pw}px;height:{ph}px;background:{C["rose_lt"]};overflow:hidden">{paper(.10, .06)}{art}</div>'
+    tb = [px, py + ah + sw / 2, pw, ph - ah - sw / 2]
+    txt = (caps("It's a party", 20 * s, C["plum"], ".44em", 700) +
+           f'<div style="{fr(250*s, 900, 100, 1, opsz=72)};color:{C["plum"]};line-height:.95;margin:{6*s}px 0;letter-spacing:-.02em">40</div>' +
+           _age_text(s, C["amber"], C["plum"], 6))
+    return dict(bg=C["cream"], body=paper(.10, .04) + panel + windows(lay["wins"], mode, mat=(12, "background:#fff;box-shadow:0 3px 10px rgba(60,30,60,.14)")) + box(tb, txt))
+
+
+def echo(n, mode):  # 30th to 70th, typographic
+    lay = LAYOUTS["age"]["n"][n]
+    px, py, pw, ph = lay["panel"]
+    s = k(n, .82, 1.05, .56)
+    fs = k(n, 122, 190, 104)
+    rows = k(n, 4, 4, 3)
+    hi = 1 if rows == 3 else 2
+    words = "".join(
+        f'<div style="{fr(fs, 900, 0, 0, opsz=72)};line-height:.92;letter-spacing:.01em;'
+        + (f"color:{C['gold']}" if i == hi else f"color:transparent;-webkit-text-stroke:{2.2}px {C['gold']};opacity:.7") + '">FORTY</div>'
+        for i in range(rows))
+    stack = f'<div style="display:flex;flex-direction:column;align-items:center">{words}</div>'
+    txt = (stack + f'<div style="font:{96*s}px/1 Yellowtail;color:{C["cream"]};margin-top:{30*s}px">Marcus</div>' +
+           caps("March 8, 2027", 20 * s, C["honey"], ".4em", 600, "Montserrat", f"margin-top:{12*s}px"))
+    panel = f'<div class="fr" style="left:{px}px;top:{py}px;width:{pw}px;height:{ph}px;background:radial-gradient(90% 70% at 50% 40%,#2a1c2e,{C["black"]})">{paper(.10, .08)}</div>'
+    return dict(bg="#1a141c", body=paper(.10, .06) + panel + windows(lay["wins"], mode, [(12, f'border:2px solid {C["gold"]}')]) + box([px, py, pw, ph], txt))
+
+
+OPTIONS = [("color-block", "Color Block", "age", color_block), ("party-awning", "Party Awning", "age", party_awning), ("echo", "Echo", "age", echo)]
+
+
 DESIGNS = [  # id, name, base layout, builder
     ("confetti-pop", "Confetti Pop", "band", confetti_pop),
     ("party-streamers", "Party Streamers", "band", party_streamers),
@@ -480,7 +545,7 @@ def page(d, n, mode):
 def main():
     os.makedirs(OUT, exist_ok=True)
     manifest = []
-    for d in DESIGNS:
+    for d in DESIGNS + (OPTIONS if os.environ.get('PD_OPTIONS') else []):
         did, name, base, _ = d
         W, H = LAYOUTS[base]["size"]
         for n in (1, 2, 3):

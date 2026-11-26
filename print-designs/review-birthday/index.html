@@ -109,6 +109,10 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.06e
       <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="30" y="12" width="60" height="9" fill="#c4bacb"/><rect x="40" y="26" width="40" height="3" fill="#c4bacb"/><rect x="11" y="43" width="98" height="40" rx="4" fill="#d8bf86"/><rect x="11" y="87" width="98" height="40" rx="4" fill="#d8bf86"/><rect x="11" y="131" width="98" height="40" rx="4" fill="#d8bf86"/></svg></div></div>
   </div>
 
+  <h2>Pick a replacement for Starburst</h2>
+  <p style="margin-bottom:8px">Three new directions for the milestone age panel. Tell me which one to keep and it takes Starburst's place in the set.</p>
+  <div id="options"></div>
+
   <h2>The ten designs</h2>
   <div id="designs"></div>
 
@@ -131,4 +135,11 @@ const port=b=>b==="Card"||b==="Ticket";
 document.getElementById("designs").innerHTML=D.map(([id,name,base,age,desc])=>`<section class="design">
   <div class="dh"><h3>${name}</h3><span>${base} · ${port(base)?"Portrait":"Landscape"} · ${age}</span></div><p>${desc}</p>
   <div class="vers ${port(base)?"p":"l"}">${[1,2,3].map(n=>`<figure><img src="web/${id}-${n}.webp" alt="${name}, ${n} photo version" width="${port(base)?600:900}" height="${port(base)?900:600}" loading="lazy"><figcaption>${n} photo${n>1?"s":""}</figcaption></figure>`).join("")}</div></section>`).join("");
+const O=[
+ ["color-block","Option A · Color Block","Age panel","30th to 70th","Modern and graphic. Squares and quarter circles in the brand colors, with a bold age and the name below."],
+ ["party-awning","Option B · Party Awning","Age panel","30th to 70th","Festive. A striped plum awning with scalloped edges over a rose panel, like a party tent."],
+ ["echo","Option C · Echo","Age panel","30th to 70th","Typographic and dramatic. The age spelled out four times in gold outline, one line solid, on near-black."]];
+document.getElementById("options").innerHTML=O.map(([id,name,base,age,desc])=>`<section class="design">
+  <div class="dh"><h3>${name}</h3><span>${base} · Landscape · ${age}</span></div><p>${desc}</p>
+  <div class="vers l">${[1,2,3].map(n=>`<figure><img src="web/${id}-${n}.webp" alt="${name}, ${n} photo version" width="900" height="600" loading="lazy"><figcaption>${n} photo${n>1?"s":""}</figcaption></figure>`).join("")}</div></section>`).join("");
 </script>
