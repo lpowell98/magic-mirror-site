@@ -9,7 +9,7 @@
 .print-table .grid-sec + .grid-sec { margin-top: clamp(32px, 4vw, 56px); }
 .table-top { --pw: 172px; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; }
 .table-land .print { width: calc(var(--pw) * 1.5); }
-.print { width: var(--pw); margin: -10px -14px; position: relative; z-index: var(--z); transform: translate(var(--dx), var(--dy)) rotate(var(--r)); transition: transform .45s var(--ease), z-index 0s .45s; }
+.print { width: var(--pw); margin: 6px 8px; position: relative; z-index: var(--z); transform: translate(var(--dx), var(--dy)) rotate(var(--r)); transition: transform .45s var(--ease), z-index 0s .45s; }
 .print a { display: block; cursor: zoom-in; -webkit-tap-highlight-color: transparent; position: relative; }
 .print a::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(125deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0) 38%); }
 .print img { display: block; width: 100%; height: auto; background: var(--surface); box-shadow: 0 2px 3px rgba(0, 0, 0, .5), 0 14px 28px rgba(0, 0, 0, .55); transition: box-shadow .45s var(--ease); }
@@ -32,8 +32,8 @@
 @media (max-width: 900px) { .table-top { --pw: 140px; } }
 @media (max-width: 640px) {
   .print-table { padding: 28px 8px 24px; }
-  .table-top { --pw: 30vw; }
-  .table-land .print { width: 46vw; }
-  .print { margin: -6px -2vw; --up: 1.35; }
+  .table-top { --pw: 28vw; }
+  .table-land .print { width: 44vw; }
+  .print { margin: 4px 1vw; --up: 1.35; }
 }
 @media (prefers-reduced-motion: reduce) { .print, .print img { transition: none; } }
