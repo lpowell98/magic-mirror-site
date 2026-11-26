@@ -361,15 +361,84 @@ def bunting_party(n, mode):  # first birthdays and little kids
                 windows(lay["wins"], mode, mat=(14, "background:#fff;box-shadow:0 4px 14px rgba(60,30,60,.15)")) + text)
 
 
+def bubbles(w, h, seed, count, color, fill):
+    """Champagne bubbles rising from the bottom: more and bigger near the bottom, a highlight on each."""
+    rnd = random.Random(seed); out, pts = [], []
+    tries = 0
+    while len(pts) < count and tries < 8000:
+        tries += 1
+        y = h * (1 - rnd.random() ** 1.8)
+        r = 4 + 22 * (y / h) ** 1.5 * rnd.uniform(.5, 1)
+        x = rnd.uniform(r + 6, w - r - 6)
+        if all(math.hypot(x - a, y - b) > r + c + 8 for a, b, c in pts):
+            pts.append((x, y, r))
+    for x, y, r in pts:
+        out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r:.1f}" fill="{fill}" stroke="{color}" stroke-width="{max(1.6, r*.12):.1f}"/>')
+        if r > 8: out.append(f'<path d="M{x-r*.55:.1f} {y-r*.1:.1f} A{r*.6:.1f} {r*.6:.1f} 0 0 1 {x-r*.1:.1f} {y-r*.55:.1f}" fill="none" stroke="#fff" stroke-width="{max(1.2, r*.1):.1f}" stroke-linecap="round" opacity=".8"/>')
+    return f'<svg width="{w}" height="{h}" style="display:block">{"".join(out)}</svg>'
+
+
+def chips(W, H, avoid, count, colors, seed=1, gap=58, rmin=9, rmax=26):
+    """Terrazzo chips: small irregular stones, evenly spread, kept clear of the photos and the name."""
+    rnd = random.Random(seed); pts, out, tries = [], [], 0
+    while len(pts) < count and tries < 30000:
+        tries += 1
+        x, y = rnd.uniform(-10, W + 10), rnd.uniform(-10, H + 10)
+        if _clear(x, y, rmax, avoid) and all(math.hypot(x - a, y - b) > gap for a, b in pts):
+            pts.append((x, y))
+    for i, (x, y) in enumerate(pts):
+        r = rnd.uniform(rmin, rmax) * (1.6 if rnd.random() < .12 else 1)
+        nv = rnd.randint(5, 7); a0 = rnd.uniform(0, 6.28)
+        poly = " ".join(f"{x + math.cos(a0 + j * 6.283 / nv) * r * rnd.uniform(.6, 1.1):.1f},{y + math.sin(a0 + j * 6.283 / nv) * r * rnd.uniform(.5, 1):.1f}" for j in range(nv))
+        out.append(f'<polygon points="{poly}" fill="{colors[i % len(colors)]}" stroke="{colors[i % len(colors)]}" stroke-width="2.5" stroke-linejoin="round"/>')
+    return f'<svg class="tex" width="{W}" height="{H}">{"".join(out)}</svg>'
+
+
+def champagne_bubbles(n, mode):  # 30th to 70th
+    lay = LAYOUTS["age"]["n"][n]
+    px, py, pw, ph = lay["panel"]
+    s = k(n, .9, 1.1, .6)
+    bh = k(n, 420, 420, 150)
+    bub = bubbles(pw, bh, 5, k(n, 40, 56, 22), C["amber"], "rgba(253,212,134,.28)")
+    txt = (caps("Cheers to", 24 * s, C["amber"], ".46em", 700) +
+           f'<div style="{fr(330*s, 800, 100, 0, opsz=72)};color:{C["plum"]};line-height:.9;margin:{12*s}px 0 {4*s}px;letter-spacing:-.02em">40</div>' +
+           f'<div style="{fr(64*s, 500, 100, 1, True)};color:{C["plum"]}">years of Marcus</div>' +
+           caps("March 8, 2027", 20 * s, C["amber"], ".4em", 600, "Montserrat", f"margin-top:{22*s}px"))
+    panel = (f'<div class="fr" style="left:{px}px;top:{py}px;width:{pw}px;height:{ph}px;overflow:hidden;'
+             f'background:linear-gradient(180deg,#fbf1dc,#f4dfb3)">{paper(.12, .08)}'
+             f'<div style="position:absolute;left:0;bottom:0">{bub}</div></div>')
+    tb = [px, py, pw, ph - k(n, 300, 300, 150)]
+    return dict(bg=C["plum"], body=paper(.12, .10) + panel + windows(lay["wins"], mode, [(12, f'border:2px solid {C["gold"]}')]) + box(tb, txt))
+
+
+def terrazzo(n, mode):  # any age, modern
+    lay = LAYOUTS["card"]["n"][n]; W, H = P
+    if n == 1:
+        txt = (caps("Happy birthday", 24, C["orchid"], ".46em", 700) +
+               f'<div style="{fr(170, 700, 100, 0)};color:{C["ink"]};margin:22px 0 4px">Grace</div>' +
+               f'<div style="{fr(62, 500, 100, 1, True)};color:{C["plum"]}">turns sixty</div>' +
+               caps("March 8, 2027", 22, C["amber"], ".42em", 700, "Montserrat", "margin-top:32px"))
+        core = text_core(lay["text"], 820, 520)
+    else:
+        txt = (f'<div style="display:flex;align-items:baseline;gap:26px"><div style="{fr(112, 700, 100, 0)};color:{C["ink"]}">Grace</div>'
+               f'<div style="{fr(54, 500, 100, 1, True)};color:{C["plum"]}">turns sixty</div></div>' +
+               caps("March 8, 2027", 20, C["amber"], ".42em", 700, "Montserrat", "margin-top:16px"))
+        core = text_core(lay["text"], 1000, 240)
+    avoid = [grow(w, 30) for w in lay["wins"]] + [core]
+    stones = chips(W, H, avoid, 120, [C["plum"], C["gold"], C["rose"], C["orchid"], C["lilac_dk"], C["honey"]], seed=31, gap=k(n, 62, 50, 46))
+    return dict(bg="#F7F2EA", body=paper(.12, .06) + stones +
+                windows(lay["wins"], mode, mat=(14, "background:#fff;box-shadow:0 4px 14px rgba(40,20,40,.14)")) + box(lay["text"], txt))
+
+
 DESIGNS = [  # id, name, base layout, builder
     ("confetti-pop", "Confetti Pop", "band", confetti_pop),
     ("party-streamers", "Party Streamers", "band", party_streamers),
     ("midnight-sparkle", "Midnight Sparkle", "band", midnight_sparkle),
-    ("big-number", "Big Number", "age", big_number),
+    ("champagne-bubbles", "Champagne Bubbles", "age", champagne_bubbles),
     ("retro-sunset", "Retro Sunset", "age", retro_sunset),
     ("marquee-lights", "Marquee Lights", "age", marquee_lights),
     ("sprinkles", "Sprinkles", "card", sprinkles),
-    ("plum-velvet", "Plum Velvet", "card", plum_velvet),
+    ("terrazzo", "Terrazzo", "card", terrazzo),
     ("party-ticket", "Party Ticket", "ticket", party_ticket),
     ("bunting-party", "Bunting Party", "ticket", bunting_party),
 ]
