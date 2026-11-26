@@ -453,8 +453,11 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
 <dialog id="evDlg" aria-labelledby="evTitle">
   <form id="evForm" class="f" method="dialog">
     <h2 id="evTitle" style="width:100%;margin:0 0 4px">Add to Event List</h2>
-    <p style="margin:0;color:var(--muted);font-size:14px">Fill this in, then copy the line and paste it at the top of the list, under the notes.</p>
-    <label style="width:100%">Photo file name<input id="evFile" required placeholder="IMG_1234.jpg" autocomplete="off" style="width:100%"></label>
+    <p style="margin:0;color:var(--muted);font-size:14px">Pick the photo you uploaded and fill in the event. Then copy the line and paste it at the top of the list, under the notes.</p>
+    <label style="width:100%" id="evPickWrap">Uploaded photo<select id="evPick" style="width:100%"></select></label>
+    <img id="evThumb" alt="" style="width:100%;max-height:180px;object-fit:contain;background:#0e0b11;display:none;border:1px solid var(--line)">
+    <p id="evNone" style="width:100%;margin:0;font-size:13px;color:var(--muted);display:none">No new uploads found. Upload the photo first with Upload Event Photo; it shows up here about 2 minutes later. Or type its file name:</p>
+    <label style="width:100%;display:none" id="evFileWrap">Photo file name<input id="evFile" placeholder="IMG_1234.jpg" autocomplete="off" style="width:100%"></label>
     <label style="width:100%">Event name<input id="evName" placeholder="Maya’s Sweet 16" autocomplete="off" style="width:100%"></label>
     <label style="flex:1">Month<select id="evMonth" style="width:100%"><option value="">None</option></select></label>
     <label style="flex:1">Year<input id="evYear" type="number" min="2019" max="2099" style="width:100%"></label>
@@ -492,7 +495,7 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/app/app.js?v=5" defer></script>
+<script src="/app/app.js?v=6" defer></script>
 <script src="/app/budget.js?v=3" defer></script>
 </body>
 </html>

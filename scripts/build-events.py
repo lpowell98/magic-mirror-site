@@ -29,6 +29,8 @@ LIST = ROOT / "content" / "events.txt"
 HOME_MARK = ROOT / "content" / "home-last-built.txt"
 COLLAGE_MARK = ROOT / "content" / "collage-last-built.txt"
 SHARE_MARK = ROOT / "content" / "share-last-built.txt"
+OLD_UNLISTED = ROOT / "content" / "old-unlisted-photos.txt"   # old photos never meant for the list
+UNLISTED_JSON = ROOT / "public" / "app" / "unlisted.json"     # Dashboard "Add to Event List" picker
 SRC = ROOT / "src-images" / "gallery"
 WEB = ROOT / "public" / "images" / "gallery"
 BROCHURE = ROOT / "brochure"
@@ -376,11 +378,30 @@ def build_brochure(events, force):
     return True
 
 
+def write_unlisted(events):
+    """Photos uploaded to src-images/gallery/ that are not on the list yet, for the Dashboard picker."""
+    listed = {e["file"] for e in events}
+    old = set(OLD_UNLISTED.read_text().split()) if OLD_UNLISTED.exists() else set()
+    items = []
+    for p in sorted(SRC.iterdir()):
+        if p.suffix.lower() not in (".jpg", ".jpeg", ".png") or p.name in listed or p.name in old:
+            continue
+        thumb = WEB / f"{p.stem}-sm.webp"
+        if not thumb.exists():
+            im = Image.open(p).convert("RGB")
+            im.resize((480, round(im.height * 480 / im.width)), Image.LANCZOS).save(thumb, "WEBP", quality=78, method=6)
+        items.append({"file": p.name, "thumb": f"/images/gallery/{p.stem}-sm.webp"})
+    text = json.dumps(items, indent=1) + "\n"
+    if not UNLISTED_JSON.exists() or UNLISTED_JSON.read_text() != text:
+        UNLISTED_JSON.write_text(text)
+    return len(items)
+
+
 def main():
     args = set(sys.argv[1:])
     events = read_list()
     made = make_web_images(events)
-    report = [f"{len(events)} prints in the list, {made} new web image set(s)"]
+    report = [f"{len(events)} prints in the list, {made} new web image set(s), {write_unlisted(events)} uploaded photo(s) waiting to be listed"]
     if build_gallery(events):
         report.append("gallery updated")
     if build_links(events):

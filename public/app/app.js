@@ -460,14 +460,25 @@ load();
 // Add to Event List: builds the line for content/events.txt, copies it and opens the list on GitHub
 const EV_MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 EV_MONTHS.forEach(m=>$("evMonth").add(new Option(m,m)));
-function evLine(){ const f=$("evFile").value.trim(), n=$("evName").value.trim(), m=$("evMonth").value, y=$("evYear").value.trim(), t=$("evType").value;
+function evFileName(){ return $("evFileWrap").style.display==="none" ? $("evPick").value : $("evFile").value.trim(); }
+function evThumb(){ const o=$("evPick").selectedOptions[0]; const t=$("evThumb"); if(o&&o.dataset.thumb&&$("evFileWrap").style.display==="none"){ t.src=o.dataset.thumb; t.style.display="block"; } else t.style.display="none"; }
+async function evLoad(){
+  let items=[]; try{ const r=await fetch("/app/unlisted.json",{cache:"no-store"}); if(r.ok) items=await r.json(); }catch(err){}
+  const sel=$("evPick"); sel.innerHTML="";
+  items.forEach(it=>{ const o=new Option(it.file,it.file); o.dataset.thumb=it.thumb; sel.add(o); });
+  const none=!items.length;
+  $("evPickWrap").style.display=none?"none":""; $("evNone").style.display=none?"block":"none"; $("evFileWrap").style.display=none?"":"none";
+  evThumb(); evShow();
+}
+function evLine(){ const f=evFileName(), n=$("evName").value.trim(), m=$("evMonth").value, y=$("evYear").value.trim(), t=$("evType").value;
   const parts=[f||"photo-file.jpg", n, m&&y?`${m} ${y}`:"", t]; while(parts.length>1&&!parts[parts.length-1]) parts.pop(); return parts.join(" | "); }
 function evShow(){ $("evLine").textContent=evLine(); }
-["evFile","evName","evMonth","evYear","evType"].forEach(id=>$(id).addEventListener("input",evShow));
-$("evBtn").onclick=()=>{ const d=new Date(); $("evForm").reset(); $("evMonth").value=EV_MONTHS[d.getMonth()]; $("evYear").value=d.getFullYear(); $("evMsg").textContent=""; evShow(); $("evDlg").showModal(); $("evFile").focus(); };
+["evFile","evName","evMonth","evYear","evType","evPick"].forEach(id=>$(id).addEventListener("input",evShow));
+$("evPick").addEventListener("change",()=>{ evThumb(); evShow(); });
+$("evBtn").onclick=()=>{ const d=new Date(); $("evForm").reset(); $("evMonth").value=EV_MONTHS[d.getMonth()]; $("evYear").value=d.getFullYear(); $("evMsg").textContent=""; evShow(); $("evDlg").showModal(); evLoad().then(()=>($("evFileWrap").style.display==="none"?$("evName"):$("evFile")).focus()); };
 $("evCancel").onclick=()=>$("evDlg").close();
 $("evForm").onsubmit=async e=>{ e.preventDefault();
-  const f=$("evFile").value.trim();
+  const f=evFileName();
   if(!/\.(jpe?g|png)$/i.test(f)){ $("evMsg").textContent="Type the photo's file name exactly as uploaded, ending in .jpg or .png."; return; }
   if($("evMonth").value&&!/^\d{4}$/.test($("evYear").value.trim())){ $("evMsg").textContent="Add the year, like 2026."; return; }
   const line=evLine(); let copied=false;
