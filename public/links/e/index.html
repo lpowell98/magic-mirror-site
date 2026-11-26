@@ -46,7 +46,11 @@
   .lf p { margin: 0; font-size: 13px; opacity: .75; }
 
   body { background: linear-gradient(180deg, #0e0b11 0, #2c0f2b 700px, #3d1540 1500px, #1e0a1d 100%); }
-  .phero { position: relative; text-align: center; padding: 40px 16px 36px; background: linear-gradient(180deg, rgba(14,11,17,.55), rgba(14,11,17,.92) 85%, #0e0b11), url(/images/home/img_6190.webp) center / cover; }
+  .phero { position: relative; overflow: hidden; text-align: center; padding: 48px 16px 40px; background: #000; }
+  .phero .wall { inset: -6%; }
+  .phero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,5,10,.68) 0, rgba(8,5,10,.8) 55%, #0e0b11 100%); pointer-events: none; }
+  .phero > :not(.wall) { position: relative; z-index: 2; }
+  .phero h1, .phero .tag { text-shadow: 0 2px 12px rgba(0,0,0,.6); }
   .phero .tag { color: #ddd3e3; }
   main.w { padding-top: 8px; }
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -69,7 +73,7 @@
 </style>
 </head>
 <body>
-<header class="phero"><a href="/" class="lg"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services, home" width="320" height="196"></a>
+<header class="phero"><div class="wall" aria-hidden="true"><figure><img src="/images/gallery/1745969084417-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1716678023162-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1715916052182-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1712965751799-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1707612796991-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1731199989581-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1722735607305-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1713046913831-sm.webp" width="480" height="320" alt=""></figure></div><a href="/" class="lg"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services, home" width="320" height="196"></a>
 <h1>Magic Mirror photo booth rentals</h1>
 <p class="tag">Providing the magic for your next event in the Greater Boston Area.</p></header>
 <main class="w">
