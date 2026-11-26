@@ -517,14 +517,14 @@ def echo(n, mode):  # 30th to 70th, typographic
     return dict(bg="#1a141c", body=paper(.10, .06) + panel + windows(lay["wins"], mode, [(12, f'border:2px solid {C["gold"]}')]) + box([px, py, pw, ph], txt))
 
 
-OPTIONS = [("color-block", "Color Block", "age", color_block), ("party-awning", "Party Awning", "age", party_awning), ("echo", "Echo", "age", echo)]
+OPTIONS = [("color-block", "Color Block", "age", color_block), ("party-awning", "Party Awning", "age", party_awning), ("starburst", "Starburst", "age", starburst)]  # rejected alternatives, PD_OPTIONS=1
 
 
 DESIGNS = [  # id, name, base layout, builder
     ("confetti-pop", "Confetti Pop", "band", confetti_pop),
     ("party-streamers", "Party Streamers", "band", party_streamers),
     ("midnight-sparkle", "Midnight Sparkle", "band", midnight_sparkle),
-    ("starburst", "Starburst", "age", starburst),
+    ("echo", "Echo", "age", echo),
     ("retro-sunset", "Retro Sunset", "age", retro_sunset),
     ("marquee-lights", "Marquee Lights", "age", marquee_lights),
     ("sprinkles", "Sprinkles", "card", sprinkles),

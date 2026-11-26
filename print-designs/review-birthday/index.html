@@ -80,7 +80,7 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.06e
   <ul class="rules" style="margin-top:28px">
     <li><b>Brand colors, used with restraint.</b> Plum, orchid and gold do most of the work. Rose and honey appear only as small accents.</li>
     <li><b>Fun comes from shape, not clutter.</b> Confetti is spread evenly and kept off the photos and the name, so the print still reads at a glance.</li>
-    <li><b>Drawn, not clip art.</b> Confetti, streamers, bunting, rainbow rings, marquee bulbs, sunburst rays and terrazzo stones are all drawn in code. No balloons, cakes or cartoon art.</li>
+    <li><b>Drawn, not clip art.</b> Confetti, streamers, bunting, rainbow rings, marquee bulbs and terrazzo stones stones are all drawn in code. No balloons, cakes or cartoon art.</li>
     <li><b>The age is the hero.</b> Milestone designs make the number big and gold. Kids' designs say it in a sentence: "Leo is five!".</li>
     <li><b>One photo orientation.</b> Every photo window is landscape, in every print and every version, so the booth camera stays set one way.</li>
     <li><b>Photos come first.</b> Windows are wide, with square or gently rounded corners, so a whole group fits. No arches.</li>
@@ -109,10 +109,6 @@ figcaption{font-size:12px;color:var(--muted);margin-top:10px;letter-spacing:.06e
       <svg viewBox="0 0 120 180"><rect width="120" height="180" fill="#2e2535"/><rect x="30" y="12" width="60" height="9" fill="#c4bacb"/><rect x="40" y="26" width="40" height="3" fill="#c4bacb"/><rect x="11" y="43" width="98" height="40" rx="4" fill="#d8bf86"/><rect x="11" y="87" width="98" height="40" rx="4" fill="#d8bf86"/><rect x="11" y="131" width="98" height="40" rx="4" fill="#d8bf86"/></svg></div></div>
   </div>
 
-  <h2>Pick a replacement for Starburst</h2>
-  <p style="margin-bottom:8px">Three new directions for the milestone age panel. Tell me which one to keep and it takes Starburst's place in the set.</p>
-  <div id="options"></div>
-
   <h2>The ten designs</h2>
   <div id="designs"></div>
 
@@ -124,7 +120,7 @@ const D=[
  ["confetti-pop","Confetti Pop","Band","Kids and teens","Cream paper with hand-placed confetti in the brand colors, kept clear of the photos and the name."],
  ["party-streamers","Party Streamers","Band","Tweens and teens","Soft lilac with curled gold and plum streamers at the corners and a retro script name."],
  ["midnight-sparkle","Midnight Sparkle","Band","21st to 40th","Evening party. Near-black with gold sparkles, a gold hairline border and the age in spaced gold capitals."],
- ["starburst","Starburst","Age panel","30th to 70th","Retro plum sunburst rays behind a cream badge with the age, ringed in gold. Works for any milestone."],
+ ["echo","Echo","Age panel","30th to 70th","Typographic and dramatic. The age spelled out four times in gold outline, one line solid, on near-black."],
  ["retro-sunset","Retro Sunset","Age panel","Sweet 16, or a 70s theme","Rose panel with a 70s rainbow in plum, orchid and gold rising from the bottom."],
  ["marquee-lights","Marquee Lights","Age panel","50th and up","A glowing marquee sign of gold bulbs around the age, on deep black."],
  ["sprinkles","Sprinkles","Card","Little kids","Lilac with rainbow sprinkles scattered around white-matted photos."],
@@ -135,11 +131,4 @@ const port=b=>b==="Card"||b==="Ticket";
 document.getElementById("designs").innerHTML=D.map(([id,name,base,age,desc])=>`<section class="design">
   <div class="dh"><h3>${name}</h3><span>${base} · ${port(base)?"Portrait":"Landscape"} · ${age}</span></div><p>${desc}</p>
   <div class="vers ${port(base)?"p":"l"}">${[1,2,3].map(n=>`<figure><img src="web/${id}-${n}.webp" alt="${name}, ${n} photo version" width="${port(base)?600:900}" height="${port(base)?900:600}" loading="lazy"><figcaption>${n} photo${n>1?"s":""}</figcaption></figure>`).join("")}</div></section>`).join("");
-const O=[
- ["color-block","Option A · Color Block","Age panel","30th to 70th","Modern and graphic. Squares and quarter circles in the brand colors, with a bold age and the name below."],
- ["party-awning","Option B · Party Awning","Age panel","30th to 70th","Festive. A striped plum awning with scalloped edges over a rose panel, like a party tent."],
- ["echo","Option C · Echo","Age panel","30th to 70th","Typographic and dramatic. The age spelled out four times in gold outline, one line solid, on near-black."]];
-document.getElementById("options").innerHTML=O.map(([id,name,base,age,desc])=>`<section class="design">
-  <div class="dh"><h3>${name}</h3><span>${base} · Landscape · ${age}</span></div><p>${desc}</p>
-  <div class="vers l">${[1,2,3].map(n=>`<figure><img src="web/${id}-${n}.webp" alt="${name}, ${n} photo version" width="900" height="600" loading="lazy"><figcaption>${n} photo${n>1?"s":""}</figcaption></figure>`).join("")}</div></section>`).join("");
 </script>
