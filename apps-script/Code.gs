@@ -510,9 +510,12 @@ function sendMail_(o) {
 let canSendAs__;
 function canSendAs_() {
   if (canSendAs__ !== undefined) return canSendAs__;
+  const cache = CacheService.getScriptCache(), hit = cache.get('canSendAs');
+  if (hit) return (canSendAs__ = hit === '1');
   const me = String(Session.getEffectiveUser().getEmail() || '').toLowerCase(), from = CONFIG.FROM.toLowerCase();
   try { canSendAs__ = me === from || GmailApp.getAliases().some(a => a.toLowerCase() === from); }
   catch (e) { canSendAs__ = false; }
+  cache.put('canSendAs', canSendAs__ ? '1' : '0', 6 * 3600);
   return canSendAs__;
 }
 
@@ -1064,7 +1067,7 @@ function adminApi_(a) {
       return { ok: false, error: 'That code is not right. Check the email and try again.' };
     }
     cache.remove(key);
-    return newSession_(email);
+    return withData_(newSession_(email));
   }
   if (a.action === 'adminLogin') {
     const email = isAdminEmail_(a.email), lockKey = 'pwfail:' + String(a.email || '').toLowerCase().slice(0, 200);
@@ -1078,8 +1081,8 @@ function adminApi_(a) {
       return { ok: false, error: stored || !email ? 'Email or password is not right.' : 'No password set for this account yet. Use an emailed code, then set one.' };
     }
     cache.remove(lockKey);
-    if (String(stored).indexOf('v2$') !== 0) props.setProperty('pw:' + email, hashPassword_(pw));   // upgrade older hashes
-    return newSession_(email);
+    if (String(stored).indexOf('v3$') !== 0) props.setProperty('pw:' + email, hashPassword_(pw));   // upgrade older hashes
+    return withData_(newSession_(email));
   }
   if (a.action === 'adminSetPassword') {
     const email = sessionEmail_(a.token);
@@ -1120,27 +1123,73 @@ function newSession_(email) {
   const props = PropertiesService.getScriptProperties();
   props.setProperty('sess:' + sha_(token), JSON.stringify({ email, exp: Date.now() + SESSION_DAYS * 864e5, ip: REQ.ip, at: Date.now() }));
   pruneSessions_(props);
-  try {
-    sendMail_({ to: email, subject: 'New sign-in to your Magic Mirror dashboard',
-      preheader: "If this was you, there's nothing to do.",
-      htmlBody: eHead_('Security alert', 'New sign-in to your dashboard') +
-        eFacts_([['Account', esc_(email)], ['When', esc_(fmtStamp_(new Date()))], ['IP address', esc_(REQ.ip)], ['Browser', esc_(REQ.ua || 'unknown')]]) +
-        eP_("If this was you, there's nothing to do. If it wasn't, open the dashboard, click <b>Sign out all</b>, then set a new password.") +
-        emailButton_(BRAND.dashboard, 'Open the dashboard') });
-  } catch (e) { Logger.log('Sign-in alert: ' + e); }
+  queueSignInAlert_({ email, when: fmtStamp_(new Date()), ip: REQ.ip, ua: REQ.ua || 'unknown' });
   return { ok: true, token, email };
 }
 
-// Salted, stretched hash: "v2$salt$hash". The plain password is never stored.
-const PW_ROUNDS = 5000;
+// Adds the dashboard data to a sign-in answer, so the dashboard opens without a second trip.
+function withData_(res) {
+  if (!res || !res.ok) return res;
+  const t = Date.now();
+  apiAdmin_ = res.email;
+  try { res.data = adminData(); } catch (e) { Logger.log('Sign-in data: ' + e); }   // the page loads it itself if this fails
+  finally { apiAdmin_ = ''; }
+  console.log('Sign-in: dashboard data took ' + (Date.now() - t) + ' ms');
+  return res;
+}
+
+/* Sign-in alerts. Sending an email takes a few seconds, so instead of making the person signing in
+   wait for it, each alert is saved in Script Properties and a one-off trigger sends it about a
+   minute later. If the trigger can't be created, the alert is sent straight away as before.
+   runAutomations() also sends any alert still waiting, as a safety net. */
+function queueSignInAlert_(a) {
+  const props = PropertiesService.getScriptProperties(), cache = CacheService.getScriptCache();
+  props.setProperty('alert:' + Date.now() + ':' + newKey_().slice(0, 8), JSON.stringify(a));
+  if (cache.get('alertTrigger')) return;   // a send is already scheduled and will pick this one up
+  try {
+    ScriptApp.newTrigger('sendSignInAlerts').timeBased().after(30 * 1000).create();
+    cache.put('alertTrigger', '1', 600);
+  } catch (e) { Logger.log('Alert trigger: ' + e); sendSignInAlerts(); }
+}
+function sendSignInAlerts() {
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'sendSignInAlerts').forEach(t => {
+    try { ScriptApp.deleteTrigger(t); } catch (e) {}
+  });
+  CacheService.getScriptCache().remove('alertTrigger');   // removed before reading, so a sign-in right now schedules a new send
+  const props = PropertiesService.getScriptProperties(), all = props.getProperties();
+  Object.keys(all).filter(k => k.indexOf('alert:') === 0).sort().forEach(k => {
+    props.deleteProperty(k);
+    let a; try { a = JSON.parse(all[k]); } catch (e) { return; }
+    try {
+      sendMail_({ to: a.email, subject: 'New sign-in to your Magic Mirror dashboard',
+        preheader: "If this was you, there's nothing to do.",
+        htmlBody: eHead_('Security alert', 'New sign-in to your dashboard') +
+          eFacts_([['Account', esc_(a.email)], ['When', esc_(a.when)], ['IP address', esc_(a.ip)], ['Browser', esc_(a.ua)]]) +
+          eP_("If this was you, there's nothing to do. If it wasn't, open the dashboard, click <b>Sign out all</b>, then set a new password.") +
+          emailButton_(BRAND.dashboard, 'Open the dashboard') });
+    } catch (e) { Logger.log('Sign-in alert: ' + e); }
+  });
+}
+
+/* Salted, stretched password hash: "v3$salt$hash". The plain password is never stored.
+   Same idea as OpenPGP's iterated-and-salted S2K (RFC 4880 3.7.1.3): salt+password is repeated to
+   2 MB and hashed with SHA-256 in one call. That is about 32,000 SHA-256 blocks per guess, more
+   work for anyone guessing than the old v2 hash (about 10,000), but it takes Apps Script one call
+   instead of 5,000, so signing in no longer waits on it. */
+const PW_BYTES = 2 * 1024 * 1024;
 function hashPassword_(pw, salt) {
   salt = salt || newKey_();
+  const unit = salt + pw, stream = unit.repeat(Math.ceil(PW_BYTES / unit.length)).slice(0, PW_BYTES);
+  return 'v3$' + salt + '$' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, stream, Utilities.Charset.UTF_8));
+}
+// Older formats, kept so existing passwords still work; they are upgraded at the next sign-in.
+const PW_ROUNDS = 5000;
+function hashPasswordV2_(pw, salt) {
   const A = Utilities.DigestAlgorithm.SHA_256, s = Utilities.newBlob(salt).getBytes();
   let h = Utilities.computeDigest(A, salt + pw, Utilities.Charset.UTF_8);
   for (let i = 0; i < PW_ROUNDS; i++) h = Utilities.computeDigest(A, h.concat(s));
   return 'v2$' + salt + '$' + Utilities.base64Encode(h);
 }
-// Older format, kept so existing passwords still work; they are upgraded at the next sign-in.
 function hashPasswordV1_(pw, salt) {
   let h = salt + pw;
   for (let i = 0; i < 1000; i++) h = sha_(h + salt);
@@ -1148,7 +1197,11 @@ function hashPasswordV1_(pw, salt) {
 }
 function checkPassword_(pw, stored) {
   const parts = String(stored).split('$');
-  return parts[0] === 'v2' ? hashPassword_(pw, parts[1]) === stored : hashPasswordV1_(pw, parts[0]) === stored;
+  const t = Date.now();
+  const ok = parts[0] === 'v3' ? hashPassword_(pw, parts[1]) === stored
+    : parts[0] === 'v2' ? hashPasswordV2_(pw, parts[1]) === stored : hashPasswordV1_(pw, parts[0]) === stored;
+  console.log('Sign-in: password check (' + (parts[0] === 'v3' || parts[0] === 'v2' ? parts[0] : 'v1') + ') took ' + (Date.now() - t) + ' ms');
+  return ok;
 }
 
 function pruneSessions_(props) {
@@ -1342,6 +1395,7 @@ function runAutomations() {
   const lock = LockService.getScriptLock(); lock.waitLock(30000);
   try {
     try { reconcileStripe_(); } catch (e) { Logger.log('Stripe reconcile: ' + e); }
+    try { sendSignInAlerts(); } catch (e) { Logger.log('Sign-in alerts: ' + e); }
     const log = autoLog_();
     dueReminders_().forEach(m => {
       const isOwner = m.to === CONFIG.NOTIFY;
