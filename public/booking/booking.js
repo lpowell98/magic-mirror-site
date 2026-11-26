@@ -390,7 +390,7 @@ const TEMPLATES=[
   ["graduationv","Graduation","p","graduation",[750,1125],[[86,60,666,850]]],
   ["hope-2-portrait-mirror-4x6-cropped","Hope","p","corporate",[1200,1800],[[104,115,1093,1500]]]
 ].map(([f,name,shape,occ,size,wins])=>({f,name,shape,occ:occ.split(" "),size,wins}));
-/* New wedding, birthday, holiday, graduation and baby shower collections (print-designs/): real artwork for each photo count, files <f>-<n>.webp.
+/* New wedding, birthday, holiday, graduation, baby shower and corporate collections (print-designs/): real artwork for each photo count, files <f>-<n>.webp.
    [file prefix, name, shape, occasions, size, windows [x0,y0,x1,y1] per photo count, window corners: 1 = cut, "r" = rounded] */
 const SETS=[
   ["wedding-ivory-script","Ivory Script","l","wedding",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
@@ -442,7 +442,17 @@ const SETS=[
   ["babyshower-christening-lace","Christening Lace","p","baby",[1200, 1800],{1:[[170,140,1030,785]],2:[[170,120,1030,700],[170,740,1030,1320]],3:[[170,110,1030,510],[170,550,1030,950],[170,990,1030,1390]]}],
   ["babyshower-cross-stitch","Cross-Stitch","p","baby",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
   ["babyshower-babys-breath","Baby's Breath","p","baby",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
-  ["babyshower-airmail","Airmail Reveal","p","baby",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"]
+  ["babyshower-airmail","Airmail Reveal","p","baby",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["corporate-lobby-sign","Lobby Sign","l","corporate",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["corporate-step-and-repeat","Step and Repeat","l","corporate",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["corporate-velvet-rope","Velvet Rope","l","corporate",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["corporate-letter-board","Letter Board","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-dinner-menu","Dinner Menu","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-color-chip","Color Chip","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-annual-report","Annual Report","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-lanyard-badge","Lanyard Badge","p","corporate",[1200, 1800],{1:[[110,620,1090,1355]],2:[[110,560,1090,1120],[110,1150,1090,1710]],3:[[110,520,1090,900],[110,925,1090,1305],[110,1330,1090,1710]]}],
+  ["corporate-leather-folio","Leather Folio","p","corporate",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["corporate-brass-plaque","Brass Plaque","p","corporate",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}]
 ].map(([f,name,shape,occ,size,vers,cut])=>({f,name,shape,occ:occ.split(" "),size,vers,cut:cut===1,round:cut==="r",wins:vers[2]}));
 TEMPLATES.unshift(...SETS);
 /* Photo-count versions. A design's own layout is shown as-is; other counts are a mock-up of how the

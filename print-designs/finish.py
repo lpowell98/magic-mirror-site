@@ -33,6 +33,10 @@ for m in man:
             d.rectangle([x * S, y * S, (x + w) * S - 1, (y + h) * S - 1], fill=0)
     ov.putalpha(mask.resize(ov.size, Image.LANCZOS))
     ov.save(os.path.join(FIN, did, f"{did}-{n}photo-overlay.png"), dpi=(300, 300), optimize=True)
+    bare = os.path.join(OUTD, "png", f"{did}-{n}-bare.png")  # Corporate: the same overlay with the logo spot left empty
+    if os.path.exists(bare):
+        nb = Image.open(bare).convert("RGBA"); nb.putalpha(mask.resize(nb.size, Image.LANCZOS))
+        nb.save(os.path.join(FIN, did, f"{did}-{n}photo-overlay-nologo.png"), dpi=(300, 300), optimize=True)
     src("blank").convert("RGB").save(os.path.join(FIN, did, f"{did}-{n}photo.png"), dpi=(300, 300), optimize=True)
     pv = src("preview").convert("RGB")
     pv.save(os.path.join(FIN, did, f"{did}-{n}photo-sample.jpg"), quality=90, dpi=(300, 300))
