@@ -1,122 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>Owner Dashboard | Magic Mirror Rental Services</title>
+<title>Dashboard | Magic Mirror Rental Services</title>
 <meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="icon" href="/images/brand/favicon.ico">
 <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
 <meta charset="utf-8">
 <meta name="theme-color" content="#000000">
 <meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{color-scheme:dark;--bg:#0e0b11;--surface:#1a1420;--surface2:#251c2d;--line:#33283d;--accent:#fba924;--accent-hover:#f4ca3e;--purple:#6e266c;--purple-deep:#4f1a4d;--paper:#eeece9;--ink:#f3f1ee;--muted:#c4bacb;
-  --ok:#3fb27f;--warn:#fba924;--bad:#e5484d;--info:#6aa3ff}
+:root{color-scheme:dark;--bg:#0e0b11;--surface:#1a1420;--surface2:#251c2d;--line:#33283d;--accent:#fba924;--accent-hover:#f4ca3e;--purple:#6e266c;--purple-deep:#4f1a4d;--purple-mid:#b45ab0;--paper:#eeece9;--ink:#f3f1ee;--muted:#c4bacb;
+  --ok:#3fb27f;--warn:#fba924;--bad:#e5484d;--info:#6aa3ff;
+  /* chart series (validated on --surface): paid = deep gold, still owed = purple */
+  --c-paid:#c98618;--c-owed:#b45ab0;
+  /* status colors, used everywhere a status shows */
+  --s-un-bg:#4a3a12;--s-un:#ffd27a;--s-co-bg:#123a2a;--s-co:#7be0b0;--s-dn-bg:#2a2a35;--s-dn:#bdb6c6;--s-ca-bg:#3d1517;--s-ca:#ff9a9d}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.5 Montserrat,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:500 15px/1.5 Montserrat,"Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 button,input,select,textarea{font:inherit;color:inherit}
 a{color:var(--accent)}
-header{display:flex;align-items:center;gap:28px;padding:12px 24px;background:#000;position:sticky;top:0;z-index:5;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:14px;font-weight:700;color:var(--muted);text-decoration:none}.brand img{height:52px;width:auto;display:block}
-nav{display:flex;gap:4px;flex-wrap:wrap}
-nav button{background:none;border:0;padding:10px 14px;border-radius:0;color:var(--ink);cursor:pointer;font-weight:600;box-shadow:inset 0 -3px 0 transparent;transition:box-shadow .2s,color .2s}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:24px;padding:10px 24px;background:#000;position:sticky;top:0;z-index:5;border-bottom:1px solid #2a1f2e}
+.brand{display:flex;align-items:center;gap:14px;font-weight:700;color:var(--muted);text-decoration:none;flex:none}.brand img{height:48px;width:auto;display:block}
+.brand span{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:var(--accent)}
+nav{display:flex;gap:2px}
+nav button{display:flex;align-items:center;gap:8px;background:none;border:0;padding:10px 12px;border-radius:0;color:var(--ink);cursor:pointer;font-weight:600;box-shadow:inset 0 -3px 0 transparent;transition:box-shadow .2s,color .2s;white-space:nowrap;position:relative}
+nav button svg{width:18px;height:18px;flex:none;opacity:.8}
 nav button:hover{color:var(--accent)}
 nav button[aria-selected=true]{color:var(--accent);box-shadow:inset 0 -3px 0 var(--accent)}
+nav button[aria-selected=true] svg{opacity:1}
+.spacer{flex:1}
+.hbtn{background:var(--surface2);border:0;border-radius:0;padding:10px 14px;color:var(--ink);font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.hbtn:hover{background:var(--purple-deep)}.hbtn svg{width:18px;height:18px}
+.acct{position:relative}
+.menu{position:absolute;right:0;top:calc(100% + 8px);background:var(--surface);min-width:240px;box-shadow:0 18px 40px rgba(0,0,0,.55);border-top:3px solid var(--accent);padding:8px 0;z-index:30}
+.menu .who{display:block;padding:8px 16px 10px;color:var(--muted);font-size:13px;border-bottom:1px solid var(--line);margin-bottom:6px;word-break:break-all}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:10px 16px;cursor:pointer;font-weight:600}
+.menu button:hover{background:var(--purple-deep);color:var(--accent)}
 button:focus-visible,a:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button,a,.row,tbody tr{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:9px;background:var(--accent);color:#1a1420;font-size:11px;font-weight:700;text-align:center;line-height:18px}
+
+/* ---------- layout ---------- */
+main{padding:24px;max-width:1400px;margin:0 auto}
+h1{font:800 clamp(26px,3vw,40px)/1.05 Montserrat,sans-serif;letter-spacing:-.02em;margin:8px 0 20px}
+h1::after{content:"";display:block;width:44px;height:3px;background:var(--accent);margin-top:12px}
+h2{font-size:17px;font-weight:700;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+h2 .count{font-size:12px;color:var(--muted);font-weight:600}
+.lead{color:var(--muted);margin:-6px 0 18px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.grid2>*{min-width:0}
+.card{background:var(--surface);padding:22px;min-width:0}
 .idbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 fieldset{border:0;margin:0;padding:0}legend{font-size:12px;color:var(--muted);margin-bottom:4px;padding:0}
-.badge{display:inline-block;min-width:18px;padding:0 6px;border-radius:9px;background:var(--accent);color:#1a1420;font-size:11px;font-weight:700;margin-left:6px;text-align:center}
-.spacer{flex:1}
-#refresh{background:var(--surface2);border:0;border-radius:0;padding:10px 16px;color:var(--ink);font-weight:600;cursor:pointer}#refresh:hover{background:var(--purple-deep)}
-main{padding:24px;max-width:1400px;margin:0 auto}
-h1{font:800 clamp(30px,3vw,44px)/1.05 Montserrat,sans-serif;letter-spacing:-.02em;margin:8px 0 24px}h2{font-size:18px;font-weight:700;margin:0 0 12px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:24px}
-.stat{background:var(--surface);padding:18px 20px}.stat:first-child{background:var(--purple)}
-.stat b{display:block;font:800 32px/1.1 Montserrat,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:14px;font-weight:600}.stat:first-child span{color:var(--ink)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-@media(max-width:900px){.grid2{grid-template-columns:1fr}}
-.card{background:var(--surface);padding:22px}
-.list{display:flex;flex-direction:column}
-.row{display:flex;gap:14px;align-items:center;padding:12px 14px;margin-bottom:4px;border:0;cursor:pointer;background:var(--bg);text-align:left;width:100%;transition:background-color .15s}
-.row:last-child{margin-bottom:0}.row:hover{background:var(--purple-deep)}
-.row .when{width:96px;flex:none;color:var(--muted);font-variant-numeric:tabular-nums}
-.row .what{flex:1;min-width:0}.row .what small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* stat tiles */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:22px}
+.stat{background:var(--surface);padding:16px 18px;border-top:3px solid var(--purple);min-width:0}
+.stat b{display:block;font:800 30px/1.1 Montserrat,sans-serif;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere}
+.stat span{color:var(--muted);font-size:13px;font-weight:600}
+.stat.hero{background:linear-gradient(135deg,var(--purple) 0%,var(--purple-deep) 100%);border-top-color:var(--accent)}
+.stat.hero span{color:#f0dcef}
+.stat.gold b{color:var(--accent)}
+button.stat{border:0;border-top:3px solid var(--purple);text-align:left;cursor:pointer;font:inherit;color:inherit}
+button.stat:hover{background:var(--surface2)}
+
+/* list rows */
+.list{display:flex;flex-direction:column;gap:4px}
+.row{display:flex;align-items:stretch;background:var(--bg);min-width:0;transition:background-color .15s}
+.row:hover{background:#160f19}
+.rowmain{display:flex;gap:14px;align-items:center;padding:12px 14px;border:0;cursor:pointer;background:none;text-align:left;flex:1;min-width:0}
+.rowmain:hover .what b{color:var(--accent)}
+.row .when{width:92px;flex:none;color:var(--muted);font-variant-numeric:tabular-nums;font-size:14px;line-height:1.3}
+.row .when em{display:block;font-style:normal;font-size:12px;color:var(--accent);font-weight:700}
+.row .what{flex:1;min-width:0}
+.row .what b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:color .15s}
+.row .what small{display:block;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .side{display:flex;align-items:center;gap:6px;padding:8px 12px 8px 0;flex:none}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.tag{font-size:11px;font-weight:700;padding:2px 7px;background:var(--surface2);color:var(--ink);white-space:nowrap}
+.tag.hot{background:#4a1d20;color:#ffb3b5}.tag.msg{background:#2b2250;color:#c9bcff}
 .empty{color:var(--muted);padding:12px 4px}
 .pill{display:inline-block;padding:3px 9px;font-size:12px;font-weight:700;white-space:nowrap}
-.s-Unconfirmed{background:#4a3a12;color:#ffd27a}.s-Confirmed{background:#123a2a;color:#7be0b0}.s-Completed{background:#2a2a35;color:#bdb6c6}.s-Cancelled{background:#3d1517;color:#ff9a9d}
+.s-Unconfirmed{background:var(--s-un-bg);color:var(--s-un)}.s-Confirmed{background:var(--s-co-bg);color:var(--s-co)}.s-Completed{background:var(--s-dn-bg);color:var(--s-dn)}.s-Cancelled{background:var(--s-ca-bg);color:var(--s-ca)}
+.qa{background:var(--surface2);border:0;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--ink)}
+.qa:hover{background:var(--purple-deep);color:var(--accent)}
+.qa.go{background:var(--accent);color:#1a1420}.qa.go:hover{background:var(--accent-hover);color:#1a1420}
+.qa:disabled{opacity:.5;cursor:default}
+
+/* filters + table */
 .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.filters input,.filters select,.f input,.f select,.f textarea{background:var(--bg);border:2px solid var(--surface2);border-radius:0;padding:9px 12px;color:var(--ink)}
+.filters input,.filters select,.f input,.f select,.f textarea{background:var(--bg);border:2px solid var(--surface2);border-radius:0;padding:9px 12px;color:var(--ink);min-width:0}
 .filters input:focus,.filters select:focus,.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--accent)}
 .filters input,.filters select{background:var(--surface)}
-.filters input{min-width:220px}
+.filters input{min-width:240px;flex:1 1 240px;max-width:360px}
 table{width:100%;border-collapse:collapse}
 th,td{padding:10px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
 th{color:var(--muted);font-size:13px;font-weight:600;position:sticky;top:0;background:var(--surface)}
 tbody tr{cursor:pointer}tbody tr:hover{background:var(--surface2)}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 td.ev{white-space:normal;max-width:280px}
-.tablewrap{overflow:auto;max-height:calc(100vh - 220px)}
+.tablewrap{overflow:auto;max-height:calc(100vh - 230px)}
 .owe{color:var(--warn)}
-.cal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+#count{color:var(--muted)}
+.bcards{display:none}
+
+/* calendar */
+.cal-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.cal-head h1{margin:0;min-width:0;flex:0 1 auto}.cal-head h1::after{display:none}
 .cal-head button{background:var(--surface2);border:0;border-radius:0;padding:8px 14px;cursor:pointer;font-weight:600}.cal-head button:hover{background:var(--purple-deep)}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 12px;color:var(--muted);font-size:13px}
+.legend span{display:flex;align-items:center;gap:6px}.legend i{width:12px;height:12px;display:inline-block}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .cal .dow{color:var(--muted);font-size:13px;font-weight:600;padding:4px}
-.day{min-height:96px;background:var(--surface);border:2px solid transparent;padding:6px;display:flex;flex-direction:column;gap:3px}
+.day{min-height:100px;background:var(--surface);border:2px solid transparent;padding:6px;display:flex;flex-direction:column;gap:3px;min-width:0}
 .day.out{opacity:.35}.day.today{border-color:var(--accent)}
 .day.blocked{background:repeating-linear-gradient(45deg,var(--surface),var(--surface) 6px,#2b1d2c 6px,#2b1d2c 12px)}
 .day .n{font-size:12px;color:var(--muted)}
-.chip{font-size:12px;padding:3px 6px;border-radius:0;border:0;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.btn{background:var(--accent);color:var(--bg);border:0;border-radius:0;padding:10px 18px;font-weight:600;cursor:pointer;transition:background-color .2s,transform .2s}.btn:hover{background:var(--accent-hover)}.btn:active{transform:translateY(1px)}
+.chip{font-size:12px;padding:3px 6px;border-radius:0;border:0;cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.agenda{display:none}
+.aday{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.aday .d{width:52px;flex:none;text-align:center;line-height:1.1}
+.aday .d b{display:block;font-size:22px;font-weight:800}.aday .d small{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase}
+.aday.today .d b{color:var(--accent)}
+.aday .evs{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;justify-content:center}
+.aday .chip{font-size:14px;padding:8px 10px;white-space:normal}
+
+/* money */
+.chartcard{position:relative}
+.chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end;height:220px;border-bottom:1px solid var(--line);position:relative}
+.gridline{position:absolute;left:0;right:0;border-top:1px dashed #2c2234;pointer-events:none}
+.gridline span{position:absolute;left:0;top:-16px;font-size:11px;color:var(--muted)}
+.bar{display:flex;flex-direction:column-reverse;gap:2px;height:100%;justify-content:flex-start;position:relative;cursor:default;padding:0 12%;z-index:1}
+.bar i{display:block;width:100%;min-height:0}
+.bar i.p{background:var(--c-paid)}.bar i.o{background:var(--c-owed)}
+.bar i:last-child{border-radius:4px 4px 0 0}
+.bar:hover i,.bar:focus-visible i{filter:brightness(1.18)}
+.bar.now::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:3px;background:var(--accent)}
+.months{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;margin-top:10px}
+.months span{text-align:center;font-size:12px;color:var(--muted);font-weight:600}
+.months span.now{color:var(--accent)}
+.tip{position:absolute;background:#000;color:var(--ink);padding:10px 12px;font-size:13px;pointer-events:none;z-index:10;min-width:170px;box-shadow:0 10px 24px rgba(0,0,0,.5);border-top:2px solid var(--accent)}
+.tip b{display:block;margin-bottom:4px}.tip div{display:flex;justify-content:space-between;gap:14px}
+.tip i{display:inline-block;width:10px;height:10px;margin-right:6px}
+details.tbl{margin-top:16px}details.tbl summary{cursor:pointer;color:var(--muted);font-weight:600;font-size:13px}
+
+/* buttons + forms */
+.btn{background:var(--accent);color:var(--bg);border:0;border-radius:0;padding:10px 18px;font-weight:700;cursor:pointer;transition:background-color .2s,transform .2s}.btn:hover{background:var(--accent-hover)}.btn:active{transform:translateY(1px)}
 .btn.ghost{background:var(--surface2);color:var(--ink)}.btn.ghost:hover{background:var(--purple-deep)}
 .btn:disabled{opacity:.5;cursor:default}
-/* drawer */
-#scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:20}
-#drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--surface);box-shadow:-24px 0 48px rgba(0,0,0,.45);z-index:21;overflow:auto;padding:22px 24px 60px;overscroll-behavior:contain}
-.hidden{display:none!important}
-.dh{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
-.dh h2{font-size:19px;margin:0}.dh p{margin:2px 0 0;color:var(--muted)}
-.x{margin-left:auto;background:var(--surface2);border:0;border-radius:0;width:34px;height:34px;cursor:pointer;font-size:18px;flex:none}
-.sec{padding:18px 0 6px}
-.sec h3{font-size:16px;font-weight:700;color:var(--accent);margin:0 0 10px}
-dl{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;margin:0}dt{color:var(--muted)}dd{margin:0;word-break:break-word}
 .f{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
-.f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.f label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted);min-width:0}
 .f textarea{width:100%;min-height:70px;resize:vertical}
-.money{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
-.money div{background:var(--bg);padding:10px 12px}.money b{display:block;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}.money span{font-size:13px;color:var(--muted)}
-.checks{display:flex;gap:14px;flex-wrap:wrap}.checks label{display:flex;gap:6px;align-items:center}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:12px 18px;font-weight:700;z-index:40;max-width:calc(100vw - 32px)}
+
+/* drawer */
+#scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--surface);box-shadow:-24px 0 48px rgba(0,0,0,.45);z-index:21;display:flex;flex-direction:column;border-left:3px solid var(--purple)}
+.dscroll{flex:1;overflow:auto;padding:22px 24px 30px;overscroll-behavior:contain}
+.dbar{display:flex;gap:8px;padding:12px 24px calc(12px + env(safe-area-inset-bottom));background:#000;border-top:1px solid var(--line);flex-wrap:wrap}
+.dbar .btn{flex:1 1 auto;padding:11px 12px}
+.dh{display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.dh h2{font-size:20px;margin:0;display:block}.dh p{margin:4px 0 0;color:var(--muted)}
+.x{margin-left:auto;background:var(--surface2);border:0;border-radius:0;width:38px;height:38px;cursor:pointer;font-size:20px;flex:none}
+.sec{padding:18px 0 6px;border-top:1px solid var(--line);margin-top:12px}
+.sec h3{font-size:13px;font-weight:700;color:var(--accent);margin:0 0 12px;text-transform:uppercase;letter-spacing:.08em}
+dl{display:grid;grid-template-columns:130px minmax(0,1fr);gap:6px 12px;margin:0}dt{color:var(--muted)}dd{margin:0;word-break:break-word}
+.money{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.money div{background:var(--bg);padding:10px 12px;min-width:0}.money b{display:block;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.money span{font-size:13px;color:var(--muted)}
+.checks{display:flex;gap:14px;flex-wrap:wrap}.checks label{display:flex;gap:6px;align-items:center;flex-direction:row;font-size:14px;color:var(--ink)}
 .thread{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:320px;overflow:auto}
 .bubble{max-width:85%;padding:10px 14px;background:var(--bg);white-space:pre-wrap}
 .bubble.me{align-self:flex-end;background:var(--purple-deep)}.bubble small{display:block;color:var(--muted);font-size:11px;margin-bottom:2px}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);padding:12px 18px;font-weight:600;z-index:40}
-.btns{display:flex;gap:8px;flex-wrap:wrap}
-.login{max-width:440px;margin:8vh auto 0}.login h1{margin-top:0}.lmsg{color:var(--accent);min-height:1.5em;margin:12px 0 0}
-.who{color:var(--muted);font-size:13px}
-#signout,.hbtn{background:none;border:0;color:var(--muted);font-weight:600;cursor:pointer;padding:10px 6px}#signout:hover,.hbtn:hover{color:var(--accent)}
-dialog#pwDlg{background:var(--surface);color:var(--ink);border:0;padding:24px;max-width:420px;width:92vw}dialog#pwDlg::backdrop{background:rgba(0,0,0,.6)}
+.paytbl td{padding:8px 6px;white-space:normal}
+
+/* login + dialogs */
+.login{max-width:440px;margin:8vh auto 0;border-top:3px solid var(--accent)}.login h1{margin-top:0}.lmsg{color:var(--accent);min-height:1.5em;margin:12px 0 0}
+dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid var(--accent);padding:24px;max-width:420px;width:92vw}dialog::backdrop{background:rgba(0,0,0,.6)}
 #loading{padding:60px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){#drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.6}}}
+
+/* ---------- tablet ---------- */
+@media(max-width:1100px){
+  nav button svg{display:none}
+  header{gap:14px}
+}
+@media(max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- phone ---------- */
+@media(max-width:760px){
+  header{padding:8px 16px;gap:10px}
+  .brand img{height:38px}.brand span{font-size:12px}
+  #refresh .lbl{display:none}
+  .hbtn{padding:10px 12px}
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:15;background:#000;border-top:1px solid #2a1f2e;padding:4px 4px calc(4px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0}
+  nav button{flex-direction:column;gap:3px;padding:7px 2px 6px;font-size:11px;box-shadow:inset 0 3px 0 transparent;justify-content:center}
+  nav button[aria-selected=true]{box-shadow:inset 0 3px 0 var(--accent)}
+  nav button svg{display:block;width:22px;height:22px}
+  nav button .badge{position:absolute;top:2px;left:calc(50% + 6px);margin:0}
+  main{padding:18px 16px calc(96px + env(safe-area-inset-bottom))}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .stat{padding:12px 14px}.stat b{font-size:22px}.stat span{font-size:12px}
+  .card{padding:16px}
+  .row{flex-wrap:wrap}
+  .row .side{padding:0 12px 12px;width:100%}
+  .row .side .qa{flex:1;padding:10px 8px;font-size:13px}
+  .rowmain{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"when pill" "what what";gap:4px 10px;padding:12px}
+  .row .when{grid-area:when;width:auto;font-size:13px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .row .when em{display:inline}
+  .row .what{grid-area:what}
+  .rowmain .pill{grid-area:pill;align-self:start}
+  .row .side:empty{display:none}
+  .filters input{max-width:none;flex-basis:100%}
+  .filters select{flex:1 1 calc(50% - 5px)}
+  .tablewrap{display:none}
+  .bcards{display:flex}
+  .cal,.cal-dow,.legend.cal-only{display:none}
+  .agenda{display:block}
+  .chart{height:180px;gap:3px}.months{gap:3px}.months span{font-size:10px}
+  .bar{padding:0 6%}
+  .dscroll{padding:18px 16px 24px}
+  .dbar{padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  dl{grid-template-columns:104px minmax(0,1fr)}
+  .money b{font-size:16px}
+  .toast{bottom:calc(80px + env(safe-area-inset-bottom))}
+}
 </style>
 </head>
 <body>
 <header>
-  <a class="brand" href="https://www.magicmirrorrentalservices.com/" target="_blank" rel="noopener"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services" width="85" height="52"><span>Owner dashboard</span></a>
-  <nav role="tablist" aria-label="Sections">
-    <button role="tab" data-v="overview" aria-selected="true">Overview</button>
-    <button role="tab" data-v="bookings" aria-selected="false">Bookings</button>
-    <button role="tab" data-v="calendar" aria-selected="false">Calendar</button>
-    <button role="tab" data-v="messages" aria-selected="false">Messages<span id="msgBadge"></span></button>
-    <button role="tab" data-v="blocked" aria-selected="false">Blocked dates</button>
+  <a class="brand" href="https://www.magicmirrorrentalservices.com/" target="_blank" rel="noopener"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services" width="85" height="52"><span>Dashboard</span></a>
+  <nav role="tablist" aria-label="Sections" class="hidden">
+    <button role="tab" data-v="overview" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-6H9v6H3z"/></svg><span>Home</span></button>
+    <button role="tab" data-v="bookings" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Bookings</span></button>
+    <button role="tab" data-v="calendar" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendar</span></button>
+    <button role="tab" data-v="messages" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"/></svg><span>Messages</span><span id="msgBadge"></span></button>
+    <button role="tab" data-v="money" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Money</span></button>
+    <button role="tab" data-v="blocked" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span>Blocked</span></button>
   </nav>
   <div class="spacer"></div>
-  <span id="who" class="who"></span>
-  <button id="refresh" type="button">Refresh</button>
-  <button id="pwBtn" type="button" class="hbtn">Password</button>
-  <button id="signoutAll" type="button" class="hbtn" title="Ends your sign-in on every phone and computer">Sign out all</button>
-  <button id="signout" type="button">Sign out</button>
+  <button id="refresh" type="button" class="hbtn hidden" aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg><span class="lbl">Refresh</span></button>
+  <div class="acct">
+    <button id="acctBtn" type="button" class="hbtn hidden" aria-haspopup="true" aria-expanded="false" aria-controls="acctMenu" aria-label="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button>
+    <div id="acctMenu" class="menu hidden">
+      <span id="who" class="who"></span>
+      <button id="pwBtn" type="button">Change password</button>
+      <button id="signoutAll" type="button" title="Ends your sign-in on every phone and computer">Sign out everywhere</button>
+      <button id="signout" type="button">Sign out</button>
+    </div>
+  </div>
 </header>
 <main>
   <section id="v-login" class="hidden" aria-labelledby="loginTitle">
@@ -149,8 +289,8 @@ dialog#pwDlg{background:var(--surface);color:var(--ink);border:0;padding:24px;ma
     <h1>Overview</h1>
     <div class="stats" id="stats"></div>
     <div class="grid2">
+      <div class="card"><h2>Needs attention <span class="count" id="attnCount"></span></h2><div class="list" id="attnList"></div></div>
       <div class="card"><h2>Next events</h2><div class="list" id="nextList"></div></div>
-      <div class="card"><h2>Needs attention</h2><div class="list" id="attnList"></div></div>
     </div>
   </section>
 
@@ -164,15 +304,18 @@ dialog#pwDlg{background:var(--surface);color:var(--ink);border:0;padding:24px;ma
       <select id="ftype" aria-label="Event type"><option value="">Any event type</option></select>
       <select id="fstaff" aria-label="Staff"><option value="">Any staff</option><option value="-">Unassigned</option></select>
     </div>
-    <div class="card" style="padding:0"><div class="tablewrap"><table>
+    <div class="card tablewrap" style="padding:0"><table>
       <thead><tr><th>ID</th><th>Event date</th><th>Client</th><th>Event</th><th>Package</th><th>Status</th><th class="num">Total</th><th class="num">Balance</th><th>Staff</th></tr></thead>
-      <tbody id="tbody"></tbody></table></div></div>
-    <p id="count" style="color:var(--muted)"></p>
+      <tbody id="tbody"></tbody></table></div>
+    <div class="list bcards" id="bcards"></div>
+    <p id="count"></p>
   </section>
 
   <section id="v-calendar" class="hidden">
-    <div class="cal-head"><button type="button" id="calPrev" aria-label="Previous month">‹</button><h1 id="calTitle" style="margin:0;min-width:200px"></h1><button type="button" id="calNext" aria-label="Next month">›</button><button type="button" id="calToday">Today</button></div>
+    <div class="cal-head"><button type="button" id="calPrev" aria-label="Previous month">‹</button><h1 id="calTitle"></h1><button type="button" id="calNext" aria-label="Next month">›</button><button type="button" id="calToday">Today</button></div>
+    <div class="legend"><span><i class="s-Unconfirmed"></i>Unconfirmed</span><span><i class="s-Confirmed"></i>Confirmed</span><span><i class="s-Completed"></i>Completed</span><span><i class="s-Cancelled"></i>Cancelled</span><span><i style="background:repeating-linear-gradient(45deg,#1a1420,#1a1420 3px,#4a3550 3px,#4a3550 6px)"></i>Blocked</span></div>
     <div class="cal" id="cal"></div>
+    <div class="card agenda" id="agenda"></div>
   </section>
 
   <section id="v-messages" class="hidden">
@@ -180,13 +323,27 @@ dialog#pwDlg{background:var(--surface);color:var(--ink);border:0;padding:24px;ma
     <div class="card"><div class="list" id="convList"></div></div>
   </section>
 
+  <section id="v-money" class="hidden">
+    <h1>Money</h1>
+    <div class="stats" id="mStats"></div>
+    <div class="card chartcard" style="margin-bottom:18px">
+      <h2>Booked by event month</h2>
+      <div class="legend"><span><i style="background:var(--c-paid)"></i>Paid</span><span><i style="background:var(--c-owed)"></i>Still owed</span></div>
+      <div class="chart" id="chart" style="margin-top:26px" role="img" aria-describedby="chartTbl"></div>
+      <div class="months" id="months" aria-hidden="true"></div>
+      <div class="tip hidden" id="tip" role="tooltip"></div>
+      <details class="tbl"><summary>Show as a table</summary><table id="chartTbl" style="margin-top:10px"></table></details>
+    </div>
+    <div class="card"><h2>Balances coming due <span class="count" id="dueCount"></span></h2><div class="list" id="dueList"></div></div>
+  </section>
+
   <section id="v-blocked" class="hidden">
     <h1>Blocked dates</h1>
-    <p style="color:var(--muted);margin-top:-8px">Clients can't book these dates. Booked dates are blocked automatically.</p>
+    <p class="lead">Clients can't book these dates. Booked dates are blocked automatically.</p>
     <div class="card" style="margin-bottom:16px">
       <form class="f" id="blockForm">
         <label>Date<input type="date" id="bDate" name="block-date" required></label>
-        <label style="flex:1">Reason (optional)<input type="text" id="bReason" name="block-reason" autocomplete="off" maxlength="200" style="width:100%"></label>
+        <label style="flex:1 1 200px">Reason (optional)<input type="text" id="bReason" name="block-reason" autocomplete="off" maxlength="200" style="width:100%"></label>
         <button class="btn" type="submit">Block date</button>
       </form>
     </div>
@@ -208,9 +365,20 @@ dialog#pwDlg{background:var(--surface);color:var(--ink);border:0;padding:24px;ma
     <button class="btn ghost" type="button" id="pwCancel">Cancel</button>
   </form>
 </dialog>
+<dialog id="payDlg" aria-labelledby="payTitle">
+  <form id="qPayForm" class="f" method="dialog">
+    <h2 id="payTitle" style="width:100%;margin:0">Record a payment</h2>
+    <p id="payFor" style="margin:0 0 4px;color:var(--muted);font-size:14px;width:100%"></p>
+    <label style="flex:1 1 120px">Amount<input type="number" id="qAmt" name="quick-amount" min="0.01" step="0.01" inputmode="decimal" required style="width:100%"></label>
+    <label style="flex:1 1 160px">Method<select id="qMethod" style="width:100%"></select></label>
+    <label style="flex:1 1 100%">Date<input type="date" id="qDate" name="quick-date" style="width:100%"></label>
+    <button class="btn" type="submit" id="qSave">Save payment</button>
+    <button class="btn ghost" type="button" id="qCancel">Cancel</button>
+  </form>
+</dialog>
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/app/app.js?v=1" defer></script>
+<script src="/app/app.js?v=2" defer></script>
 </body>
 </html>
