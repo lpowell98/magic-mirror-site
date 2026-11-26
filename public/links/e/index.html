@@ -51,6 +51,8 @@
   .phero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,5,10,.68) 0, rgba(8,5,10,.8) 55%, #0e0b11 100%); pointer-events: none; }
   .phero > :not(.wall) { position: relative; z-index: 2; }
   .phero h1, .phero .tag { text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+  .loc { display: inline-flex; align-items: center; gap: 6px; }
+  .loc svg { width: 18px; height: 18px; flex: none; fill: none; stroke: var(--accent); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .phero .tag { color: #ddd3e3; }
   main.w { padding-top: 8px; }
   .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
@@ -76,7 +78,7 @@
 <body>
 <header class="phero"><div class="wall" aria-hidden="true"><figure><img src="/images/gallery/1745969084417-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1716678023162-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1715916052182-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1712965751799-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1707612796991-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1731199989581-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1722735607305-sm.webp" width="480" height="320" alt=""></figure><figure><img src="/images/gallery/1713046913831-sm.webp" width="480" height="320" alt=""></figure></div><a href="/" class="lg"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services, home" width="320" height="196"></a>
 <h1>Magic Mirror photo booth rentals</h1>
-<p class="tag">Providing the magic for your next event<br>Greater Boston Area.</p></header>
+<p class="tag">Providing the magic for your next event<br><span class="loc"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Greater Boston Area</span></p></header>
 <main class="w">
 <a class="book" href="/booking/"><span>Book your event<small>Check date availability</small></span></a>
 <ul class="ll">
