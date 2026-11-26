@@ -10,7 +10,7 @@
     return {
       cat: li.dataset.cat, name: img.alt.split(', a ')[0], n: +full.match(/-(\d)\.webp$/)[1],
       land: +img.getAttribute('width') > +img.getAttribute('height'), alt: img.alt, full,
-      thumb: img.getAttribute('src'), sample: full.replace(/\.webp$/, '-sample.webp'),
+      thumb: img.getAttribute('src'), sample: full.replace(/\.webp$/, '-sample.webp?v=ai1'),
     };
   });
   if (!items.length) return;
