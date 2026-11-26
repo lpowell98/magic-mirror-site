@@ -517,3 +517,8 @@ p { margin: 0 0 1em; }
   .inc-grid h3 { font-size: 16px; }
   .inc-grid p { font-size: 14px; }
 }
+.tpl-filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+.tpl-filter .chip { font: 600 14px var(--body); color: var(--ink); background: transparent; border: 1.5px solid #4a3d55; padding: 9px 16px; min-height: 40px; cursor: pointer; transition: border-color .2s, background-color .2s; }
+.tpl-filter .chip:hover { border-color: var(--purple-light); }
+.tpl-filter .chip[aria-pressed="true"] { background: var(--purple); border-color: var(--purple); }
+.grid-sec[hidden], .template-grid li[hidden] { display: none; }
