@@ -442,7 +442,7 @@ const hasN=(t,n)=>t.vers?!!t.vers[n]:n===t.wins.length;
 const tplValue=(name,n)=>name+" · "+vLabel(n);
 const parseTpl=v=>{ const m=/^(.*) · (\d) photos?$/.exec(v||""); return m?[m[1],+m[2]]:[v||"",0]; };
 const OCCASIONS=[["all","All"],["wedding","Wedding"],["birthday","Birthday"],["holiday","Holiday"],["graduation","Graduation"],["baby","Baby shower"],["corporate","Corporate"]];
-const SHAPES=[["all","All shapes"],["l","Landscape"],["p","Portrait"]];
+const SHAPES=[["all","All"],["l","Landscape"],["p","Portrait"]];
 const ZOOM='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg>';
 const tplByName=n=>TEMPLATES.find(t=>t.name===n);
 const tplSrc=(t,thumb,n)=>`/images/templates/${t.f}${t.vers?"-"+(n||nativeN(t)):""}${thumb?"-thumb":""}.webp`;
