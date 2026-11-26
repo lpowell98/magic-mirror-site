@@ -26,6 +26,7 @@
   --gap-section: clamp(56px, 6vw, 96px);
   /* five type steps */
   --t-display: clamp(44px, 6.4vw, 104px);
+  --t-page: clamp(36px, 4.8vw, 76px);   /* inner-page h1 */
   --t-head: clamp(30px, 3.6vw, 52px);
   --t-statement: clamp(22px, 2.2vw, 32px);
   --t-body: 17px;
@@ -205,8 +206,8 @@ p { margin: 0 0 1em; }
    INNER PAGES
    ========================================================= */
 .page-head { padding-block: clamp(40px, 5vw, 72px) clamp(28px, 3vw, 44px); }
-.page-head h1 { font-size: var(--t-display); letter-spacing: -.035em; max-width: 14ch; }
-.page-head p { max-width: 52ch; color: var(--muted); margin: 24px 0 0; font-size: 22px; }
+.page-head h1 { font-size: var(--t-page); letter-spacing: -.035em; max-width: 16ch; text-wrap: balance; }
+.page-head p { max-width: 52ch; color: var(--muted); margin: 24px 0 0; font-size: 20px; }
 .page-head .actions { margin-top: 28px; }
 .prose { max-width: 62ch; }
 .prose p, .prose li { color: var(--ink); }
@@ -352,7 +353,7 @@ p { margin: 0 0 1em; }
   .contact-form { grid-template-columns: 1fr; }
   .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 6px; }
   .template-grid { grid-template-columns: repeat(2, 1fr); }
-  .page-head h1 { font-size: clamp(40px, 11vw, 56px); }
+  .page-head h1, .mm-hero h1 { font-size: clamp(34px, 9.5vw, 44px); }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -458,7 +459,7 @@ p { margin: 0 0 1em; }
    ========================================================= */
 .eyebrow { margin: 0 0 14px; font: 700 14px/1.2 var(--body); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 .mm-hero { display: grid; grid-template-columns: 6fr 5fr; gap: clamp(32px, 5vw, 80px); align-items: center; padding-block: clamp(40px, 5vw, 72px) clamp(40px, 4vw, 56px); }
-.mm-hero h1 { font-size: var(--t-display); letter-spacing: -.035em; margin-bottom: 28px; }
+.mm-hero h1 { font-size: var(--t-page); letter-spacing: -.035em; margin-bottom: 28px; text-wrap: balance; }
 .mm-lead { font: 700 var(--t-statement)/1.3 var(--head); letter-spacing: -.01em; max-width: 30ch; }
 .mm-hero-text > p:not(.eyebrow):not(.mm-lead) { color: var(--muted); max-width: 52ch; }
 .mm-hero-img { margin: 0; position: relative; }
@@ -509,7 +510,7 @@ p { margin: 0 0 1em; }
   .inc-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 560px) {
-  .mm-hero h1 { font-size: clamp(40px, 11vw, 56px); margin-bottom: 20px; }
+  .mm-hero h1 { font-size: clamp(34px, 9.5vw, 44px); margin-bottom: 20px; }
   .mm-hero .btn { width: 100%; }
   .mm-step-list { grid-template-columns: 1fr; gap: 36px; }
   .mm-step-list figure { aspect-ratio: 3 / 2; }
