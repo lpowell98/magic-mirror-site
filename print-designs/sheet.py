@@ -5,13 +5,14 @@ import json, os, sys
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-man = json.load(open(os.path.join(HERE, "out", "manifest.json")))
+OUTD = os.path.join(HERE, os.environ.get("PD_OUT", "out"))
+man = json.load(open(os.path.join(OUTD, "manifest.json")))
 ids = sys.argv[2:] or list(dict.fromkeys(m["id"] for m in man))
 RH, PAD = 560, 40
 font = ImageFont.truetype(os.path.join(HERE, "fonts", "Montserrat.ttf"), 30)
 rows = []
 for did in ids:
-    ims = [Image.open(os.path.join(HERE, "out", "png", f"{did}-{n}-preview.png")).convert("RGB") for n in (1, 2, 3)]
+    ims = [Image.open(os.path.join(OUTD, "png", f"{did}-{n}-preview.png")).convert("RGB") for n in (1, 2, 3)]
     ims = [i.resize((round(i.width * RH / i.height), RH), Image.LANCZOS) for i in ims]
     name = next(m["name"] for m in man if m["id"] == did)
     rows.append((name, ims))

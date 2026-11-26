@@ -74,10 +74,12 @@ def win_style(x, y, w, h, shape, grow=0):
     x, y, w, h = x - grow, y - grow, w + 2 * grow, h + 2 * grow
     r = f"border-radius:{w/2}px {w/2}px 0 0/{w/2}px {w/2}px 0 0;" if shape == "a" else ""
     if shape == "c": r = f"clip-path:polygon({chamfer_pts(w, h, CUT + grow * .4142, '%gpx %gpx', ',')});"
+    if shape == "o": r = f"border-radius:{RAD + grow}px;"
     return f"left:{x}px;top:{y}px;width:{w}px;height:{h}px;{r}"
 
 
 CUT = 44  # corner cut of the cut-corner windows, in px
+RAD = 36  # corner radius of the rounded windows ("o"), in px
 
 
 def chamfer_pts(w, h, c, fmt="%g,%g", sep=" ", inset=0):

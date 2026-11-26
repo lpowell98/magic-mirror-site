@@ -1,5 +1,8 @@
 out/
 final/
+out-*/
+final-*/
 review/web/
+review*/web/
 review/ornaments.png
 __pycache__/

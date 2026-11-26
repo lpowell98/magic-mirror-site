@@ -4,15 +4,16 @@ and writes print-ready files to final/<id>/ plus web previews to final/web/."""
 import json, os
 from PIL import Image, ImageDraw
 HERE = os.path.dirname(os.path.abspath(__file__))
-man = json.load(open(os.path.join(HERE, "out", "manifest.json")))
-FIN = os.path.join(HERE, "final"); os.makedirs(os.path.join(FIN, "web"), exist_ok=True)
+OUTD = os.path.join(HERE, os.environ.get("PD_OUT", "out"))  # PD_OUT=out-birthday PD_FINAL=final-birthday for other categories
+man = json.load(open(os.path.join(OUTD, "manifest.json")))
+FIN = os.path.join(HERE, os.environ.get("PD_FINAL", "final")); os.makedirs(os.path.join(FIN, "web"), exist_ok=True)
 import sys
 only = sys.argv[1:]
 for m in man:
     if only and m["id"] not in only: continue
     did, n = m["id"], m["n"]
     os.makedirs(os.path.join(FIN, did), exist_ok=True)
-    src = lambda mode: Image.open(os.path.join(HERE, "out", "png", f"{did}-{n}-{mode}.png"))
+    src = lambda mode: Image.open(os.path.join(OUTD, "png", f"{did}-{n}-{mode}.png"))
     ov = src("overlay").convert("RGBA")
     S = 4  # supersampled mask for smooth arch edges
     mask = Image.new("L", (ov.width * S, ov.height * S), 255)
@@ -25,6 +26,9 @@ for m in man:
             import build
             pts = [(x + px, y + py) for px, py in (tuple(map(float, q.split(","))) for q in build.chamfer_pts(w, h, build.CUT).split())]
             d.polygon([(px * S, py * S) for px, py in pts], fill=0)
+        elif sh == "o":
+            import build
+            d.rounded_rectangle([x * S, y * S, (x + w) * S - 1, (y + h) * S - 1], radius=build.RAD * S, fill=0)
         else:
             d.rectangle([x * S, y * S, (x + w) * S - 1, (y + h) * S - 1], fill=0)
     ov.putalpha(mask.resize(ov.size, Image.LANCZOS))

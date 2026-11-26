@@ -3,7 +3,8 @@
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 (async () => {
-  const dir = path.join(__dirname, 'out', 'html'), out = path.join(__dirname, 'out', 'png');
+  const base = path.join(__dirname, process.env.PD_OUT || 'out');  // PD_OUT=out-birthday for other categories
+  const dir = path.join(base, 'html'), out = path.join(base, 'png');
   fs.mkdirSync(out, { recursive: true });
   const filt = process.argv[2] || '';
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.html') && f.includes(filt));
