@@ -27,9 +27,9 @@
 /* Booking flow, styled with the site's tokens (assets/css/style.css) */
 .bk{padding-bottom:var(--gap-section)}
 .bk .hidden{display:none!important}
-.bk label{display:block;font-weight:600;font-size:15px;margin:14px 0 8px}
+.bk label{display:block;font-weight:600;font-size:14px;margin:12px 0 5px}
 .bk .req{color:var(--accent)}
-.bk input[type=text],.bk input[type=email],.bk input[type=tel],.bk select{font:16px var(--body);padding:10px 14px;border:2px solid transparent;border-radius:0;background:var(--surface);color:var(--ink);width:100%;min-height:50px}
+.bk input[type=text],.bk input[type=email],.bk input[type=tel],.bk select{font:16px var(--body);padding:8px 12px;border:2px solid transparent;border-radius:0;background:var(--surface);color:var(--ink);width:100%;min-height:44px}
 .bk .home input,.bk .home select,.bk .fs input,.bk .fs select{background:var(--bg)}
 .bk input:focus-visible,.bk select:focus-visible{outline:none;border-color:var(--accent)}
 .bk [aria-invalid="true"]{border-color:#e5484d!important}
@@ -52,20 +52,22 @@
 .bk .btn[disabled]{opacity:.6;cursor:default;transform:none}
 
 /* step 1: date + manage */
-.bk .home{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:stretch;max-width:1280px}
-.bk .home>div{background:var(--surface);padding:clamp(24px,3vw,40px)}
-.bk .home .field{max-width:340px}
+.bk .home{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:start;max-width:908px;margin-inline:auto}
+.bk .home>div{background:var(--surface);padding:clamp(20px,2.2vw,28px)}
+.bk .home .field{max-width:300px}
+.bk .home h2{font-size:clamp(22px,2vw,26px);margin-bottom:14px}
+.bk .home p{font-size:15px;line-height:1.5}
 .bk .home .btn{width:auto}
 .bk .home p{color:var(--muted);max-width:46ch}
-.bk .cal{max-width:340px}
-.bk .cal-head{display:flex;align-items:center;gap:8px;margin-bottom:16px}
-.bk .cal-head select{width:auto;flex:1;min-height:44px}
-.bk .cal-nav{width:44px;height:44px;border:0;background:var(--bg);color:var(--ink);cursor:pointer;font-size:14px}
+.bk .cal{max-width:300px}
+.bk .cal-head{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.bk .cal-head select{width:auto;flex:1;min-height:38px;padding:6px 10px}
+.bk .cal-nav{width:38px;height:38px;border:0;background:var(--bg);color:var(--ink);cursor:pointer;font-size:14px}
 .bk .cal-nav:hover:not(:disabled){color:var(--accent)}
 .bk .cal-nav:disabled{opacity:.3;cursor:default}
-.bk .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.bk .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .bk .dow{font-size:12px;font-weight:700;color:var(--muted);text-align:center;padding-bottom:4px}
-.bk .day{aspect-ratio:1/1;border:0;background:var(--bg);color:var(--ink);font:600 15px var(--body);cursor:pointer;transition:background-color .2s,color .2s}
+.bk .day{aspect-ratio:1/1;border:0;background:var(--bg);color:var(--ink);font:600 14px var(--body);cursor:pointer;transition:background-color .2s,color .2s}
 .bk .day:hover{background:var(--purple-light)}
 .bk .day.past{background:transparent;color:rgba(196,186,203,.35);cursor:default}
 .bk .day.taken{text-decoration:line-through}
@@ -86,7 +88,7 @@
 .bk .home .day.sel{background:var(--accent);color:var(--accent-ink)}
 /* center each panel's content: headings, text and buttons centered; field labels stay left over their inputs */
 .bk .home>div{display:flex;flex-direction:column;align-items:center;text-align:center}
-.bk .home .cal,.bk .home .field{width:100%;max-width:340px;text-align:left}
+.bk .home .cal,.bk .home .field{width:100%;max-width:300px;text-align:left}
 
 /* step 2: booking form */
 .bk .banner{background:var(--purple-deep);padding:16px 20px;font-weight:600}
@@ -339,6 +341,7 @@
   .bk .inv-cols{grid-template-columns:1fr}
   .bk .inv-meta{text-align:left}
   .bk .home,.bk .pkgs,.bk .cols3,.bk .cols2,.bk .grid2{grid-template-columns:1fr}
+  .bk .home{gap:20px}
 }
 </style>
 
@@ -387,7 +390,7 @@
           <label for="lma">Email address <span class="req">*</span></label>
           <input type="email" id="lma" name="email" autocomplete="email" spellcheck="false" required>
         </div>
-        <button class="btn" id="checkBtn" style="margin-top:24px">Check availability</button>
+        <button class="btn" id="checkBtn" style="margin-top:18px">Check availability</button>
         <div class="msg" id="homeMsg" role="status" aria-live="polite"></div>
       </div>
       <div>
@@ -400,7 +403,7 @@
           <input type="text" id="mSur" name="last-name" autocomplete="family-name">
         </div>
         <div class="ts-box" id="tsManage" style="margin-top:16px"></div>
-        <button class="btn" id="searchBtn" style="margin-top:24px">Search</button>
+        <button class="btn" id="searchBtn" style="margin-top:18px">Search</button>
         <div class="field hidden" id="codeBox" style="margin-top:20px">
           <label for="mCode">6-digit code from your email</label>
           <input type="text" id="mCode" name="one-time-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}">
