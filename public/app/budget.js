@@ -1,4 +1,4 @@
-// Money > Budget: an operating budget for the vendors under review.
+// Money > Operational Budget: an operating budget for the vendors under review.
 // It runs in the browser only and saves to this device (localStorage).
 (function(){
   const $=id=>document.getElementById(id);
@@ -84,14 +84,19 @@
     $("bCuts").onclick=()=>{ items.forEach(i=>{ const d=DEFAULTS.find(x=>x.n===i.n&&x.cut); if(d&&i.id[0]==="d") Object.assign(i,d.cut); }); render(); };
     $("bReset").onclick=()=>{ items=fresh(); render(); };
 
-    // Overview / Budget tabs inside Money
-    const tabs=[...document.querySelectorAll(".subtabs [data-m]")];
-    const pick=m=>{ tabs.forEach(t=>t.setAttribute("aria-selected",t.dataset.m===m));
+    // Money button opens a menu: Overview or Operational Budget.
+    const btn=$("moneyBtn"), menu=$("moneyMenu"); if(!btn||!menu) return; const items_=[...menu.querySelectorAll("[data-m]")];
+    const open=on=>{ menu.classList.toggle("hidden",!on); btn.setAttribute("aria-expanded",String(on)); if(on) items_[0].focus(); };
+    const pick=m=>{ items_.forEach(x=>x.dataset.m===m?x.setAttribute("aria-current","page"):x.removeAttribute("aria-current"));
       $("m-overview").classList.toggle("hidden",m!=="overview"); $("m-budget").classList.toggle("hidden",m!=="budget");
-      ls.set("mmrsMoneyTab",m); };
-    tabs.forEach(t=>t.onclick=()=>pick(t.dataset.m));
-    tabs.forEach((t,k)=>t.addEventListener("keydown",e=>{ if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft") return;
-      const nx=tabs[(k+(e.key==="ArrowRight"?1:tabs.length-1))%tabs.length]; nx.focus(); pick(nx.dataset.m); }));
+      $("moneyTitle").textContent=m==="budget"?"Operational Budget":"Money"; ls.set("mmrsMoneyTab",m); };
+    btn.onclick=e=>{ e.stopPropagation(); open(menu.classList.contains("hidden")); };
+    // app.js also gives these buttons its tab handler, which opens the Money view first.
+    items_.forEach(x=>x.addEventListener("click",()=>{ pick(x.dataset.m); open(false); btn.focus(); }));
+    menu.addEventListener("keydown",e=>{ const k=items_.indexOf(document.activeElement);
+      if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); items_[(k+(e.key==="ArrowDown"?1:items_.length-1))%items_.length].focus(); } });
+    document.addEventListener("click",e=>{ if(!e.target.closest(".navdd")) open(false); });
+    document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!menu.classList.contains("hidden")){ open(false); btn.focus(); } });
     pick(ls.get("mmrsMoneyTab")==="budget"?"budget":"overview");
     render();
   }
