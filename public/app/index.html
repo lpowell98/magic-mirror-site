@@ -198,6 +198,10 @@ nav .ddmenu button:hover{background:var(--purple-deep);color:var(--accent)}
 nav .ddmenu button[aria-current=page]{color:var(--accent)}
 .stat.save b{color:var(--ok)}.stat.save b.neg{color:var(--warn)}
 .bnote{color:var(--muted);font-size:13px;margin:0 0 18px;max-width:80ch}
+.bsave{position:sticky;bottom:0;z-index:4;display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#000;border-top:3px solid var(--accent);padding:12px 18px;margin:18px -24px -24px;box-shadow:0 -10px 24px rgba(0,0,0,.4)}
+.bsave p{margin:0;flex:1 1 200px;color:var(--muted);font-weight:600;min-width:0}
+.bsave.dirty p{color:var(--accent)}
+.bsave .btn{min-width:110px}
 .bcat{margin-bottom:14px;padding:0}
 .bcat-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .bcat-h h2{margin:0}
@@ -230,6 +234,8 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
   nav .caret{display:none!important}
   .ddmenu{position:fixed;left:auto;right:8px;top:auto;bottom:calc(64px + env(safe-area-inset-bottom));border-top:3px solid var(--accent)}
   .bhead{display:none}
+  .bsave{bottom:calc(62px + env(safe-area-inset-bottom));margin:18px -16px 0;padding:10px 16px}
+  .bsave p{flex-basis:100%;font-size:13px}.bsave .btn{flex:1}
   .bitem{grid-template-columns:44px minmax(0,1fr) minmax(0,1fr) 34px;grid-template-areas:"sw nm nm del" "amt amt fr fr" "pm pm py py";gap:8px;padding:12px 14px}
   .bitem>:nth-child(1){grid-area:sw}.bitem>:nth-child(2){grid-area:nm}.bitem>:nth-child(3){grid-area:amt}.bitem>:nth-child(4){grid-area:fr}
   .bitem>:nth-child(5){grid-area:pm;text-align:left}.bitem>:nth-child(6){grid-area:py;text-align:left}.bitem>:nth-child(7){grid-area:del}
@@ -407,15 +413,20 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
     </div>
 
     <div id="m-budget" class="hidden">
-      <p class="lead">The vendors you are reviewing, starting from what the business card paid in 2026. Switch items on or off, change amounts and how often they bill, and the totals update as you go. Changes are saved on this device.</p>
+      <p class="lead">Your recurring business costs, starting from what the business card paid in 2026. Rename, delete or add line items, switch them on or off, and change amounts and how often they bill. Press Save to keep your changes in the Budget tab of your Google Sheet.</p>
       <div class="stats" id="bStats"></div>
       <div class="btns" style="margin-bottom:8px">
-        <button type="button" class="btn" id="bCuts">Apply suggested cuts</button>
+        <button type="button" class="btn ghost" id="bCuts">Apply suggested cuts</button>
         <button type="button" class="btn ghost" id="bReset">Reset to 2026 actuals</button>
       </div>
       <p class="bnote">Suggested cuts drop Adobe (you also pay for Canva), cut ZenBusiness to the $500 state filing fee, bring Google Workspace back to $17.85 a month, and stop iPostal storage fees. Items tagged <span class="tag hot">check</span> need you to confirm them.</p>
       <div id="bCats"></div>
-      <p class="bnote">Amounts come from the Blue Business Plus card, Jan 1 to Nov 26, 2026, and include sales tax.</p>
+      <p class="bnote">Starting amounts come from the Blue Business Plus card, Jan 1 to Nov 26, 2026, and include sales tax.</p>
+      <div class="bsave" id="bSaveBar">
+        <p id="bStatus" role="status" aria-live="polite">Loading your budget…</p>
+        <button type="button" class="btn ghost hidden" id="bUndo">Undo</button>
+        <button type="button" class="btn" id="bSave" disabled>Save</button>
+      </div>
     </div>
   </section>
 
@@ -462,6 +473,6 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
 
 <script src="/assets/js/turnstile.js?v=1" defer></script>
 <script src="/app/app.js?v=4" defer></script>
-<script src="/app/budget.js?v=2" defer></script>
+<script src="/app/budget.js?v=3" defer></script>
 </body>
 </html>

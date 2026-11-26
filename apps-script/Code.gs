@@ -920,6 +920,56 @@ function adminPromoActive(code, on) {
   });
 }
 
+/* ---------------- Operational budget ----------------
+   Saved from the Dashboard (Money > Operational Budget) to the "Budget" tab, one row per line item.
+   Each save replaces the whole tab. Billed is Monthly, Quarterly or Yearly. Suggested cut is "off", a new amount, or blank. */
+const BUDGET_HEAD = ['Category', 'Line item', 'Amount', 'Billed', 'Included', 'Note', 'Check', 'Suggested cut', 'Saved'];
+const BUDGET_FREQ = { m: 'Monthly', q: 'Quarterly', y: 'Yearly' };
+function budgetSheet_() {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName('Budget');
+  if (!sh) {
+    sh = ss.insertSheet('Budget'); sh.appendRow(BUDGET_HEAD); sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, BUDGET_HEAD.length).setFontWeight('bold');
+  }
+  return sh;
+}
+// Returns { items: [...], savedAt } or { items: null } when nothing has been saved yet.
+function adminBudgetGet() {
+  guard_();
+  const sh = budgetSheet_(), n = sh.getLastRow();
+  if (n < 2) return { items: null, savedAt: '' };
+  const rows = sh.getRange(2, 1, n - 1, BUDGET_HEAD.length).getValues().filter(r => String(r[1]).trim() !== '');
+  const f = Object.keys(BUDGET_FREQ).reduce((o, k) => (o[BUDGET_FREQ[k]] = k, o), {});
+  return {
+    items: rows.map(r => ({ cat: String(r[0]), n: String(r[1]), a: num_(r[2]), f: f[String(r[3])] || 'm',
+      on: r[4] === true || String(r[4]).toUpperCase() === 'TRUE' ? 1 : 0, h: String(r[5] || ''),
+      flag: r[6] === true || String(r[6]).toUpperCase() === 'TRUE' ? 1 : 0, cut: String(r[7] === '' ? '' : r[7]) })),
+    savedAt: rows.length && rows[0][8] instanceof Date ? fmtStamp_(rows[0][8]) : ''
+  };
+}
+// items: [{ cat, n, a, f, on, h, flag, cut }]
+function adminBudgetSave(items) {
+  guard_();
+  if (!Array.isArray(items) || items.length > 300) throw new Error('Budget is too long to save');
+  const now = new Date();
+  const rows = items.filter(i => i && String(i.n || '').trim()).map(i => {
+    const a = Math.round(Math.max(0, Number(i.a) || 0) * 100) / 100;
+    const cut = i.cut === 'off' ? 'off' : (i.cut === '' || i.cut == null || !isFinite(Number(i.cut)) ? '' : Math.max(0, Number(i.cut)));
+    return [clip_(i.cat, 60), clip_(String(i.n).trim(), 80), a, BUDGET_FREQ[i.f] || 'Monthly', !!i.on, clip_(i.h, 200), !!i.flag, cut, now];
+  });
+  return withLock_(() => {
+    const sh = budgetSheet_(), n = sh.getLastRow();
+    if (n > 1) sh.getRange(2, 1, n - 1, BUDGET_HEAD.length).clearContent();
+    if (rows.length) {
+      sh.getRange(2, 1, rows.length, 2).setNumberFormat('@');
+      sh.getRange(2, 1, rows.length, BUDGET_HEAD.length).setValues(rows);
+      sh.getRange(2, 3, rows.length, 1).setNumberFormat('$#,##0.00');
+    }
+    return adminBudgetGet();
+  });
+}
+
 // p: { amount, method, date (MM/dd/yyyy), note }
 function adminAddPayment(id, p) {
   guard_();
@@ -1024,7 +1074,7 @@ function adminUnblock(date) {
    session token valid for 7 days. Tokens are stored hashed in Script Properties. Every new sign-in
    is emailed to that admin, and "Sign out all" ends all of their sessions. */
 
-const ADMIN_FNS = { adminData, adminUpdate, adminAddPayment, adminReply, adminResend, adminBlock, adminUnblock, adminPromoSave, adminPromoActive };
+const ADMIN_FNS = { adminData, adminUpdate, adminAddPayment, adminReply, adminResend, adminBlock, adminUnblock, adminPromoSave, adminPromoActive, adminBudgetGet, adminBudgetSave };
 const SESSION_DAYS = 7;
 
 function sha_(t) {
