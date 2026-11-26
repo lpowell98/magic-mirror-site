@@ -319,7 +319,7 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
       <button id="signout" type="button">Sign out</button>
       <span class="who sect">New event</span>
       <a href="https://github.com/lpowell98/magic-mirror-site/upload/main/src-images/gallery" target="_blank" rel="noopener">Upload Event Photo</a>
-      <a href="https://github.com/lpowell98/magic-mirror-site/edit/main/content/events.txt" target="_blank" rel="noopener">Add to Event List</a>
+      <button id="evBtn" type="button">Add to Event List</button>
     </div>
   </div>
 </header>
@@ -450,6 +450,22 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
 
 <div id="scrim" class="hidden"></div>
 <aside id="drawer" class="hidden" role="dialog" aria-modal="true" aria-labelledby="dTitle"></aside>
+<dialog id="evDlg" aria-labelledby="evTitle">
+  <form id="evForm" class="f" method="dialog">
+    <h2 id="evTitle" style="width:100%;margin:0 0 4px">Add to Event List</h2>
+    <p style="margin:0;color:var(--muted);font-size:14px">Fill this in, then copy the line and paste it at the top of the list, under the notes.</p>
+    <label style="width:100%">Photo file name<input id="evFile" required placeholder="IMG_1234.jpg" autocomplete="off" style="width:100%"></label>
+    <label style="width:100%">Event name<input id="evName" placeholder="Maya’s Sweet 16" autocomplete="off" style="width:100%"></label>
+    <label style="flex:1">Month<select id="evMonth" style="width:100%"><option value="">None</option></select></label>
+    <label style="flex:1">Year<input id="evYear" type="number" min="2019" max="2099" style="width:100%"></label>
+    <label style="width:100%">Event type<select id="evType" style="width:100%"><option value="">None</option><option>Weddings</option><option>Birthdays</option><option>Graduations &amp; proms</option><option>Galas &amp; balls</option><option>Campus nights</option><option>Corporate</option><option>Baby showers</option></select></label>
+    <p style="width:100%;margin:4px 0 0;font-size:13px;color:var(--muted)">Your line</p>
+    <code id="evLine" style="width:100%;display:block;padding:10px;background:#0e0b11;border:1px solid var(--line);word-break:break-all;font-size:13px"></code>
+    <p id="evMsg" class="lmsg" role="status" aria-live="polite" style="width:100%"></p>
+    <button class="btn" type="submit">Copy line and open list</button>
+    <button class="btn ghost" type="button" id="evCancel">Cancel</button>
+  </form>
+</dialog>
 <dialog id="pwDlg" aria-labelledby="pwTitle">
   <form id="setPwForm" class="f" method="dialog">
     <h2 id="pwTitle" style="width:100%;margin:0 0 4px">Set your password</h2>
@@ -476,7 +492,7 @@ nav .ddmenu button[aria-current=page]{color:var(--accent)}
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/app/app.js?v=4" defer></script>
+<script src="/app/app.js?v=5" defer></script>
 <script src="/app/budget.js?v=3" defer></script>
 </body>
 </html>
