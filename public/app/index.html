@@ -188,6 +188,54 @@ dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid 
 #loading{padding:60px;text-align:center;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){#drawer{animation:slide .18s ease-out}@keyframes slide{from{transform:translateX(30px);opacity:.6}}}
 
+/* money sub-pages + budget */
+.navdd{position:relative;display:flex}
+nav .caret{width:14px!important;height:14px!important;opacity:.7;margin-left:-2px;display:block!important}
+.ddmenu{position:absolute;left:0;top:calc(100% + 4px);background:var(--surface);min-width:220px;box-shadow:0 18px 40px rgba(0,0,0,.55);border-top:3px solid var(--accent);padding:6px 0;z-index:30;display:flex;flex-direction:column}
+nav .ddmenu button{display:block;width:100%;text-align:left;padding:11px 16px;box-shadow:none!important;font-size:15px;color:var(--ink)}
+nav .ddmenu button:hover{background:var(--purple-deep);color:var(--accent)}
+nav .ddmenu button[aria-current=page]{color:var(--accent)}
+.stat.save b{color:var(--ok)}.stat.save b.neg{color:var(--warn)}
+.bnote{color:var(--muted);font-size:13px;margin:0 0 18px;max-width:80ch}
+.bcat{margin-bottom:14px;padding:0}
+.bcat-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.bcat-h h2{margin:0}
+.bcat-h .ct{font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}.bcat-h .ct span{color:var(--muted);font-weight:500;font-size:13px}
+.bhead,.bitem{display:grid;grid-template-columns:44px minmax(0,1fr) 120px 118px 100px 100px 34px;gap:10px;align-items:center;padding:10px 18px}
+.bhead{color:var(--muted);font-size:12px;font-weight:600;padding-block:8px;border-bottom:1px solid var(--line)}
+.bhead .num,.bitem .num{text-align:right;font-variant-numeric:tabular-nums}
+.bitem{border-bottom:1px solid var(--line)}.bitem:last-of-type{border-bottom:0}
+.bitem .nm input{width:100%;background:transparent;border:2px solid transparent;padding:4px 6px;font-weight:700;color:var(--ink)}
+.bitem .nm input:hover{border-color:var(--surface2)}.bitem .nm input:focus{outline:none;border-color:var(--accent)}
+.bitem .nm small{display:block;color:var(--muted);font-size:12px;padding-left:8px}
+.bitem .nm .tag{margin-left:8px}
+.bitem input[type=number],.bitem select{width:100%;background:var(--bg);border:2px solid var(--surface2);border-radius:0;padding:7px 8px;color:var(--ink);min-width:0}
+.bitem input[type=number]{text-align:right;font-variant-numeric:tabular-nums}
+.bitem input[type=number]:focus,.bitem select:focus{outline:none;border-color:var(--accent)}
+.bitem.off .nm input{text-decoration:line-through;color:var(--muted)}
+.bitem.off .num{color:var(--muted)}
+.bitem .lbl{display:none}
+.sw{position:relative;display:inline-block;width:40px;height:22px}
+.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sw span{position:absolute;inset:0;background:var(--surface2);border-radius:11px;transition:background .15s;pointer-events:none}
+.sw span::after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.sw input:checked+span{background:var(--purple-light)}.sw input:checked+span::after{transform:translateX(18px);background:var(--accent)}
+.sw input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.bdel{background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px;padding:4px}
+.bdel:hover{color:var(--bad)}
+.badd{margin:10px 18px 16px;background:none;border:0;color:var(--accent);font-weight:700;cursor:pointer;padding:4px 0}
+@media(max-width:760px){
+  .navdd{display:block}.navdd>button{width:100%;height:100%}
+  nav .caret{display:none!important}
+  .ddmenu{position:fixed;left:auto;right:8px;top:auto;bottom:calc(64px + env(safe-area-inset-bottom));border-top:3px solid var(--accent)}
+  .bhead{display:none}
+  .bitem{grid-template-columns:44px minmax(0,1fr) minmax(0,1fr) 34px;grid-template-areas:"sw nm nm del" "amt amt fr fr" "pm pm py py";gap:8px;padding:12px 14px}
+  .bitem>:nth-child(1){grid-area:sw}.bitem>:nth-child(2){grid-area:nm}.bitem>:nth-child(3){grid-area:amt}.bitem>:nth-child(4){grid-area:fr}
+  .bitem>:nth-child(5){grid-area:pm;text-align:left}.bitem>:nth-child(6){grid-area:py;text-align:left}.bitem>:nth-child(7){grid-area:del}
+  .bitem .lbl{display:block;color:var(--muted);font-size:11px;font-weight:600}
+  .bcat-h{padding:12px 14px}.badd{margin:10px 14px 14px}
+}
+
 /* ---------- tablet ---------- */
 @media(max-width:1100px){
   nav button svg{display:none}
@@ -243,7 +291,13 @@ dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid 
     <button role="tab" data-v="bookings" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Bookings</span></button>
     <button role="tab" data-v="calendar" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span>Calendar</span></button>
     <button role="tab" data-v="messages" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"/></svg><span>Messages</span><span id="msgBadge"></span></button>
-    <button role="tab" data-v="money" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Money</span></button>
+    <div class="navdd">
+      <button role="tab" data-v="money" id="moneyBtn" aria-selected="false" aria-haspopup="true" aria-expanded="false" aria-controls="moneyMenu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>Money</span><svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      <div class="ddmenu hidden" id="moneyMenu" role="menu" aria-label="Money pages">
+        <button type="button" role="menuitem" data-v="money" data-m="overview">Overview</button>
+        <button type="button" role="menuitem" data-v="money" data-m="budget">Operational Budget</button>
+      </div>
+    </div>
     <button role="tab" data-v="blocked" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><span>Blocked</span></button>
   </nav>
   <div class="spacer"></div>
@@ -324,7 +378,8 @@ dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid 
   </section>
 
   <section id="v-money" class="hidden">
-    <h1>Money</h1>
+    <h1 id="moneyTitle">Money</h1>
+    <div id="m-overview">
     <div class="stats" id="mStats"></div>
     <div class="card chartcard" style="margin-bottom:18px">
       <h2>Booked by event month</h2>
@@ -347,6 +402,19 @@ dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid 
         <button class="btn" type="submit" id="prSave">Create code</button>
       </form>
       <div class="list" id="promoList"></div>
+    </div>
+    </div>
+
+    <div id="m-budget" class="hidden">
+      <p class="lead">The vendors you are reviewing, starting from what the business card paid in 2026. Switch items on or off, change amounts and how often they bill, and the totals update as you go. Changes are saved on this device.</p>
+      <div class="stats" id="bStats"></div>
+      <div class="btns" style="margin-bottom:8px">
+        <button type="button" class="btn" id="bCuts">Apply suggested cuts</button>
+        <button type="button" class="btn ghost" id="bReset">Reset to 2026 actuals</button>
+      </div>
+      <p class="bnote">Suggested cuts drop Adobe (you also pay for Canva), cut ZenBusiness to the $500 state filing fee, bring Google Workspace back to $17.85 a month, and stop iPostal storage fees. Items tagged <span class="tag hot">check</span> need you to confirm them.</p>
+      <div id="bCats"></div>
+      <p class="bnote">Amounts come from the Blue Business Plus card, Jan 1 to Nov 26, 2026, and include sales tax.</p>
     </div>
   </section>
 
@@ -393,5 +461,6 @@ dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid 
 
 <script src="/assets/js/turnstile.js?v=1" defer></script>
 <script src="/app/app.js?v=3" defer></script>
+<script src="/app/budget.js?v=2" defer></script>
 </body>
 </html>
