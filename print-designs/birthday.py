@@ -430,11 +430,36 @@ def terrazzo(n, mode):  # any age, modern
                 windows(lay["wins"], mode, mat=(14, "background:#fff;box-shadow:0 4px 14px rgba(40,20,40,.14)")) + box(lay["text"], txt))
 
 
+def starburst(n, mode):  # 30th to 70th
+    lay = LAYOUTS["age"]["n"][n]
+    px, py, pw, ph = lay["panel"]
+    s = k(n, .82, 1.05, .56)
+    cx, cy = pw / 2, ph * k(n, .4, .42, .46)
+    R = math.hypot(pw, ph)
+    rays = "".join(f'<path d="M{cx} {cy} L{cx+R*math.cos(math.radians(a)):.1f} {cy+R*math.sin(math.radians(a)):.1f} '
+                   f'L{cx+R*math.cos(math.radians(a+7.5)):.1f} {cy+R*math.sin(math.radians(a+7.5)):.1f}Z" fill="#7f317c"/>'
+                   for a in range(0, 360, 15))
+    br = 210 * s
+    badge = (f'<circle cx="{cx}" cy="{cy}" r="{br+26*s:.1f}" fill="none" stroke="{C["gold"]}" stroke-width="{3*s:.1f}" stroke-dasharray="{2*s:.1f} {9*s:.1f}" stroke-linecap="round"/>'
+             f'<circle cx="{cx}" cy="{cy}" r="{br+10*s:.1f}" fill="{C["gold"]}"/><circle cx="{cx}" cy="{cy}" r="{br:.1f}" fill="{C["cream"]}"/>')
+    panel = (f'<div class="fr" style="left:{px}px;top:{py}px;width:{pw}px;height:{ph}px;overflow:hidden;background:{C["plum"]}">'
+             f'<svg width="{pw}" height="{ph}" style="position:absolute;inset:0">{rays}{badge}</svg>{paper(.12, .08)}</div>')
+    inner = (caps("Cheers to", 20 * s, C["amber"], ".42em", 700) +
+             f'<div style="{fr(200*s, 800, 100, 0, opsz=72)};color:{C["plum"]};line-height:.95;letter-spacing:-.02em">40</div>' +
+             caps("years", 20 * s, C["amber"], ".42em", 700))
+    badge_box = box([px + cx - br, py + cy - br, 2 * br, 2 * br], inner)
+    below = (f'<div style="font:{110*s}px/1 Yellowtail;color:{C["cream"]}">Marcus</div>' +
+             caps("March 8, 2027", 20 * s, C["honey"], ".4em", 600, "Montserrat", f"margin-top:{14*s}px"))
+    top = py + cy + br + 30 * s
+    below_box = box([px, top, pw, py + ph - top - k(n, 50, 50, 14)], below)
+    return dict(bg=C["cream"], body=paper(.10, .04) + panel + windows(lay["wins"], mode, [(12, f'border:2px solid {C["gold"]}')]) + badge_box + below_box)
+
+
 DESIGNS = [  # id, name, base layout, builder
     ("confetti-pop", "Confetti Pop", "band", confetti_pop),
     ("party-streamers", "Party Streamers", "band", party_streamers),
     ("midnight-sparkle", "Midnight Sparkle", "band", midnight_sparkle),
-    ("champagne-bubbles", "Champagne Bubbles", "age", champagne_bubbles),
+    ("starburst", "Starburst", "age", starburst),
     ("retro-sunset", "Retro Sunset", "age", retro_sunset),
     ("marquee-lights", "Marquee Lights", "age", marquee_lights),
     ("sprinkles", "Sprinkles", "card", sprinkles),
