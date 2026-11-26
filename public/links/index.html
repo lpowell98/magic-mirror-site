@@ -68,7 +68,7 @@
   .ll a:hover { background: var(--purple-light); }
   .prints h2 { color: var(--accent); }
   .strip { display: flex; gap: 14px; overflow-x: auto; padding: 6px 2px 16px; scroll-snap-type: x mandatory; }
-  .strip a { flex: 0 0 72%; scroll-snap-align: start; background: #fff; padding: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+  .strip a { display: block; height: fit-content; flex: 0 0 72%; scroll-snap-align: start; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
   .strip a:nth-child(odd) { transform: rotate(-1.2deg); }
   .strip a:nth-child(even) { transform: rotate(1deg); }
   .lf { border-top: 1px solid rgba(255,255,255,.18); color: #fff; }
