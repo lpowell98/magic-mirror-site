@@ -26,7 +26,8 @@ and point the page at `/images/<folder>/<name>.webp`. The script needs Pillow (`
    - the event gallery grids (`public/gallery/`)
    - /links "Latest Events" (4 newest)
    - the hosted brochure PDF, page 5 (6 newest), from `brochure/brochure.html`
-   - the home page print wall and "Your event, on paper", plus the /links header wall, once 4 new events have been added since the last home refresh (`content/home-last-built.txt`; run `python3 scripts/build-events.py --home` to refresh it sooner)
+   - the home page "Your event, on paper" (5 newest prints of each event type)
+   - the home page print wall and the /links header wall, once 4 new events have been added since their last refresh (`content/home-last-built.txt`; run `python3 scripts/build-events.py --home` to refresh them sooner)
 
 To run it yourself: `python3 scripts/build-events.py` (needs Pillow; the PDF also needs Node with Playwright).
 

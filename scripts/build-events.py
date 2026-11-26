@@ -3,7 +3,7 @@
 
 Usage (from the repo root):
     python3 scripts/build-events.py          # normal run (GitHub Actions runs this on every push)
-    python3 scripts/build-events.py --home   # also refresh the home page now
+    python3 scripts/build-events.py --home   # also refresh the print walls now
     python3 scripts/build-events.py --pdf    # re-render the brochure PDF even if nothing changed
 
 What it updates:
@@ -11,8 +11,9 @@ What it updates:
 - public/gallery/          the landscape and portrait print grids
 - public/links/            "Latest Events" (4 newest) and the header wall
 - brochure/ + public/brochure/magic-mirror-brochure.pdf   page 5 "Prints from the mirror" (6 newest)
-- public/index.html        print wall (and the /links header wall that copies it) and "Your event, on paper", but only once HOME_EVERY new
-                           events have been added since the last home refresh (content/home-last-built.txt)
+- public/index.html        "Your event, on paper": the 5 newest prints of each event type, on every run
+- public/index.html        print wall and its rotating pool, plus the /links header wall that copies it, only once
+                           HOME_EVERY new events have been added since the last refresh (content/home-last-built.txt)
 
 Needs Pillow. The PDF needs Node with Playwright (node scripts/render-brochure.js); without it the PDF is skipped.
 """
@@ -162,7 +163,8 @@ def build_links(events):
     return replace_block(path, "links-latest", strip)
 
 
-def build_home(events):
+def build_walls(events):
+    """Home page print wall (and the /links header wall). Refreshes every HOME_EVERY new events."""
     path = ROOT / "public" / "index.html"
     named = [e for e in shown(events) if e["name"]]
     g = "/images/gallery/"
@@ -173,7 +175,19 @@ def build_home(events):
                      f'srcset="{g}{e["stem"]}-sm.webp 480w, {g}{e["stem"]}-thumb.webp 800w" sizes="(max-width: 900px) 50vw, 25vw" '
                      f'width="{e["tw"]}" height="{e["th"]}" alt=""{lazy}></figure>')
     pool = [f"{g}{e['stem']}-thumb.webp" for e in named[WALL:WALL + POOL]]
+    # The /links header wall copies the first 8 prints of the home page wall
+    links_wall = "".join(f'<figure><img src="{g}{e['stem']}-sm.webp" width="480" height="{round(e['th'] * 480 / e['tw'])}" alt=""></figure>' for e in named[:8])
+    a = replace_block(ROOT / "public" / "links" / "index.html", "links-wall", links_wall)
+    b = replace_block(path, "home-wall", "\n".join(tiles))
+    c = replace_block(path, "home-wall-pool", f"<script>window.WALL_POOL={json.dumps(pool)};</script>")
+    return a or b or c
 
+
+def build_picker(events):
+    """ "Your event, on paper": the newest prints of each event type. Updates with every new typed event."""
+    path = ROOT / "public" / "index.html"
+    named = [e for e in shown(events) if e["name"]]
+    g = "/images/gallery/"
     data = {}
     for t in TYPES:
         picks = [e for e in named if e["type"] == t][:PICKS]
@@ -200,13 +214,7 @@ def build_home(events):
     </div>
   </div>
   <script type="application/json" id="picker-data">{json.dumps(data, ensure_ascii=False)}</script>'''
-    # The /links header wall copies the first 8 prints of the home page wall
-    links_wall = "".join(f'<figure><img src="{g}{e['stem']}-sm.webp" width="480" height="{round(e['th'] * 480 / e['tw'])}" alt=""></figure>' for e in named[:8])
-    replace_block(ROOT / "public" / "links" / "index.html", "links-wall", links_wall)
-    a = replace_block(path, "home-wall", "\n".join(tiles))
-    b = replace_block(path, "home-picker", picker)
-    c = replace_block(path, "home-wall-pool", f"<script>window.WALL_POOL={json.dumps(pool)};</script>")
-    return a or b or c
+    return replace_block(path, "home-picker", picker)
 
 
 def home_due(events, force):
@@ -278,11 +286,13 @@ def main():
         report.append("gallery updated")
     if build_links(events):
         report.append("/links updated")
+    if build_picker(events):
+        report.append('home "Your event, on paper" updated')
     due, new = home_due(events, "--home" in args)
     if due:
-        report.append("home page updated" if build_home(events) else "home page already current")
+        report.append("print walls updated" if build_walls(events) else "print walls already current")
     else:
-        report.append(f"home page waits ({new} of {HOME_EVERY} new events since its last refresh)")
+        report.append(f"print walls wait ({new} of {HOME_EVERY} new events since their last refresh)")
     if build_brochure(events, "--pdf" in args):
         report.append("brochure PDF rebuilt")
     print("; ".join(report))
