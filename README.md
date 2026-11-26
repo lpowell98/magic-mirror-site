@@ -34,7 +34,7 @@ and point the page at `/images/<folder>/<name>.webp`. The script needs Pillow (`
 
 To run it yourself: `python3 scripts/build-events.py` (needs Pillow; the PDF also needs Node with Playwright).
 
-The Canva brochure (design DAFIasy8epA, page 5 "Prints from the mirror") is synced by a daily Claude scheduled task (7:47 PM Eastern) that copies the prints and captions from `brochure/brochure.html` once the new images are live.
+The Canva brochure (design DAFIasy8epA, page 5 "Prints from the mirror") is synced by a weekly Claude scheduled task (Sundays, 7:47 PM Eastern) that copies the prints and captions from `brochure/brochure.html` once the new images are live.
 
 ## Deploying
 
