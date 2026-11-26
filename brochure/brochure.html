@@ -1,0 +1,217 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face{font-family:M;src:url(fonts/Montserrat-400.ttf);font-weight:400}
+@font-face{font-family:M;src:url(fonts/Montserrat-500.ttf);font-weight:500}
+@font-face{font-family:M;src:url(fonts/Montserrat-600.ttf);font-weight:600}
+@font-face{font-family:M;src:url(fonts/Montserrat-700.ttf);font-weight:700}
+@font-face{font-family:M;src:url(fonts/Montserrat-800.ttf);font-weight:800}
+:root{--bg:#0e0b11;--surface:#1a1420;--ink:#f3f1ee;--muted:#c4bacb;--gold:#fba924;--purple:#6e266c;--plight:#884c9e;--pdeep:#4f1a4d;--paper:#eeece9;--pink:#17121b;--pmuted:#4a4150}
+@page{size:816px 1056px;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:M,sans-serif;font-weight:500;background:#555}
+.page{width:816px;height:1056px;position:relative;overflow:hidden;page-break-after:always;background:var(--bg);color:var(--ink)}
+.paper{background:var(--paper);color:var(--pink)}
+.m{position:absolute;left:56px;right:56px}
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.22em;color:var(--gold);text-transform:uppercase}
+.paper .eyebrow{color:var(--purple)}
+h1,h2{font-weight:800;letter-spacing:-.02em;line-height:1.02}
+h2{font-size:46px}
+.rule{height:2px;width:56px;background:var(--gold)}
+.lead{font-size:15px;line-height:1.6;color:var(--muted)}
+.paper .lead{color:var(--pmuted)}
+.foot{position:absolute;left:56px;right:56px;bottom:30px;display:flex;justify-content:space-between;font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--muted)}
+.paper .foot{color:var(--pmuted)}
+.foot b{color:var(--gold);font-weight:700}
+.paper .foot b{color:var(--purple)}
+img{display:block}
+.ph{object-fit:cover;border-radius:6px}
+/* cover */
+.cover-photo{position:absolute;left:56px;top:160px;width:704px;height:430px;border-radius:6px;object-fit:cover;object-position:50% 30%}
+.cover-fade{display:none}
+.cover-logo{position:absolute;left:50px;top:30px;width:190px}
+.cover-top{position:absolute;left:0;top:0;width:816px;height:260px;background:linear-gradient(180deg,rgba(14,11,17,.92),rgba(14,11,17,0))}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid rgba(251,169,36,.45)}
+.facts div{padding:18px 16px 0 0}
+.facts b{display:block;font-size:26px;font-weight:800;color:var(--gold)}
+.facts span{font-size:12.5px;color:var(--muted)}
+/* steps */
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:26px 28px}
+.step img{width:100%;height:178px}
+.step .n{font-size:12px;font-weight:800;color:var(--purple);letter-spacing:.1em;margin:14px 0 4px}
+.step h3{font-size:18px;font-weight:800;margin-bottom:5px}
+.step p{font-size:12.5px;line-height:1.55;color:var(--pmuted)}
+/* includes */
+.inc{display:grid;grid-template-columns:1fr 1fr;column-gap:36px}
+.inc div{padding:13px 0 13px 26px;border-top:1px solid rgba(196,186,203,.22);position:relative}
+.inc div:before{content:"";position:absolute;left:2px;top:19px;width:8px;height:8px;background:var(--gold);transform:rotate(45deg)}
+.inc h3{font-size:15px;font-weight:800;margin-bottom:3px}
+.inc p{font-size:12px;line-height:1.5;color:var(--muted)}
+/* packages */
+.pk{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:#fff;border-radius:8px;padding:24px 20px 22px;border:1px solid #ddd6dc}
+.card.gold{background:var(--bg);color:var(--ink);border-color:var(--bg)}
+.card .tier{font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--purple)}
+.card.gold .tier{color:var(--gold)}
+.card .price{font-size:40px;font-weight:800;letter-spacing:-.02em;margin:8px 0 2px}
+.card .hrs{font-size:13px;font-weight:700;padding-bottom:14px;border-bottom:1px solid #ddd6dc;margin-bottom:12px}
+.card.gold .hrs{border-color:rgba(196,186,203,.25)}
+.card li{list-style:none;font-size:11.5px;line-height:1.4;padding:5px 0 5px 16px;position:relative;color:var(--pmuted)}
+.card.gold li{color:var(--muted)}
+.card li:before{content:"";position:absolute;left:0;top:10px;width:6px;height:6px;background:var(--purple);transform:rotate(45deg)}
+.card.gold li:before{background:var(--gold)}
+.card li.x{color:var(--pink);font-weight:700}
+.card.gold li.x{color:var(--ink)}
+.badge{position:absolute;top:-11px;right:16px;background:var(--gold);color:var(--bg);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:5px 9px;border-radius:3px}
+.terms{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.terms h3{font-size:14px;font-weight:800;margin-bottom:5px}
+.terms p{font-size:12px;line-height:1.5;color:var(--pmuted)}
+/* events */
+.ev{display:grid;grid-template-columns:1fr 1fr;gap:12px 22px}
+.ev figure img{width:100%;aspect-ratio:3/2;object-fit:cover;border-radius:4px;box-shadow:0 0 0 1px rgba(251,169,36,.35)}
+.ev figcaption{font-size:12px;font-weight:700;margin-top:7px}
+.ev figcaption span{font-weight:500;color:var(--muted)}
+/* faq */
+.faq{display:grid;grid-template-columns:1fr 1fr;column-gap:34px}
+.faq div{padding:15px 0;border-top:1px solid #d6cfd5}
+.faq h3{font-size:14.5px;font-weight:800;margin-bottom:4px}
+.faq p{font-size:12.5px;line-height:1.5;color:var(--pmuted)}
+.cta{position:absolute;left:0;right:0;bottom:0;height:318px;background:var(--bg);color:var(--ink);padding:44px 56px}
+.qr{position:absolute;right:56px;top:44px;width:168px;background:#fff;padding:14px;border-radius:6px}
+.qr img{width:100%}
+.qr p{font-size:10px;font-weight:700;color:var(--bg);text-align:center;margin-top:8px;letter-spacing:.04em}
+.contact{font-size:15px;line-height:2;font-weight:600}
+.contact b{color:var(--gold);font-weight:700;display:inline-block;width:130px;font-size:11px;letter-spacing:.16em;text-transform:uppercase}
+</style></head><body>
+
+<!-- 1 COVER -->
+<section class="page">
+  <img class="cover-photo" src="pose-prop-gr.jpg">
+  <div class="cover-fade"></div><div class="eyebrow" style="position:absolute;right:56px;top:84px">Photo booth rentals · Boston</div>
+  <img class="cover-logo" src="logo.png">
+  <div class="m" style="top:626px">
+        <h1 style="font-size:58px;margin:0 0 18px">Providing the magic<br>for your <span style="color:var(--gold)">next event</span></h1>
+    <p class="lead" style="max-width:560px">A full-length, touch-screen mirror that greets your guests, counts them into the shot and hands them a print in seconds. Weddings, birthdays, galas and corporate nights, all styled to your event.</p>
+  </div>
+  <div class="m facts" style="top:900px">
+    <div><b>Unlimited</b><span>sessions and prints</span></div>
+    <div><b>2</b><span>attendants at every event</span></div>
+    <div><b>4x6</b><span>prints in seconds</span></div>
+  </div>
+  <div class="foot"><span><b>magicmirrorrentalservices.com</b></span><span>inquiries@magicmirrorrentalservices.com</span></div>
+</section>
+
+<!-- 2 THE MIRROR -->
+<section class="page paper">
+  <div class="m" style="top:64px">
+    <div class="eyebrow">The Magic Mirror</div>
+    <h2 style="margin:14px 0 16px">One session,<br>start to print</h2>
+    <div class="rule"></div>
+    <p class="lead" style="margin-top:18px;max-width:600px">Each session takes about a minute, and guests come back all night. Animations, voice prompts and the print are all styled to your event.</p>
+  </div>
+  <div class="m steps" style="top:300px">
+    <div class="step"><img class="ph" src="bk-mirror-02.jpg" style="object-position:50% 40%"><div class="n">01</div><h3>Touch to start</h3><p>Built-in animations invite guests up to the glass. They can be tailored to your event and run in several languages.</p></div>
+    <div class="step"><img class="ph" src="pose.jpg" style="object-position:50% 40%"><div class="n">02</div><h3>Pose and prop</h3><p>A voice countdown leads the shot. Our attendants help with poses and props, and a DSLR with studio lighting captures it.</p></div>
+    <div class="step"><img class="ph" src="987e60_b7dc5.jpg" style="object-position:50% 35%"><div class="n">03</div><h3>Retake if you like</h3><p>Guests can check every shot and retake it before it prints.</p></div>
+    <div class="step"><img class="ph" src="9876.jpg" style="object-position:50% 40%"><div class="n">04</div><h3>Sign, print and share</h3><p>Guests sign their creation on the touch screen, then get a 4x6 print in seconds plus a copy by text or email.</p></div>
+  </div>
+  <div class="foot"><span><b>magicmirrorrentalservices.com</b></span><span>02</span></div>
+</section>
+
+<!-- 3 INCLUDES -->
+<section class="page">
+  <img src="mirror.png" style="position:absolute;right:-40px;top:70px;height:520px;opacity:.95">
+  <div class="m" style="top:64px;right:330px">
+    <div class="eyebrow">Every booking</div>
+    <h2 style="margin:14px 0 16px">What every event includes</h2>
+    <div class="rule"></div>
+    <p class="lead" style="margin-top:18px">No add-ons needed for the essentials. Every package comes with the full mirror experience and a team to run it.</p>
+    <div class="facts" style="margin-top:40px;grid-template-columns:1fr 1fr"><div><b>500+</b><span>print templates to choose from</span></div><div><b>1 min</b><span>per session, start to print</span></div></div>
+  </div>
+  <div class="m inc" style="top:600px">
+    <div><h3>Unlimited photos</h3><p>Unlimited sessions and prints for the whole event.</p></div>
+    <div><h3>Two attendants</h3><p>Two trained, on-site attendants at every event.</p></div>
+    <div><h3>Pro camera and lighting</h3><p>A DSLR and studio lighting on every shot.</p></div>
+    <div><h3>Premium props</h3><p>Quality props, themed to your event on request.</p></div>
+    <div><h3>Personalized print</h3><p>A print layout designed for your event.</p></div>
+    <div><h3>Text and email sharing</h3><p>Guests send their photos to themselves instantly.</p></div>
+    <div><h3>Animations</h3><p>Bright on-screen animations in several languages.</p></div>
+    <div><h3>Digital gallery</h3><p>An online gallery of every photo from the night.</p></div>
+  </div>
+  <div class="foot"><span><b>magicmirrorrentalservices.com</b></span><span>03</span></div>
+</section>
+
+<!-- 4 PACKAGES -->
+<section class="page paper">
+  <div class="m" style="top:64px">
+    <div class="eyebrow">Service packages</div>
+    <h2 style="margin:14px 0 16px">Packages and prices</h2>
+    <div class="rule"></div>
+    <p class="lead" style="margin-top:18px;max-width:600px">Every package includes two attendants, unlimited sessions and instant prints. Pick the hours and extras that fit your event.</p>
+  </div>
+  <div class="m pk" style="top:290px">
+    <div class="card"><div class="tier">Bronze</div><div class="price">$650</div><div class="hrs">3 hours of runtime</div><ul>
+      <li class="x">Unlimited sessions, 2 prints per session</li><li class="x">Your pick of 500+ print templates</li><li>High-quality 4x6 prints</li><li>Text and email sharing</li><li>DSLR camera and studio lighting</li><li>2 on-site attendants</li><li>Creative props and accessories</li><li>Private online photo gallery</li></ul></div>
+    <div class="card"><div class="tier">Silver</div><div class="price">$850</div><div class="hrs">4 hours of runtime</div><ul>
+      <li class="x">Unlimited sessions and prints</li><li class="x">1 custom print design</li><li class="x">USB drive of all event photos</li><li>High-quality 4x6 prints</li><li>Text and email sharing</li><li>DSLR camera and studio lighting</li><li>2 on-site attendants</li><li>Creative props and accessories</li><li>Private online photo gallery</li></ul></div>
+    <div class="card gold" style="position:relative"><span class="badge">Best value</span><div class="tier">Gold</div><div class="price">$1,100</div><div class="hrs">5 hours of runtime</div><ul>
+      <li class="x">Unlimited sessions and prints</li><li class="x">3 custom print designs</li><li class="x">Professional photo booth backdrop</li><li class="x">USB drive of all event photos</li><li>High-quality 4x6 prints</li><li>Text and email sharing</li><li>DSLR camera and studio lighting</li><li>2 on-site attendants</li><li>Creative props and accessories</li><li>Private online photo gallery</li></ul></div>
+  </div>
+  <div class="m terms" style="top:836px;border-top:1px solid #d6cfd5;padding-top:20px">
+    <div><h3>Deposit</h3><p>A $250 non-refundable deposit holds your date. The balance is due 14 days before the event.</p></div>
+    <div><h3>Travel</h3><p>No travel fee inside the City of Boston. Outside the city, a travel fee is added to the total.</p></div>
+    <div><h3>Setup</h3><p>We arrive up to an hour early. Setup takes 30 to 45 minutes and never counts toward your hours.</p></div>
+  </div>
+  <div class="foot"><span><b>magicmirrorrentalservices.com</b></span><span>04</span></div>
+</section>
+
+<!-- 5 EVENTS -->
+<section class="page">
+  <div class="m" style="top:64px">
+    <div class="eyebrow">Recent events</div>
+    <h2 style="margin:14px 0 16px">Prints from the mirror</h2>
+    <div class="rule"></div>
+    
+  </div>
+  <div class="m ev" style="top:190px">
+<!-- events:brochure-prints (built from content/events.txt, do not edit by hand) -->
+    <figure><img src="prints/1788655192435.jpg"><figcaption>Laury and Heroldens’ baby shower <span>· Sept 2026</span></figcaption></figure>
+    <figure><img src="prints/1779667313735.jpg"><figcaption>Alla and Ibrahim’s wedding <span>· May 2026</span></figcaption></figure>
+    <figure><img src="prints/1775354153323.jpg"><figcaption>NBSA’s Evening of Elegance <span>· Apr 2026</span></figcaption></figure>
+    <figure><img src="prints/1774571504860.jpg"><figcaption>Junior Tassel <span>· Mar 2026</span></figcaption></figure>
+    <figure><img src="prints/1759971807860.jpg"><figcaption>Medicine Design Symposium <span>· Oct 2025</span></figcaption></figure>
+    <figure><img src="prints/1747349931066.jpg"><figcaption>Suffolk Law Barrister’s Ball <span>· May 2025</span></figcaption></figure>
+<!-- /events:brochure-prints -->
+  </div>
+  <div class="foot"><span><b>magicmirrorrentalservices.com</b></span><span>05</span></div>
+</section>
+
+<!-- 6 FAQ + CONTACT -->
+<section class="page paper">
+  <div class="m" style="top:56px">
+    <div class="eyebrow">Good to know</div>
+    <h2 style="margin:12px 0 14px;font-size:40px">Frequently asked questions</h2>
+    <div class="rule"></div>
+  </div>
+  <div class="m faq" style="top:192px">
+    <div><h3>What do you need at the venue?</h3><p>A standard outlet, Wi-Fi, a table with two chairs and about 10 feet of open space in front of the mirror.</p></div>
+    <div><h3>How long does setup take?</h3><p>About 30 to 45 minutes. We arrive up to an hour before your start time, and setup never counts toward your hours.</p></div>
+    <div><h3>Is there a travel fee?</h3><p>Not inside the City of Boston. Outside the city, the first 20 round-trip miles are free, then $0.85 per mile.</p></div>
+    <div><h3>Can you match our theme?</h3><p>Yes. Tell us your theme and we will bring props to match. Send ideas and logos and we will design the print with you.</p></div>
+    <div><h3>Are the photos printed right away?</h3><p>Yes. Each photo prints in seconds as a high-quality 4x6, and guests can text or email it to themselves.</p></div>
+    <div><h3>How far ahead should I book?</h3><p>At least 30 days before your event is best. We will always try to fit in later bookings if the date is open.</p></div>
+    <div><h3>Is a deposit required?</h3><p>Yes. A $250 non-refundable deposit holds your date, and the balance is due 14 days before the event.</p></div>
+    <div><h3>Do you have a referral program?</h3><p>Yes. Refer a friend and we will pay you $50 for every event they book, once their deposit is paid.</p></div>
+  </div>
+  <div class="cta">
+    <div class="eyebrow" style="color:var(--gold)">Book your date</div>
+    <h2 style="font-size:38px;margin:12px 0 22px;max-width:440px">Bring the magic to your next event</h2>
+    <div class="contact">
+      <div><b>Book online</b>magicmirrorrentalservices.com</div>
+      <div><b>Email</b>inquiries@magicmirrorrentalservices.com</div>
+      <div><b>Instagram</b>@magicmirrorrentalservices</div>
+    </div>
+    <div class="qr"><img src="qr.png"><p>Scan to check availability</p></div>
+  </div>
+</section>
+</body></html>

@@ -18,6 +18,20 @@ To add or change a photo, put the original in `src-images/<folder>/`, then from 
 
 and point the page at `/images/<folder>/<name>.webp`. The script needs Pillow (`pip install pillow`).
 
+## Adding a new event to the gallery
+
+1. Put the print's original photo in `src-images/gallery/` (jpg or png).
+2. Add one line at the top of `content/events.txt`: `photo file | event name | month and year | event type`.
+3. Push (or commit on GitHub). The deploy then rebuilds everything that shows event prints and saves the result to the branch:
+   - the event gallery grids (`public/gallery/`)
+   - /links "Latest Events" (4 newest)
+   - the hosted brochure PDF, page 5 (6 newest), from `brochure/brochure.html`
+   - the home page print wall and "Your event, on paper", plus the /links header wall, once 4 new events have been added since the last home refresh (`content/home-last-built.txt`; run `python3 scripts/build-events.py --home` to refresh it sooner)
+
+To run it yourself: `python3 scripts/build-events.py` (needs Pillow; the PDF also needs Node with Playwright).
+
+Still manual after a new event: the Canva brochure (design DAFIasy8epA, page 5 "Prints from the mirror"). Swap in the photos from `brochure/prints/` with the captions in `brochure/brochure.html`.
+
 ## Deploying
 
 `.github/workflows/deploy.yml` deploys `public/` to the Cloudflare Pages project `magic-mirror-site`.
