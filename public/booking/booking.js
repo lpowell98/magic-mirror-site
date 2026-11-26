@@ -366,42 +366,86 @@ function drawInvoice(){
 }
 $("printInvoice").onclick=()=>window.print();
 
-/* Templates: the print designs from the site's Print templates page.
-   [file, name, shape (l = landscape, p = portrait), occasions]. Names are what gets saved to the booking. */
-const TEMPLATES=[
-  ["dec14-ny-dr-4x6-ps","New Year","l","holiday",[1200,800],[[420,40,1150,555]]],
-  ["holiday-cheer-2-4x6-drb","Holiday Cheer","l","holiday",[1200,800],[[120,39,1081,677]]],
-  ["black-ice-2-4x6-cropped","Black Ice","l","holiday corporate",[1200,800],[[133,44,1066,656]]],
-  ["fiesta-2-drb-4x6-single-pse","Fiesta","l","holiday birthday",[1200,800],[[157,27,1043,617]]],
-  ["pot-o-gold-2-4x6-cropped","Pot o' Gold","l","holiday",[1200,800],[[136,47,1063,662]]],
-  ["midnight-watercolor-drb-4x6-pse","Midnight Watercolor","l","wedding corporate",[1200,800],[[111,46,1088,692]]],
-  ["baby-safari-1-portrait-mirror-4x6-cropped","Baby Safari","l","baby",[1200,800],[[37,43,406,598],[415,43,785,598],[794,43,1163,598]]],
-  ["ever-after-portrait-mirror-1-4x6-cropped","Ever After","l","wedding birthday",[1200,800],[[42,43,409,596],[418,43,789,597],[798,43,1166,595]]],
-  ["nov15a-dr-4x6-ps","Autumn Glow","l","holiday wedding",[1200,800],[[424,20,1194,520],[424,536,794,780],[808,536,1194,780]]],
-  ["painted-leaves-portrait-mirror-1-cropped","Painted Leaves","l","wedding",[1200,800],[[40,41,410,596],[419,41,788,596],[797,41,1168,596]]],
-  ["red-carpet-4x6-ps","Red Carpet","l","corporate birthday",[1200,807],[[89,66,717,501],[829,69,1130,265],[829,303,1129,501]]],
-  ["sweetheart-black-1-4x6-cropped","Sweetheart Black","l","wedding",[1200,800],[[424,24,1173,521],[424,537,790,780],[807,537,1172,780]]],
-  ["winterreds-single","Winter Reds","p","holiday",[1200,1785],[[214,155,988,1316]]],
-  ["boo-2-portrait-mirror-4x6-full-bleed","Boo","p","holiday",[1200,1785],[[119,136,1081,1540]]],
-  ["art-deco-2-portrait-mirror-4x6-cropped","Art Deco","p","wedding corporate",[1200,1800],[[109,127,1095,1600]]],
-  ["b-w-grad-2-portrait-mirror-4x6-cropped","Black & White Grad","p","graduation",[1200,1800],[[180,280,1005,1515]]],
-  ["birthday_vert_1","Birthday","p","birthday",[750,1125],[[141,151,608,900]]],
-  ["babyshowerh","Baby Shower","p","baby",[750,1125],[[110,110,640,840]]],
-  ["graduationv","Graduation","p","graduation",[750,1125],[[86,60,666,850]]],
-  ["hope-2-portrait-mirror-4x6-cropped","Hope","p","corporate",[1200,1800],[[104,115,1093,1500]]]
-].map(([f,name,shape,occ,size,wins])=>({f,name,shape,occ:occ.split(" "),size,wins}));
+/* New wedding, birthday, holiday, graduation, baby shower and corporate collections (print-designs/): real artwork for each photo count, files <f>-<n>.webp.
+   [file prefix, name, shape, occasions, size, windows [x0,y0,x1,y1] per photo count, window corners: 1 = cut, "r" = rounded] */
+const SETS=[
+  ["wedding-ivory-script","Ivory Script","l","wedding",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["wedding-champagne-toast","Champagne Toast","l","wedding",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["wedding-navy-and-gold","Navy & Gold","l","wedding",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["wedding-sage-garden","Sage Garden","l","wedding",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["wedding-black-tie","Black Tie","l","wedding",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["wedding-blush-linen","Blush Linen","l","wedding",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["wedding-modern-serif","Modern Serif","p","wedding",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["wedding-monogram-crest","Monogram Crest","p","wedding",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["wedding-gilded-frame","Gilded Frame","p","wedding",[1200, 1800],{1:[[100,640,1100,1390]],2:[[100,430,1100,1045],[100,1095,1100,1710]],3:[[100,400,1100,810],[100,860,1100,1270],[100,1320,1100,1730]]},1],
+  ["wedding-emerald-frame","Emerald Frame","p","wedding",[1200, 1800],{1:[[100,640,1100,1390]],2:[[100,430,1100,1045],[100,1095,1100,1710]],3:[[100,400,1100,810],[100,860,1100,1270],[100,1320,1100,1730]]},1],
+  ["birthday-confetti-pop","Confetti Pop","l","birthday",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["birthday-party-streamers","Party Streamers","l","birthday",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["birthday-midnight-sparkle","Midnight Sparkle","l","birthday",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["birthday-echo","Echo","l","birthday",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["birthday-retro-sunset","Retro Sunset","l","birthday",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["birthday-marquee-lights","Marquee Lights","l","birthday",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["birthday-sprinkles","Sprinkles","p","birthday",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["birthday-terrazzo","Terrazzo","p","birthday",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["birthday-party-ticket","Party Ticket","p","birthday",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,460,1090,1060],[110,1100,1090,1700]],3:[[110,430,1090,830],[110,870,1090,1270],[110,1310,1090,1710]]},"r"],
+  ["birthday-bunting-party","Bunting Party","p","birthday",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,460,1090,1060],[110,1100,1090,1700]],3:[[110,430,1090,830],[110,870,1090,1270],[110,1310,1090,1710]]},"r"],
+  ["holiday-papercut-pines","Papercut Pines","l","holiday",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["holiday-fireworks","Fireworks","l","holiday",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["holiday-evergreen-wreath","Evergreen Wreath","l","holiday",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["holiday-midnight-clock","Midnight Clock","l","holiday",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["holiday-harvest-moon","Harvest Moon","l","holiday",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["holiday-nordic-knit","Nordic Knit","p","holiday",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["holiday-candy-stripe","Candy Stripe","p","holiday",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["holiday-frost","Frost","p","holiday",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["holiday-gift-tag","Gift Tag","p","holiday",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["holiday-apothecary","Apothecary","p","holiday",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["graduation-diploma","Diploma","l","graduation",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["graduation-chalk-notes","Chalk Notes","l","graduation",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["graduation-felt-pennant","Felt Pennant","l","graduation",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["graduation-gold-tassel","Gold Tassel","l","graduation",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["graduation-graduate-stack","Graduate Stack","l","graduation",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["graduation-embossed-seal","Embossed Seal","l","graduation",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["graduation-varsity-letter","Varsity Letter","p","graduation",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["graduation-composition-book","Composition Book","p","graduation",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["graduation-library-card","Library Card","p","graduation",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["graduation-commencement","Commencement","p","graduation",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["babyshower-muslin-swaddle","Muslin Swaddle","l","baby",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["babyshower-letter-beads","Letter Beads","l","baby",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["babyshower-gingham-label","Gingham","l","baby",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["babyshower-alphabet-blocks","Alphabet Blocks","l","baby",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["babyshower-nursery-mobile","Nursery Mobile","l","baby",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["babyshower-oh-baby","Oh Baby","l","baby",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["babyshower-christening-lace","Christening Lace","p","baby",[1200, 1800],{1:[[170,140,1030,785]],2:[[170,120,1030,700],[170,740,1030,1320]],3:[[170,110,1030,510],[170,550,1030,950],[170,990,1030,1390]]}],
+  ["babyshower-cross-stitch","Cross-Stitch","p","baby",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}],
+  ["babyshower-babys-breath","Baby's Breath","p","baby",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["babyshower-airmail","Airmail Reveal","p","baby",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["corporate-lobby-sign","Lobby Sign","l","corporate",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["corporate-step-and-repeat","Step and Repeat","l","corporate",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["corporate-velvet-rope","Velvet Rope","l","corporate",[1800, 1200],{1:[[310,72,1490,858]],2:[[90,90,875,613],[925,90,1710,613]],3:[[145,75,1145,742],[1189,75,1656,386],[1189,431,1656,742]]}],
+  ["corporate-letter-board","Letter Board","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-dinner-menu","Dinner Menu","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-color-chip","Color Chip","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-annual-report","Annual Report","l","corporate",[1800, 1200],{1:[[615,160,1740,1040]],2:[[950,60,1740,575],[950,625,1740,1140]],3:[[930,55,1745,575],[55,625,870,1145],[930,625,1745,1145]]}],
+  ["corporate-lanyard-badge","Lanyard Badge","p","corporate",[1200, 1800],{1:[[110,620,1090,1355]],2:[[110,560,1090,1120],[110,1150,1090,1710]],3:[[110,520,1090,900],[110,925,1090,1305],[110,1330,1090,1710]]}],
+  ["corporate-leather-folio","Leather Folio","p","corporate",[1200, 1800],{1:[[110,660,1090,1395]],2:[[110,470,1090,1070],[110,1110,1090,1710]],3:[[110,440,1090,840],[110,880,1090,1280],[110,1320,1090,1720]]},"r"],
+  ["corporate-brass-plaque","Brass Plaque","p","corporate",[1200, 1800],{1:[[110,110,1090,845]],2:[[110,110,1090,720],[110,770,1090,1380]],3:[[110,110,1090,510],[110,555,1090,955],[110,1000,1090,1400]]}]
+].map(([f,name,shape,occ,size,vers,cut])=>({f,name,shape,occ:occ.split(" "),size,vers,cut:cut===1,round:cut==="r",wins:vers[2]}));
+/* The print designs offered in Choose Template. Names are what gets saved to the booking.
+   The older designs were retired from the picker on 2026-11-25 (their images still exist for the Print templates page). */
+const TEMPLATES=SETS;
 /* Photo-count versions. A design's own layout is shown as-is; other counts are a mock-up of how the
    photos would sit in its photo area until real artwork for that version is added. */
 const VERSIONS=[1,2,3];
 const vLabel=n=>n+" photo"+(n>1?"s":"");
-const nativeN=t=>t.wins.length;
+const nativeN=t=>t.vers?2:t.wins.length;
+const hasN=(t,n)=>t.vers?!!t.vers[n]:n===t.wins.length;
 const tplValue=(name,n)=>name+" · "+vLabel(n);
 const parseTpl=v=>{ const m=/^(.*) · (\d) photos?$/.exec(v||""); return m?[m[1],+m[2]]:[v||"",0]; };
 const OCCASIONS=[["all","All"],["wedding","Wedding"],["birthday","Birthday"],["holiday","Holiday"],["graduation","Graduation"],["baby","Baby shower"],["corporate","Corporate"]];
-const SHAPES=[["all","All shapes"],["l","Landscape"],["p","Portrait"]];
+const SHAPES=[["all","All"],["l","Landscape"],["p","Portrait"]];
 const ZOOM='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M10.5 7.5v6M7.5 10.5h6"/></svg>';
 const tplByName=n=>TEMPLATES.find(t=>t.name===n);
-const tplSrc=(t,thumb)=>`/images/templates/${t.f}${thumb?"-thumb":""}.webp`;
+const tplSrc=(t,thumb,n)=>`/images/templates/${t.f}${t.vers?"-"+(n||nativeN(t)):""}${thumb?"-thumb":""}.webp`;
 S.tplOcc="all"; S.tplShape="all";
 function drawChips(){
   const count=(o,sh)=>TEMPLATES.filter(t=>(o==="all"||t.occ.includes(o))&&(sh==="all"||t.shape===sh)).length;
@@ -412,7 +456,7 @@ function drawChips(){
 }
 function drawTplGrid(){
   const list=TEMPLATES.filter(t=>(S.tplOcc==="all"||t.occ.includes(S.tplOcc))&&(S.tplShape==="all"||t.shape===S.tplShape));
-  const tile=t=>`<div class="tpl"><button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===t.name}" data-name="${esc(t.name)}"><img src="${tplSrc(t,1)}" alt="" width="600" height="${t.shape==="p"?900:400}" loading="lazy"><span>${esc(t.name)}<small>${vLabel(nativeN(t))}</small></span><i class="tplzoom" aria-hidden="true">${ZOOM}</i></button></div>`;
+  const tile=t=>`<div class="tpl"><button type="button" role="radio" class="tplopt" aria-checked="${S.tplPick===t.name}" data-name="${esc(t.name)}"><img src="${tplSrc(t,1)}" alt="" width="600" height="${t.shape==="p"?900:400}" loading="lazy"><span>${esc(t.name)}<small>${t.vers?"1–3 photos":vLabel(nativeN(t))}</small></span><i class="tplzoom" aria-hidden="true">${ZOOM}</i></button></div>`;
   const sec=(sh,label)=>{ const g=list.filter(t=>t.shape===sh); return g.length?`<section class="tplsec"><h4>${label} · ${g.length}</h4><div class="tplgrid ${sh==="l"?"land":"port"}">${g.map(tile).join("")}</div></section>`:""; };
   $("tplGrid").innerHTML=sec("l","Landscape prints")+sec("p","Portrait prints");
   $("tplEmpty").classList.toggle("hidden",list.length>0);
@@ -423,7 +467,7 @@ function pickTpl(name,n){
   S.tplPick=t?name:""; S.tplN=t?(n||S.tplN&&S.tplPick===name&&S.tplN||nativeN(t)):0;
   $("tplGrid").querySelectorAll(".tplopt").forEach(x=>x.setAttribute("aria-checked",x.dataset.name===S.tplPick));
   $("tplSel").textContent=t?t.name:"None chosen yet";
-  $("tplSelImg").classList.toggle("hidden",!t); if(t) $("tplSelImg").src=tplSrc(t,1);
+  $("tplSelImg").classList.toggle("hidden",!t); if(t) $("tplSelImg").src=tplSrc(t,1,S.tplN);
   $("tplBarVers").classList.toggle("hidden",!t);
   $("tplBarVers").innerHTML=VERSIONS.map(n=>`<button type="button" class="chip" role="radio" data-n="${n}" aria-checked="${n===S.tplN}">${vLabel(n)}</button>`).join("");
   $("tplBarVers").querySelectorAll(".chip").forEach(c=>c.onclick=()=>pickTpl(S.tplPick,+c.dataset.n));
@@ -431,6 +475,7 @@ function pickTpl(name,n){
 }
 /* Where the photos sit for a given count, in the design's own pixels */
 function tplSlots(t,n){
+  if(t.vers&&t.vers[n]) return t.vers[n];
   if(n===nativeN(t)) return t.wins;
   const x0=Math.min(...t.wins.map(w=>w[0])), y0=Math.min(...t.wins.map(w=>w[1])), x1=Math.max(...t.wins.map(w=>w[2])), y1=Math.max(...t.wins.map(w=>w[3]));
   const W=x1-x0, H=y1-y0, g=Math.round(Math.min(W,H)*.03);
@@ -442,12 +487,14 @@ function tplSlots(t,n){
 const CAM='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 function drawTplPreview(){
   const t=tplByName(S.tplViewing), n=S.tplViewN, [W,H]=t.size, pc=(v,d)=>(v/d*100).toFixed(2)+"%";
-  const box=(r,cls,inner)=>`<div class="${cls}" style="left:${pc(r[0],W)};top:${pc(r[1],H)};width:${pc(r[2]-r[0],W)};height:${pc(r[3]-r[1],H)}">${inner||""}</div>`;
-  const native=n===nativeN(t);
+  const box=(r,cls,inner)=>`<div class="${cls}" style="left:${pc(r[0],W)};top:${pc(r[1],H)};width:${pc(r[2]-r[0],W)};height:${pc(r[3]-r[1],H)}${t.cut&&cls==="tplslot"?";clip-path:"+cutPath(r):""}${t.round&&cls==="tplslot"?";border-radius:"+(36/(r[2]-r[0])*100).toFixed(2)+"%/"+(36/(r[3]-r[1])*100).toFixed(2)+"%":""}">${inner||""}</div>`;
+  const cutPath=r=>{ const w=r[2]-r[0],h=r[3]-r[1],x=(44/w*100).toFixed(2)+"%",y=(44/h*100).toFixed(2)+"%",X=(100-44/w*100).toFixed(2)+"%",Y=(100-44/h*100).toFixed(2)+"%"; return `polygon(${x} 0,${X} 0,100% ${y},100% ${Y},${X} 100%,${x} 100%,0 ${Y},0 ${y})`; };
+  const native=hasN(t,n);
+  $("tplViewImg").src=tplSrc(t,0,n);
   const x0=Math.min(...t.wins.map(w=>w[0])), y0=Math.min(...t.wins.map(w=>w[1])), x1=Math.max(...t.wins.map(w=>w[2])), y1=Math.max(...t.wins.map(w=>w[3]));
   $("tplSlots").innerHTML=(native?"":box([x0,y0,x1,y1],"tplmat"))+tplSlots(t,n).map((r,i)=>box(r,"tplslot",CAM+"<b>Photo "+(i+1)+"</b>")).join("");
   $("tplVers").querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-checked",+c.dataset.n===n));
-  $("tplVerNote").textContent=native?"This is the design's original layout.":"Mock-up: we'll adjust the artwork for "+vLabel(n)+" and show it on your proof.";
+  $("tplVerNote").textContent=t.vers?"This design is made for "+vLabel(n)+". Your names and date replace the sample ones.":native?"This is the design's original layout.":"Mock-up: we'll adjust the artwork for "+vLabel(n)+" and show it on your proof.";
   $("tplViewPick").textContent="Choose this design";
 }
 function openTplView(name){
@@ -456,7 +503,7 @@ function openTplView(name){
   const occ=t.occ.map(o=>OCCASIONS.find(x=>x[0]===o)[1]).join(" · ");
   $("tplViewTags").textContent=occ+" · "+(t.shape==="p"?"Portrait":"Landscape");
   $("tplViewName").textContent=t.name;
-  $("tplViewPrint").className="tplprint"+(t.shape==="p"?" port":"");
+  $("tplViewPrint").className="tplprint"+(t.shape==="p"?" port":"")+(t.vers?" named":"");
   $("tplViewImg").src=tplSrc(t,0);
   $("tplVers").innerHTML=VERSIONS.map(n=>`<button type="button" class="chip" role="radio" data-n="${n}">${vLabel(n)}</button>`).join("");
   $("tplVers").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ S.tplViewN=+c.dataset.n; if(S.tplPick===S.tplViewing) pickTpl(S.tplPick,S.tplViewN); drawTplPreview(); });

@@ -42,8 +42,9 @@ if (links.length) {
   const img = box.querySelector('img');
   const buttons = [...box.querySelectorAll('button')];
   let opener = null;
-  const show = (n) => {
+  const show = (n, dir = 1) => {
     i = (n + links.length) % links.length;
+    for (let k = 0; k < links.length && links[i].closest('[hidden]'); k++) i = (i + dir + links.length) % links.length;
     img.src = links[i].href;
     img.alt = links[i].querySelector('img')?.alt || '';
     if (box.hidden) { opener = document.activeElement; box.hidden = false; buttons[0].focus(); }
@@ -51,13 +52,13 @@ if (links.length) {
   const close = () => { box.hidden = true; img.removeAttribute('src'); opener?.focus(); };
   links.forEach((a, n) => a.addEventListener('click', (e) => { e.preventDefault(); show(n); }));
   box.querySelector('.lb-close').onclick = close;
-  box.querySelector('.lb-prev').onclick = () => show(i - 1);
+  box.querySelector('.lb-prev').onclick = () => show(i - 1, -1);
   box.querySelector('.lb-next').onclick = () => show(i + 1);
   box.addEventListener('click', (e) => { if (e.target === box) close(); });
   document.addEventListener('keydown', (e) => {
     if (box.hidden) return;
     if (e.key === 'Escape') close();
-    if (e.key === 'ArrowLeft') show(i - 1);
+    if (e.key === 'ArrowLeft') show(i - 1, -1);
     if (e.key === 'ArrowRight') show(i + 1);
     if (e.key === 'Tab') { // keep focus inside the viewer
       const first = buttons[0], last = buttons[buttons.length - 1];
