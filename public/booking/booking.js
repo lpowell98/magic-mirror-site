@@ -199,9 +199,37 @@ function lineItems(){
   if(S.print){ const x=CFG.prints.find(p=>p.id===S.print); items.push([x.name,x.price]); }
   if(S.pkg){ const p=CFG.packages.find(p=>p.id===S.pkg); items.push(["Mirror Me Booth - "+p.name,p.price]); }
   CFG.times.filter(t=>S.times.has(t.id)).forEach(t=>items.push([t.name,t.price]));
+  const off=promoOff(items.reduce((s,i)=>s+i[1],0));
+  if(off>0) items.push([S.promo.label,-off]);
   items.push(["Travel",travelFee()]);
   return items;
 }
+/* ===== Promo code: checked by the back end, which also re-checks it when the booking is made ===== */
+// Same rule as the back end: off the package, prints and extra time, never travel.
+function promoOff(sub){
+  const p=S.promo; if(!p||!(sub>0)) return 0;
+  const off=p.type==="percent"?sub*Math.min(100,p.amount)/100:p.amount;
+  return Math.round(Math.min(sub,Math.max(0,off))*100)/100;
+}
+const normCode=v=>String(v||"").trim().toUpperCase().replace(/\s+/g,"");
+function promoMsg(text,kind){ const m=$("promoMsg"); m.textContent=text; m.classList.toggle("promo-ok",kind==="ok"); m.classList.toggle("promo-bad",kind==="bad"); }
+async function applyPromo(){
+  const code=normCode($("coupon").value);
+  if(!code){ S.promo=null; promoMsg("Enter a promo code, then press Apply.","bad"); refresh(); return false; }
+  if(S.promo&&S.promo.code===code) return true;
+  const btn=$("promoBtn"); btn.disabled=true; promoMsg("Checking…");
+  try{
+    const r=await api(null,{action:"checkPromo",code});
+    if(r.ok){ S.promo=r.promo; $("coupon").value=r.promo.code; refresh();
+      const sub=lineItems().filter(i=>i[1]<0).reduce((s,i)=>s-i[1],0);
+      promoMsg(`${r.promo.code} applied: ${r.promo.type==="percent"?r.promo.amount+"% off":money(r.promo.amount)+" off"} your package and extras${S.pkg?` (you save ${money(sub)})`:""}.`,"ok"); return true; }
+    S.promo=null; refresh(); promoMsg(r.error==="TOO_MANY"?TOO_MANY:(r.error||"That promo code isn't valid."),"bad"); return false;
+  }catch(e){ promoMsg("We couldn't check that code. Please try again.","bad"); return false; }
+  finally{ btn.disabled=false; }
+}
+$("promoBtn").onclick=applyPromo;
+$("coupon").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); applyPromo(); } });
+$("coupon").addEventListener("input",()=>{ if(S.promo&&normCode($("coupon").value)!==S.promo.code){ S.promo=null; promoMsg("Press Apply to use this code."); refresh(); } });
 const total=()=>lineItems().reduce((s,i)=>s+i[1],0);
 function drawPay(){
   const t=total(), opts=[["later","Pay later"],["deposit",`${money(Math.min(CFG.deposit,t))} (pay deposit only)`],["full",`${money(t)} (pay full balance)`]];
@@ -248,6 +276,8 @@ $("bookBtn").onclick=async()=>{
     if(first){ first.scrollIntoView({behavior:SMOOTH,block:"center"}); first.focus({preventScroll:true}); }
     return;
   }
+  // a typed code that wasn't applied yet: apply it first, and stop if it isn't valid
+  if(normCode($("coupon").value)&&!S.promo&&API_URL){ if(!(await applyPromo())){ $("coupon").scrollIntoView({behavior:SMOOTH,block:"center"}); $("coupon").focus({preventScroll:true}); return; } }
   const id = (memBookings.reduce((mx,b)=>Math.max(mx,b.id),150))+1;
   const toMin=s=>{ const [t,ap]=s.split(" "); let [h,mm]=t.split(":").map(Number); if(ap==="pm"&&h!==12)h+=12; if(ap==="am"&&h===12)h=0; return h*60+mm; };
   const fromMin=n=>{ n=(n+1440)%1440; const h=Math.floor(n/60),mm=n%60; return `${((h+11)%12)+1}:${String(mm).padStart(2,"0")} ${h<12?"am":"pm"}`; };
@@ -262,7 +292,7 @@ $("bookBtn").onclick=async()=>{
     const payload={ action:"book", date:b.date, eventType:b.eventType, pkg:S.pkg, print:S.print, times:[...S.times],
       miles:$("vMiles").value, email:b.email, phone:b.phone, evName:b.evName, start:b.start, end:b.end,
       arrive:b.arrive, depart:b.depart, vName:b.vName, vAddr:b.vAddr, vZip:b.vZip, fn:b.fn, ln:b.ln,
-      street:$("street").value, zip:$("zip").value, coupon:$("coupon").value, ref:$("ref").value,
+      street:$("street").value, zip:$("zip").value, coupon:S.promo?S.promo.code:"", ref:$("ref").value,
       payOpt:S.payOpt, terms:$("terms").checked };
     try{
       payload.ts=await mmTS.token($("tsBook"));
@@ -272,7 +302,8 @@ $("bookBtn").onclick=async()=>{
         if(S.payOpt!=="later"){ const amt=S.payOpt==="full"?r.booking.total:Math.min(CFG.deposit,r.booking.total); startPay(amt,$("payBtn")); } }
       else{
         const w=$("bottomWarn");
-        w.textContent = r.error==="DATE_TAKEN" ? "Sorry, that date was just booked. Please choose another date." : r.error==="TOO_MANY" ? TOO_MANY : r.error==="BOT_CHECK" ? BOT : "Something went wrong: "+r.error;
+        if(r.error==="PROMO"){ S.promo=null; refresh(); promoMsg(r.message||"That promo code can't be used.","bad"); }
+        w.textContent = r.error==="PROMO" ? (r.message||"That promo code can't be used.")+" Remove it or try another code." : r.error==="DATE_TAKEN" ? "Sorry, that date was just booked. Please choose another date." : r.error==="TOO_MANY" ? TOO_MANY : r.error==="BOT_CHECK" ? BOT : "Something went wrong: "+r.error;
         w.classList.remove("hidden");
       }
     }catch(e){

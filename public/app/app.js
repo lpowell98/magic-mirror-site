@@ -307,7 +307,38 @@ function drawMoney(){
     return rowHtml(b,`${b.fn} ${b.ln} · ${money(b.paid)} of ${money(b.total)} paid`,{soon:inDays(d),
       tags:`<span class="tags"><span class="tag ${d<=14?"hot":""}">${money(bal(b))} owed</span></span>`,actions:quick(b)}); }).join("")||`<div class="empty">Every upcoming booking is paid in full.</div>`;
   bindRows($("dueList"));
+  drawPromos();
 }
+
+/* ---------- promo codes ---------- */
+const promoOffText=p=>p.type==="percent"?`${+p.amount}% off`:`${money(p.amount)} off`;
+function drawPromos(){
+  const list=(D.promos||[]).slice().sort((a,b)=>(b.problem?0:1)-(a.problem?0:1)||String(b.created).localeCompare(String(a.created)));
+  const live=list.filter(p=>!p.problem).length;
+  $("promoCount").textContent=list.length?`${live} active`:"";
+  $("promoList").innerHTML=list.map(p=>{
+    const used=D.bookings.filter(b=>String(b.coupon||"").toUpperCase()===p.code);
+    const state=p.problem?(!p.active?"Paused":/expired/.test(p.problem)?"Expired":"Used up"):"Active";
+    const pill=state==="Active"?"s-Confirmed":state==="Paused"?"s-Completed":"s-Cancelled";
+    const sub=[promoOffText(p), `${p.uses} use${p.uses===1?"":"s"}${p.maxUses?` of ${p.maxUses}`:""}`, p.expires?`expires ${pretty(p.expires)}`:"no expiry", p.note].filter(Boolean).join(" · ");
+    return `<div class="row"><div class="rowmain" style="cursor:default"><span class="when" style="color:var(--accent);font-weight:800;letter-spacing:.04em">${esc(p.code)}</span>
+      <span class="what"><b>${esc(promoOffText(p))}</b><small>${esc(sub)}</small>${used.length?`<span class="tags">${used.slice(0,4).map(b=>`<button type="button" class="tag" data-id="${b.id}" style="border:0;cursor:pointer">#${b.id} ${esc(b.evName)}</button>`).join("")}${used.length>4?`<span class="tag">+${used.length-4} more</span>`:""}</span>`:""}</span>
+      <span class="pill ${pill}">${state}</span></div>
+      <div class="side"><button type="button" class="qa" data-promo="${esc(p.code)}" data-on="${p.active?"0":"1"}">${p.active?"Pause":"Turn on"}</button></div></div>`;
+  }).join("")||`<div class="empty">No promo codes yet. Create one above.</div>`;
+  $("promoList").querySelectorAll("[data-id]").forEach(t=>t.onclick=()=>openBooking(Number(t.dataset.id)));
+  $("promoList").querySelectorAll("[data-promo]").forEach(btn=>btn.onclick=async()=>{ btn.disabled=true;
+    try{ setData(await run("adminPromoActive",btn.dataset.promo,btn.dataset.on==="1")); toast(btn.dataset.on==="1"?btn.dataset.promo+" is on":btn.dataset.promo+" paused"); }catch(e){ fail(e); btn.disabled=false; } });
+}
+$("prType").onchange=()=>{ $("prAmt").max=$("prType").value==="percent"?"100":""; };
+$("prType").onchange();
+$("promoForm").onsubmit=async e=>{ e.preventDefault();
+  const code=$("prCode").value.trim().toUpperCase(), ex=$("prExp").value, [y,m,d]=ex?ex.split("-"):[];
+  if((D.promos||[]).some(p=>p.code===code)){ toast("There's already a code named "+code); return; }
+  $("prSave").disabled=true;
+  try{ setData(await run("adminPromoSave",{code,type:$("prType").value,amount:$("prAmt").value,expires:ex?`${m}/${d}/${y}`:"",maxUses:$("prMax").value,note:$("prNote").value}));
+    $("promoForm").reset(); $("prType").onchange(); toast(code+" created"); }
+  catch(err){ fail(err); } $("prSave").disabled=false; };
 function MONYformat(x){ return `${MONY.format(x.d)}: ${money(x.paid)} paid, ${money(x.owed)} still owed, ${x.n} event${x.n===1?"":"s"}`; }
 
 /* ---------- blocked ---------- */
@@ -347,6 +378,7 @@ function openBooking(id,keep,focus){
       <dt>Venue</dt><dd>${esc(b.vName)}<br><a href="https://maps.google.com/?q=${encodeURIComponent(b.vAddr+" "+b.vZip)}">${esc(b.vAddr)} ${esc(b.vZip)}</a></dd>
       <dt>Arrive / leave</dt><dd>${esc(b.arrive||"—")} / ${esc(b.depart||"—")}</dd>
       <dt>Package</dt><dd>${esc([b.pkg,b.print,b.xtime].filter(Boolean).join(" · "))}</dd>
+      ${b.coupon?`<dt>Promo code</dt><dd><b style="color:var(--accent)">${esc(b.coupon)}</b>${(()=>{ const p=(D.promos||[]).find(x=>x.code===String(b.coupon).toUpperCase()); return p?` · ${esc(promoOffText(p))}`:""; })()}</dd>`:""}
       <dt>Miles</dt><dd>${esc(b.miles||"—")}</dd>
       <dt>Booked</dt><dd>${esc(b.created)}</dd>
       ${b.notes?`<dt>Notes</dt><dd>${esc(b.notes)}</dd>`:""}

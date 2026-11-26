@@ -334,7 +334,20 @@ dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid 
       <div class="tip hidden" id="tip" role="tooltip"></div>
       <details class="tbl"><summary>Show as a table</summary><table id="chartTbl" style="margin-top:10px"></table></details>
     </div>
-    <div class="card"><h2>Balances coming due <span class="count" id="dueCount"></span></h2><div class="list" id="dueList"></div></div>
+    <div class="card" style="margin-bottom:18px"><h2>Balances coming due <span class="count" id="dueCount"></span></h2><div class="list" id="dueList"></div></div>
+    <div class="card" id="promos"><h2>Promo codes <span class="count" id="promoCount"></span></h2>
+      <p class="lead" style="margin:-6px 0 14px;font-size:14px">Clients enter a code on the booking page. It takes money off the package, prints and extra time, never travel.</p>
+      <form class="f" id="promoForm" style="margin-bottom:16px">
+        <label style="flex:1 1 150px">Code<input type="text" id="prCode" name="promo-code" autocomplete="off" spellcheck="false" maxlength="30" pattern="[A-Za-z0-9_\-]{3,30}" required placeholder="SPRING25" style="width:100%;text-transform:uppercase"></label>
+        <label style="flex:0 1 120px">Discount<select id="prType" style="width:100%"><option value="percent">% off</option><option value="amount">$ off</option></select></label>
+        <label style="flex:0 1 100px">Amount<input type="number" id="prAmt" name="promo-amount" min="1" step="0.01" inputmode="decimal" required style="width:100%"></label>
+        <label style="flex:1 1 150px">Expires (optional)<input type="date" id="prExp" name="promo-expires" style="width:100%"></label>
+        <label style="flex:0 1 120px">Max uses (optional)<input type="number" id="prMax" name="promo-max" min="1" step="1" inputmode="numeric" placeholder="No limit" style="width:100%"></label>
+        <label style="flex:1 1 200px">Note (only you see it)<input type="text" id="prNote" name="promo-note" autocomplete="off" maxlength="200" style="width:100%"></label>
+        <button class="btn" type="submit" id="prSave">Create code</button>
+      </form>
+      <div class="list" id="promoList"></div>
+    </div>
   </section>
 
   <section id="v-blocked" class="hidden">
@@ -379,6 +392,6 @@ dialog{background:var(--surface);color:var(--ink);border:0;border-top:3px solid 
 <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/app/app.js?v=2" defer></script>
+<script src="/app/app.js?v=3" defer></script>
 </body>
 </html>

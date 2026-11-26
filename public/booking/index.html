@@ -44,6 +44,8 @@
 .bk input[readonly]{color:var(--muted)}
 .bk input[type=file]{font:15px var(--body);color:var(--muted)}
 .bk .help{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5}
+.bk .promo-row{display:flex;gap:8px;max-width:360px}.bk .promo-row input{flex:1;min-width:0;text-transform:uppercase}.bk .promo-row .btn{flex:none}
+.bk .help.promo-ok{color:#7be0b0;font-weight:600}.bk .help.promo-bad{color:#ff9a9d;font-weight:600}
 .bk h2{font-size:clamp(24px,2.4vw,34px);margin-bottom:22px}
 .bk h3{font-size:20px;margin-bottom:6px}
 .bk h4,.bk .kicker{font:700 16px/1.25 var(--head);color:var(--ink);margin:0 0 8px}
@@ -494,9 +496,9 @@
       <div class="help">Files must be less than <b>2&nbsp;MB</b>.<br>Allowed file types: <b>jpg jpeg png pdf psd</b>.</div>
     </div>
 
-    <label for="coupon" style="margin-top:20px">Add a coupon</label>
-    <input type="text" id="coupon" name="coupon" autocomplete="off" spellcheck="false" style="max-width:300px">
-    <div class="help">If you have a coupon, add it here to validate it.</div>
+    <label for="coupon" style="margin-top:20px">Promo code</label>
+    <div class="promo-row"><input type="text" id="coupon" name="coupon" autocomplete="off" spellcheck="false" autocapitalize="characters" maxlength="30" aria-describedby="promoMsg"><button type="button" class="btn" id="promoBtn">Apply</button></div>
+    <div class="help" id="promoMsg" role="status" aria-live="polite">Have a promo code? Enter it and press Apply.</div>
 
     <fieldset class="payfs"><legend>Payment options</legend>
     <div class="pay" id="pay"></div></fieldset>
@@ -647,6 +649,6 @@
 </footer>
 <script src="/assets/js/main.js?v=speed1" defer></script>
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/booking/booking.js?v=6" defer></script>
+<script src="/booking/booking.js?v=7" defer></script>
 </body>
 </html>

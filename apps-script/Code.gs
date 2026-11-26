@@ -81,6 +81,7 @@ function doPost(e) {
   try {
     if (action === 'dates') return json({ ok: true, taken: takenDates_() });
     if (action === 'portalCode') return json(portalCode_(b));
+    if (action === 'checkPromo') return json(checkPromo_(b));
     if (action === 'portalVerify') return json(portalVerify_(b));
     if (PORTAL_READS[action]) {
       const f = authRow_(b); if (!f) return json(authError_());
@@ -212,16 +213,65 @@ function takenDates_() {
   return Object.keys(set);
 }
 
-function price_(b) {
+function price_(b, promo) {
   const items = [];
   if (has_(CONFIG.PRINTS, b.print)) items.push(CONFIG.PRINTS[b.print]);
   if (has_(CONFIG.PACKAGES, b.pkg)) items.push(['Mirror Me Booth - ' + CONFIG.PACKAGES[b.pkg][0], CONFIG.PACKAGES[b.pkg][1]]);
   (b.times || []).forEach(t => { if (has_(CONFIG.TIMES, t)) items.push(CONFIG.TIMES[t]); });
   const miles = Math.max(0, parseFloat(b.miles) || 0);
   const fee = Math.round(Math.max(0, miles - CONFIG.FREE_MILES) * CONFIG.PER_MILE * 100) / 100;
+  const off = promoOff_(promo, items.reduce((s, i) => s + i[1], 0));
+  if (off > 0) items.push([promoLabel_(promo), -off]);
   if (fee > 0) items.push(['Travel', fee]);
-  const total = items.reduce((s, i) => s + i[1], 0);
+  const total = Math.round(items.reduce((s, i) => s + i[1], 0) * 100) / 100;
   return { items, total, fee, miles };
+}
+
+/* ---------------- Promo codes ----------------
+   Made in the dashboard (Money tab) and kept on the "Promo Codes" tab of the sheet.
+   A code takes a percent or a dollar amount off the package, prints and extra time. Travel is never discounted.
+   A code is counted as used when a booking is made with it. */
+const PROMO_HEAD = ['Code', 'Type', 'Amount', 'Expires', 'Max uses', 'Uses', 'Active', 'Note', 'Created'];
+function promoSheet_() {
+  const ss = SpreadsheetApp.getActive();
+  let sh = ss.getSheetByName('Promo Codes');
+  if (!sh) {
+    sh = ss.insertSheet('Promo Codes'); sh.appendRow(PROMO_HEAD); sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, PROMO_HEAD.length).setFontWeight('bold'); sh.getRange('A:A').setNumberFormat('@');
+  }
+  return sh;
+}
+function normCode_(v) { return String(v || '').trim().toUpperCase().replace(/\s+/g, '').slice(0, 30); }
+function promos_() {
+  const sh = promoSheet_(), n = sh.getLastRow();
+  return n < 2 ? [] : sh.getRange(2, 1, n - 1, PROMO_HEAD.length).getValues().map((r, i) => ({
+    row: i + 2, code: normCode_(r[0]), type: r[1] === 'amount' ? 'amount' : 'percent', amount: num_(r[2]),
+    expires: fmtDate_(r[3]), maxUses: num_(r[4]), uses: num_(r[5]), active: r[6] === true || String(r[6]).toUpperCase() === 'TRUE',
+    note: String(r[7] || ''), created: fmtDate_(r[8]) })).filter(p => p.code);
+}
+const findPromo_ = code => { code = normCode_(code); return code ? promos_().find(p => p.code === code) || null : null; };
+// Why a code can't be used today, or '' when it can.
+function promoProblem_(p) {
+  if (!p) return "That promo code isn't valid.";
+  if (!p.active) return 'That promo code is no longer active.';
+  if (p.expires && dayNum_(p.expires) < dayNum_(new Date())) return 'That promo code has expired.';
+  if (p.maxUses > 0 && p.uses >= p.maxUses) return 'That promo code has been fully used.';
+  return '';
+}
+function promoLabel_(p) { return `Promo code ${p.code} (${p.type === 'percent' ? p.amount + '% off' : money_(p.amount) + ' off'})`; }
+// Dollars off a subtotal (package, prints and extra time).
+function promoOff_(p, sub) {
+  if (!p || !(sub > 0)) return 0;
+  const off = p.type === 'percent' ? sub * Math.min(100, p.amount) / 100 : p.amount;
+  return Math.round(Math.min(sub, Math.max(0, off)) * 100) / 100;
+}
+// Public: the booking page's "Apply" button. Rate limited so codes can't be guessed.
+function checkPromo_(b) {
+  if (limited_('promo-ip:' + REQ.ip, 20, 3600)) return tooMany_();
+  if (!normCode_(b.code)) return { ok: false, error: 'Enter a promo code.' };
+  const p = findPromo_(b.code), why = promoProblem_(p);
+  if (why) return { ok: false, error: why };
+  return { ok: true, promo: { code: p.code, type: p.type, amount: p.amount, label: promoLabel_(p) } };
 }
 
 /* ---------------- Create booking ---------------- */
@@ -268,6 +318,12 @@ function createBooking_(b) {
   if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(c.email)) return { ok: false, error: 'Please enter a valid email address.' };
   if (!b.terms) return { ok: false, error: 'Terms not accepted' };
   if (takenDates_().indexOf(c.date) !== -1) return { ok: false, error: 'DATE_TAKEN' };
+  let promo = null;
+  if (normCode_(c.coupon)) {
+    promo = findPromo_(c.coupon); const why = promoProblem_(promo);
+    if (why) return { ok: false, error: 'PROMO', message: why };
+    c.coupon = promo.code;
+  }
 
   // Travel: Google Maps driving miles when BASE_ADDRESS is set; otherwise the miles the client typed.
   const typed = Math.min(500, Math.max(0, parseFloat(b.miles) || 0));
@@ -279,7 +335,7 @@ function createBooking_(b) {
   const sh = sheet_('Bookings');
   const ids = rows_().map(r => Number(r[0]) || 0);
   const id = Math.max(CONFIG.FIRST_ID, ...ids) + 1;
-  const p = price_(c);
+  const p = price_(c, promo);
   const row = sh.getLastRow() + 1;
   const key = newKey_();
 
@@ -298,6 +354,7 @@ function createBooking_(b) {
   [COL.FEE, COL.TOTAL, COL.PAID, COL.BALANCE].forEach(col => sh.getRange(row, col).setNumberFormat('$#,##0.00'));
   sh.getRange(row, 1, 1, values.length).setValues([values]);
   sh.getRange(row, COL.KEY).setNumberFormat('@').setValue(key);
+  if (promo) promoSheet_().getRange(promo.row, 6).setValue(promo.uses + 1);
 
   const r = sh.getRange(row, 1, 1, NCOL).getValues()[0];
   notifyOwner_(id, c, p, milesNote, mapped !== null);
@@ -470,6 +527,9 @@ function bookingView_(r) {
   const pr = byName(CONFIG.PRINTS, g(COL.PRINT)); if (pr) items.push(CONFIG.PRINTS[pr]);
   String(g(COL.XTIME) || '').split(', ').filter(String).forEach(n => { const t = byName(CONFIG.TIMES, n); if (t) items.push(CONFIG.TIMES[t]); });
   if (Number(g(COL.FEE)) > 0) items.push(['Travel', Number(g(COL.FEE))]);
+  // A promo discount is whatever the stored total is below the listed prices.
+  const coupon = String(g(COL.COUPON) || ''), gap = Math.round((items.reduce((s, i) => s + i[1], 0) - (Number(g(COL.TOTAL)) || 0)) * 100) / 100;
+  if (coupon && gap > 0) items.splice(items.length - (Number(g(COL.FEE)) > 0 ? 1 : 0), 0, ['Promo code ' + coupon, -gap]);
   return {
     id: g(COL.ID), key: keyOf_(r), date: fmtDate_(g(COL.DATE)), status: g(COL.STATUS), start: g(COL.START), end: g(COL.END),
     arrive: g(COL.ARRIVE), depart: g(COL.DEPART), evName: g(COL.EVNAME), vName: g(COL.VNAME), vAddr: g(COL.VADDR),
@@ -762,6 +822,7 @@ function adminData() {
     pdf: String(r[COL.CONTRACT_PDF - 1]), template: String(r[COL.TEMPLATE - 1]), templateText: String(r[COL.TEMPLATE_TEXT - 1]),
     onsiteName: String(r[COL.ONSITE_NAME - 1]), onsitePhone: String(r[COL.ONSITE_PHONE - 1]), guests: String(r[COL.GUESTS - 1]),
     setupNotes: String(r[COL.SETUP_NOTES - 1]), detailsAt: r[COL.DETAILS_AT - 1] ? fmtStamp_(r[COL.DETAILS_AT - 1]) : '',
+    coupon: String(r[COL.COUPON - 1] || ''),
     staff: String(r[COL.STAFF - 1] || ''), adminNotes: String(r[COL.ADMIN_NOTES - 1] || ''), teamNotes: String(r[COL.TEAM_NOTES - 1] || '')
   }));
   const ms = messagesSheet_(), mn = ms.getLastRow();
@@ -773,7 +834,8 @@ function adminData() {
   const bl = sheet_('Blocked Dates'), bn = bl.getLastRow();
   const blocked = bn < 2 ? [] : bl.getRange(2, 1, bn - 1, 2).getValues().filter(r => r[0])
     .map(r => ({ date: fmtDate_(r[0]), reason: String(r[1] || '') }));
-  return { bookings, messages, payments, blocked, staff: CONFIG.STAFF.map(s => s.name),
+  const promos = promos_().map(p => { const o = Object.assign({}, p); delete o.row; o.problem = promoProblem_(p); return o; });
+  return { bookings, messages, payments, blocked, promos, staff: CONFIG.STAFF.map(s => s.name),
     statuses: ['Unconfirmed', 'Confirmed', 'Completed', 'Cancelled'], today: Utilities.formatDate(new Date(), CONFIG.TZ, 'MM/dd/yyyy') };
 }
 
@@ -822,6 +884,36 @@ function notifyStaff_(r, staffList) {
           ['Arrive', esc_(fmtTime_(r[COL.ARRIVE - 1]))], ['Venue', esc_([r[COL.VNAME - 1], r[COL.VADDR - 1]].filter(String).join(', '))],
           ['Package', esc_(r[COL.PKG - 1])], ['Booking', '#' + esc_(r[0])], ['Team notes', esc_(r[COL.TEAM_NOTES - 1] || '—')]]) +
         eSmall_('Questions? Reply to this email.') });
+  });
+}
+
+// New promo code. p: { code, type: 'percent'|'amount', amount, expires (MM/dd/yyyy or ''), maxUses (0 = no limit), note }
+function adminPromoSave(p) {
+  guard_(); p = p || {};
+  const code = normCode_(p.code);
+  if (!/^[A-Z0-9_-]{3,30}$/.test(code)) throw new Error('Use 3 to 30 letters or numbers for the code');
+  const type = p.type === 'amount' ? 'amount' : 'percent', amount = Math.round(Number(p.amount) * 100) / 100;
+  if (!(amount > 0)) throw new Error('Enter an amount above 0');
+  if (type === 'percent' && amount > 100) throw new Error('A percent can be at most 100');
+  const expires = String(p.expires || '');
+  if (expires && !/^\d{2}\/\d{2}\/\d{4}$/.test(expires)) throw new Error('Choose a valid expiry date');
+  const maxUses = Math.max(0, Math.floor(Number(p.maxUses) || 0));
+  return withLock_(() => {
+    if (findPromo_(code)) throw new Error('There is already a code named ' + code);
+    const sh = promoSheet_(), row = sh.getLastRow() + 1;
+    sh.getRange(row, 1).setNumberFormat('@');
+    sh.getRange(row, 1, 1, PROMO_HEAD.length).setValues([[code, type, amount, expires, maxUses || '', 0, true, clip_(p.note, 200), new Date()]]);
+    return adminData();
+  });
+}
+
+// Pause (false) or turn back on (true) a promo code.
+function adminPromoActive(code, on) {
+  guard_();
+  return withLock_(() => {
+    const p = findPromo_(code); if (!p) throw new Error('Promo code not found');
+    promoSheet_().getRange(p.row, 7).setValue(!!on);
+    return adminData();
   });
 }
 
@@ -929,7 +1021,7 @@ function adminUnblock(date) {
    session token valid for 7 days. Tokens are stored hashed in Script Properties. Every new sign-in
    is emailed to that admin, and "Sign out all" ends all of their sessions. */
 
-const ADMIN_FNS = { adminData, adminUpdate, adminAddPayment, adminReply, adminResend, adminBlock, adminUnblock };
+const ADMIN_FNS = { adminData, adminUpdate, adminAddPayment, adminReply, adminResend, adminBlock, adminUnblock, adminPromoSave, adminPromoActive };
 const SESSION_DAYS = 7;
 
 function sha_(t) {
