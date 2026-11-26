@@ -37,3 +37,9 @@
   .print { margin: 4px 1vw; --up: 1.35; }
 }
 @media (prefers-reduced-motion: reduce) { .print, .print img { transition: none; } }
+
+/* Portrait prints: two rows of four */
+.table-port { max-width: calc(4 * (220px + 16px) + 8px); margin-inline: auto; }
+.table-port .print { width: 220px; }
+@media (max-width: 900px) { .table-port { max-width: calc(4 * (150px + 16px) + 8px); } .table-port .print { width: 150px; } }
+@media (max-width: 640px) { .table-port { max-width: none; } .table-port .print { width: 21vw; } }
