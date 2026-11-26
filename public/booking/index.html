@@ -39,7 +39,7 @@
 .bk .linkbtn{background:none;border:0;padding:0;font:600 16px var(--body);color:var(--accent);text-decoration:underline;text-underline-offset:4px;cursor:pointer;margin-left:8px}
 .bk .payfs{border:0;margin:24px 0 0;padding:0}
 .bk .payfs legend{font-weight:600;font-size:15px;padding:0}
-.bk .price,.bk .summary td,.bk .paytile span,.sticky,.bk .kv span,.bk #vFee,.bk #payAmt{font-variant-numeric:tabular-nums}
+.bk .price,.bk .summary td,.bk .paytile span,.bk .kv span,.bk #vFee,.bk #payAmt{font-variant-numeric:tabular-nums}
 .bk .section-title,.bk h2,.bk h3{text-wrap:balance}
 .bk input[readonly]{color:var(--muted)}
 .bk input[type=file]{font:15px var(--body);color:var(--muted)}
@@ -92,97 +92,149 @@
 .bk .home>div{display:flex;flex-direction:column;align-items:center;text-align:center}
 .bk .home .cal,.bk .home .field{width:100%;max-width:300px;text-align:left}
 
-/* step 2: booking form */
-.bk .banner{background:var(--purple-deep);padding:16px 20px;font-weight:600}
-.bk .datebar{margin:18px 0 8px;color:var(--muted)}
+/* ===== booking form: four steps, styled like the pricing page (site tokens only) ===== */
+.bk .datebar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:var(--muted);margin:0 0 20px}
 .bk .datebar b{color:var(--ink)}
-.bk .datebar a{color:var(--accent);font-weight:600;margin-left:8px}
-.bk .section-title{font:800 clamp(22px,2vw,28px)/1.1 var(--head);letter-spacing:-.01em;margin:44px 0 16px}
-.bk .service{width:200px;position:relative;cursor:default;background:var(--paper)}
-.bk .service img{width:100%;aspect-ratio:1/1;object-fit:cover}
-.bk .service .cap{background:#000;color:var(--ink);font-weight:600;font-size:14px;text-align:center;padding:8px}
-.bk .service .tick{position:absolute;top:10px;right:10px;width:28px;height:28px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800}
+.bk .datebar .linkbtn{margin-left:0}
+.bk .stepper{list-style:none;margin:0 0 32px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;counter-reset:none}
+.bk .stepper button{width:100%;display:flex;align-items:center;gap:10px;background:none;border:0;border-top:3px solid #3a2f42;padding:12px 0 0;color:var(--muted);font:600 15px var(--body);text-align:left;cursor:default}
+.bk .stepper .n{flex:none;width:28px;height:28px;display:grid;place-items:center;border:2px solid #4a3d55;font:700 13px var(--body);font-variant-numeric:tabular-nums}
+.bk .stepper li.done button{border-top-color:var(--purple-light);color:var(--ink);cursor:pointer}
+.bk .stepper li.done .n{background:var(--purple);border-color:var(--purple);color:#fff;font-size:0}
+.bk .stepper li.done .n::before{content:"✓";font-size:14px}
+.bk .stepper li.done button:hover .l{color:var(--accent)}
+.bk .stepper li.cur button{border-top-color:var(--accent);color:var(--ink)}
+.bk .stepper li.cur .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.bk .bkgrid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:32px;align-items:start}
+.bk .step-title{font:800 clamp(24px,2.4vw,34px)/1.1 var(--head);letter-spacing:-.01em;margin:0 0 22px;outline:none}
+.bk .step h3{font:700 19px/1.25 var(--head);margin:0 0 4px}
+.bk .step .sub{color:var(--muted);margin:0 0 16px;font-size:15px}
+
+/* packages: same look as the pricing page cards, Gold in brand purple */
+.bk .pkgs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.bk .pkg{position:relative;font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:2px solid transparent;padding:28px 24px 24px;display:flex;flex-direction:column;cursor:pointer;transition:border-color .2s,transform .2s var(--ease)}
+.bk .pkg:hover{border-color:var(--purple-light);transform:translateY(-2px)}
+.bk .pkg.gold{background:var(--purple)}
+.bk .pkg[aria-checked="true"]{border-color:var(--accent)}
+.bk .pkg .pname{font:800 var(--t-statement)/1.1 var(--head)}
+.bk .pkg .pprice{font:500 clamp(34px,3vw,44px)/1 var(--head);letter-spacing:-.02em;margin:14px 0 4px;font-variant-numeric:tabular-nums}
+.bk .pkg .phours{color:var(--muted);margin-bottom:16px}
+.bk .pkg.gold .phours{color:#e7dcef}
+.bk .pkg ul,.bk .allinc ul{list-style:none;margin:0 0 20px;padding:0}
+.bk .pkg li,.bk .allinc li{padding:4px 0 4px 22px;position:relative;font-size:15px}
+.bk .pkg li::before,.bk .allinc li::before{content:"";position:absolute;left:0;top:11px;width:10px;height:6px;border-left:2px solid var(--accent);border-bottom:2px solid var(--accent);transform:rotate(-45deg)}
+.bk .pkg .pick{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;min-height:46px;background:var(--accent);color:var(--accent-ink);font:600 16px var(--body)}
+.bk .pkg[aria-checked="true"] .pick{background:var(--ink);color:var(--accent-ink)}
+.bk .pkg[aria-checked="true"] .pick::before{content:"✓\00a0"}
+.bk .allinc{margin-top:20px;padding:20px 24px;border:1px solid #3a2f42}
+.bk .allinc ul{display:grid;grid-template-columns:repeat(3,1fr);gap:0 24px;margin:0}
+
+/* extras: print design + extra time as tap-to-select option tiles */
+.bk .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:760px}
+.bk .opts-time{grid-template-columns:repeat(3,minmax(0,1fr))}
+.bk .opt{font:inherit;color:var(--ink);text-align:left;background:var(--surface);border:2px solid #3a2f42;padding:16px 18px;cursor:pointer;display:flex;flex-direction:column;gap:4px;min-height:44px;transition:border-color .2s,background-color .2s}
+.bk .opt:hover{border-color:var(--purple-light)}
+.bk .opt b{font:700 17px var(--head);display:flex;justify-content:space-between;gap:10px}
+.bk .opt b i{font-style:normal;color:var(--accent);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bk .opt small{color:var(--muted);font-size:14px;line-height:1.45}
+.bk .opt[aria-checked="true"],.bk .opt[aria-pressed="true"]{border-color:var(--accent);background:var(--purple-deep)}
+.bk .opt[aria-checked="true"] b span::before,.bk .opt[aria-pressed="true"] b span::before{content:"✓\00a0";color:var(--accent)}
+.bk .opts-time .opt b{flex-direction:column;gap:2px}
+
+.bk .fs{background:var(--surface);padding:clamp(20px,2.4vw,28px);margin-bottom:16px}
+.bk .fs .kicker{color:var(--accent);font:700 13px/1.2 var(--body);letter-spacing:.14em;text-transform:uppercase;margin-bottom:4px}
+.bk .cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:24px}
+.bk .cols2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.bk details.more summary{cursor:pointer;font-weight:600;color:var(--accent);list-style:none;min-height:24px}
+.bk details.more summary::-webkit-details-marker{display:none}
+.bk details.more summary::before{content:"+";display:inline-block;width:18px;font-weight:700}
+.bk details.more[open] summary::before{content:"–"}
+.bk .check{display:flex;align-items:flex-start;gap:12px;margin:24px 0 8px}
+.bk .check input{flex:none;width:22px;height:22px;margin-top:1px;accent-color:var(--accent)}
+.bk .check label{margin:0;font-weight:500;font-size:16px}
+.bk .check a{color:var(--accent)}
+.bk .paychoice{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px}
+.bk .paychoice label{margin:0;display:flex;flex-direction:column;gap:2px;background:var(--surface);border:2px solid #3a2f42;padding:14px 16px;cursor:pointer;font-weight:600;font-size:15px;transition:border-color .2s}
+.bk .paychoice label:hover{border-color:var(--purple-light)}
+.bk .paychoice label.on{border-color:var(--accent);background:var(--purple-deep)}
+.bk .paychoice input{position:absolute;opacity:0;width:1px;height:1px}
+.bk .paychoice label:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:3px}
+.bk .paychoice span{font:800 22px var(--head);font-variant-numeric:tabular-nums}
+.bk .paychoice small{color:var(--muted);font-size:13px;font-weight:500}
+.bk .review .kv{font-size:15px}
+.bk .review .kv a,.bk .review .kv button{color:var(--accent)}
+.bk .review h3{display:flex;justify-content:space-between;align-items:baseline}
+.bk .stepnav{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px}
+.bk .stepnav .backbtn{margin:0}
+.bk .stepnav .backbtn[hidden]{visibility:hidden;display:inline}
+.bk .bigbtn{display:flex;width:100%;margin-top:20px}
 .bk .warnbar{background:var(--purple);color:var(--ink);padding:14px 18px;font-weight:600;margin-top:20px}
 
-.bk .pkgs{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.bk .pkg{background:var(--surface);display:flex;flex-direction:column;position:relative}
-.bk .pkg .tag{position:absolute;top:0;right:0;background:var(--accent);color:var(--accent-ink);font-size:11px;font-weight:700;padding:5px 10px}
-.bk .pkg .title{font:800 24px/1.1 var(--head);padding:32px 24px 0}
-.bk .pkg .body{padding:16px 24px;font-size:15px;line-height:1.7;color:var(--muted)}
-.bk .pkg .body strong{display:block;color:var(--accent);font-size:17px;margin-bottom:8px}
-.bk .pkg .extras{border-top:1px solid rgba(255,255,255,.08);margin:0 24px;padding:14px 0;font-size:15px;min-height:96px}
-.bk .pkg .extras em{display:block;font-style:normal;font-size:14px;font-weight:600;color:var(--muted);margin-bottom:6px}
-.bk .pkg .foot{margin-top:auto;padding:8px 24px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.bk .price{font:800 30px/1 var(--head)}
-.bk .price small{font-size:16px;margin-right:2px;vertical-align:top}
-.bk .cart{display:flex}
-.bk .cart button{white-space:nowrap;min-height:44px;padding:0 18px;border:0;border-radius:0;background:var(--accent);color:var(--accent-ink);font:600 15px var(--body);cursor:pointer;transition:transform .2s var(--ease),background-color .2s}
-.bk .cart button:hover{transform:translateY(-2px)}
-.bk .cart span{display:none}
-.bk .cart.on button{background:var(--purple);color:var(--ink)}
-.bk .cart.on button::before{content:"✓ "}
-
-.bk .xgroup{margin-top:28px}
-.bk .xgroup p{color:var(--muted);margin:0 0 16px}
-.bk .xrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:24px;max-width:1100px}
-.bk .xcard{background:var(--surface);display:flex;flex-direction:column}
-.bk .xcard img{width:100%;aspect-ratio:1/1;object-fit:contain;background:var(--paper);padding:18px}
-.bk .xcard .t{font-weight:700;padding:16px 18px 4px}
-.bk .xcard .d{font-size:14px;color:var(--muted);padding:0 18px;min-height:44px}
-.bk .xcard .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 18px;margin-top:auto}
-.bk .xcard .row .price{font-size:22px}
-.bk .xgroup .err{background:var(--purple);padding:12px 16px;margin-top:16px;font-weight:600;max-width:1000px}
-
-.bk .fs{background:var(--surface);padding:clamp(20px,2.4vw,32px)}
-.bk .cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:24px}
-.bk .cols2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
-.bk .times{display:flex;gap:12px}
-.bk .fee{display:flex;align-items:center;gap:8px;max-width:220px}
-.bk .check{display:flex;align-items:center;gap:12px;margin:28px 0}
-.bk .check input{width:22px;height:22px;accent-color:var(--accent)}
-.bk .check label{margin:0;font-weight:500;font-size:17px}
-.bk .pay label{display:flex;align-items:center;gap:12px;font-weight:500;font-size:17px;margin:10px 0}
-.bk .pay input{accent-color:var(--accent);width:20px;height:20px}
-.bk .pay label.on{color:var(--accent);font-weight:700}
-.bk .summary{width:100%;border-collapse:collapse;margin-top:28px;font-size:16px}
+/* running total */
+.bk .sumcard{position:sticky;top:20px;background:var(--surface);border-top:3px solid var(--accent);padding:24px}
+.bk .sumcard .kicker{color:var(--accent);font:700 13px/1.2 var(--body);letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}
+.bk .summary{width:100%;border-collapse:collapse;font-size:15px}
+.bk .summary td{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+.bk .summary td:last-child{text-align:right;padding-left:12px;white-space:nowrap}
+.bk .summary td.empty{color:var(--muted)}
 .bk .summary th{font-size:14px;font-weight:600;color:var(--muted);text-align:left;border-bottom:1px solid rgba(255,255,255,.12);padding:8px 0}
-.bk .summary th:last-child,.bk .summary td:last-child{text-align:right}
-.bk .summary td{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
-.bk .summary tr.total td{font:800 22px var(--head);border-bottom:0;padding-top:16px}
-.bk .bigbtn{display:flex;width:100%;margin-top:24px}
-.sticky{position:fixed;right:20px;bottom:20px;background:var(--accent);color:var(--accent-ink);padding:12px 18px;display:flex;align-items:center;gap:8px;font-weight:700;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.45)} /* taste-skill-ignore: floating cart total */
-.sticky.hidden{display:none}
+.bk .summary th:last-child{text-align:right}
+.bk .summary tr.off td:last-child{color:#7be0b0}
+.bk .sumtot{display:flex;justify-content:space-between;align-items:baseline;padding-top:14px;font:800 24px var(--head);font-variant-numeric:tabular-nums}
+.bk .sumtot span{font-size:16px}
+.bk .sumcard .help{margin-top:6px}
+.bk .totbar{display:none}
 
-/* step 3: client portal */
-.bk .tabs{background:var(--surface);display:flex;justify-content:center;gap:24px;padding:28px 16px;margin-top:24px;flex-wrap:wrap}
-.bk .tab{width:118px;text-align:center;font-size:15px;position:relative}
-.bk .tab .ic{width:58px;height:58px;background:var(--paper);margin:0 auto 10px;display:grid;place-items:center}
-.bk .tab .badge{position:absolute;top:-8px;left:30px;background:var(--accent);color:var(--accent-ink);width:22px;height:22px;border-radius:50%;font-size:12px;font-weight:800;display:grid;place-items:center}
-.bk .grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:24px}
-.bk .card{background:var(--surface);padding:clamp(20px,2.4vw,32px)}
-.bk .card h3{margin-bottom:12px}
-.bk .kv{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:15px}
-.bk .kv b{font-weight:700}
-.bk .kv span{color:var(--muted);text-align:right}
-.bk .paytiles{display:flex;justify-content:center;gap:12px;margin:20px 0;flex-wrap:wrap}
-.bk .paytile{font:inherit;color:var(--ink);background:var(--bg);padding:14px 22px;text-align:center;cursor:pointer;min-width:170px;border:2px solid transparent;transition:border-color .2s}
+/* ===== client portal ===== */
+.bk .banner{background:var(--purple);padding:16px 20px;font-weight:600;margin-bottom:20px}
+.bk .phead{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 20px;margin-bottom:20px}
+.bk .phead h2{font:800 clamp(24px,2.4vw,34px)/1.1 var(--head);margin:0}
+.bk .phead p{margin:6px 0 0;color:var(--muted)}
+.bk .pill{display:inline-block;font:700 13px var(--body);letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;background:var(--purple);color:#fff}
+.bk .pill.ok{background:var(--accent);color:var(--accent-ink)}
+.bk .todo{background:var(--surface);border-top:3px solid var(--accent);padding:clamp(18px,2.4vw,28px)}
+.bk .todo-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px}
+.bk .todo-head h3{font:700 20px var(--head);margin:0}
+.bk .todo-head span{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.bk .todo-bar{height:6px;background:#3a2f42;margin-bottom:8px}
+.bk .todo-bar i{display:block;height:100%;background:var(--accent);transition:width .4s var(--ease)}
+.bk .todo ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.bk .todo li{display:flex;flex-direction:column;gap:6px;padding:14px 0 0;border-top:1px solid rgba(255,255,255,.08)}
+.bk .todo .ti{display:flex;align-items:center;gap:10px;font-weight:700}
+.bk .todo .dot{flex:none;width:26px;height:26px;display:grid;place-items:center;border:2px solid var(--accent);color:var(--accent);font:700 13px var(--body)}
+.bk .todo li.done .dot{background:var(--accent);color:var(--accent-ink)}
+.bk .todo li.done .ti{color:var(--muted)}
+.bk .todo small{color:var(--muted);font-size:14px;min-height:20px}
+.bk .todo .btn{min-height:42px;padding:0 16px;font-size:15px;align-self:flex-start;margin-top:auto}
+.bk .todo li.done .btn{background:transparent;color:var(--ink);border:1.5px solid #4a3d55}
+.bk .todo li.done .btn:hover{border-color:var(--accent)}
+.bk .tabs{display:flex;gap:4px;margin-top:24px;border-bottom:1px solid #3a2f42;overflow-x:auto;scrollbar-width:none}
+.bk .tabs::-webkit-scrollbar{display:none}
+.bk .tab{flex:none;font:600 15px var(--body);color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;padding:12px 14px;cursor:pointer;white-space:nowrap;margin-bottom:-1px;display:flex;align-items:center;gap:8px;min-height:44px}
+.bk .tab:hover{color:var(--ink)}
+.bk .tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.bk .tab .cnt{background:var(--purple-light);color:#fff;min-width:20px;height:20px;padding:0 6px;font-size:12px;font-weight:800;display:inline-grid;place-items:center;border-radius:10px}
+.bk .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.bk .card{background:var(--surface);padding:clamp(20px,2.4vw,28px)}
+.bk .card h3{font:700 20px var(--head);margin:0 0 10px}
+.bk .card .sub{color:var(--muted);margin:0 0 4px;font-size:15px}
+.bk .kv{display:flex;justify-content:space-between;gap:16px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:15px}
+.bk .kv:last-child{border-bottom:0}
+.bk .kv b{font-weight:600;color:var(--muted);flex:none}
+.bk .kv span{color:var(--ink);text-align:right;overflow-wrap:anywhere}
+.bk .kv.big b,.bk .kv.big span{font:800 20px var(--head);color:var(--ink)}
+.bk #pTotals{margin-top:6px}
+.bk .paytiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px;margin:14px 0}
+.bk .paytile{font:inherit;color:var(--ink);background:var(--bg);padding:12px 8px;text-align:center;cursor:pointer;border:2px solid #3a2f42;transition:border-color .2s}
 .bk .paytile:hover{border-color:var(--purple-light)}
-.bk .paytile.on{background:var(--purple);border-color:var(--purple)}
-.bk .paytile small{display:block;font-size:14px;font-weight:600;color:var(--muted)}
-.bk .paytile.on small{color:var(--ink)}
-.bk .paytile span{font:800 28px var(--head)}
-.bk #payAmt{max-width:140px;display:inline-block}
+.bk .paytile.on{background:var(--purple-deep);border-color:var(--accent)}
+.bk .paytile small{display:block;font-size:13px;font-weight:600;color:var(--muted)}
+.bk .paytile span{font:800 20px var(--head);font-variant-numeric:tabular-nums}
+.bk .payamt{display:flex;align-items:center;gap:8px}
+.bk .payamt label{margin:0 8px 0 0}
+.bk .payamt input{max-width:160px}
 .bk .note{color:var(--accent);margin-top:12px;font-weight:600}
-
-/* portal: next-step prompt + clickable tab */
-.bk .nextstep{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;background:var(--purple);padding:16px 20px;margin-top:20px;font-weight:600}
-.bk .tab.done .badge{background:#3fb76b;color:#fff}
-
-/* portal tabs + panes */
-.bk .tab{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:6px 0 10px;border-bottom:3px solid transparent}
-.bk .tab:hover .ic{outline:2px solid var(--accent)}
-.bk .tab[aria-selected="true"]{border-bottom-color:var(--accent)}
-.bk .tab .badge.cnt{background:var(--purple-light);color:#fff}
+.bk .note:empty{display:none}
 .bk .pane{margin-top:20px}
 .bk .paper{background:#fff;color:var(--paper-ink);padding:clamp(20px,3vw,44px)}
 .bk .paper h3{color:var(--paper-ink);font-size:24px;margin-bottom:6px}
@@ -342,8 +394,42 @@
 @media (max-width:900px){
   .bk .inv-cols{grid-template-columns:1fr}
   .bk .inv-meta{text-align:left}
-  .bk .home,.bk .pkgs,.bk .cols3,.bk .cols2,.bk .grid2{grid-template-columns:1fr}
+  .bk .home,.bk .pkgs,.bk .cols3,.bk .grid2{grid-template-columns:1fr}
   .bk .home{gap:20px}
+  /* booking form on phones: the total and Continue live in a bar along the bottom */
+  .bk .bkgrid{grid-template-columns:1fr}
+  .bk .sumcard{display:none}
+  .bk #v-book{padding-bottom:84px}
+  .bk .totbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:#000;border-top:2px solid var(--accent)}
+  .bk #v-book.hidden ~ .totbar,.bk .totbar.hidden{display:none}
+  .bk .totbar small{display:block;color:var(--muted);font-size:12px;font-weight:600}
+  .bk .totbar b{font:800 22px var(--head);font-variant-numeric:tabular-nums}
+  .bk .totbar .btn{min-height:46px;padding:0 22px}
+  .bk .stepnav #nextStepBtn{display:none}
+  .bk .stepnav{margin-top:16px}
+  .bk .stepper{gap:4px;margin-bottom:24px}
+  .bk .stepper button{flex-direction:column;align-items:flex-start;gap:6px;font-size:12px}
+  .bk .allinc ul{grid-template-columns:1fr 1fr}
+  .bk .pkg{padding:20px 18px 18px}
+  .bk .pkg .pprice{font-size:30px;margin:8px 0 2px}
+  .bk .pkg .phours{margin-bottom:10px}
+  .bk .opts-time{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .bk .opts-time .opt{padding:12px 10px}
+  .bk .opts-time .opt small{display:none}
+  .bk .paychoice{grid-template-columns:1fr}
+  .bk .todo ol{grid-template-columns:1fr;gap:0}
+  .bk .todo li{flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 0}
+  .bk .todo .ti{flex:1 1 0;min-width:0}
+  .bk .todo small{order:3;flex-basis:100%;padding-left:36px;min-height:0}
+  .bk .todo .btn{margin:0;min-height:40px}
+  .bk .paytile span{font-size:17px}
+}
+@media (max-width:520px){
+  .bk .cols2{grid-template-columns:1fr}
+  .bk .opts{grid-template-columns:1fr}
+  .bk .opts-time{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .bk .allinc ul{grid-template-columns:1fr}
+  .bk .stepper .l{font-size:11px;line-height:1.2}
 }
 </style>
 
@@ -377,6 +463,7 @@
     <div class="home">
       <div>
         <h2>New booking</h2>
+        <p>Pick your event date.</p>
         <div class="cal">
           <div class="cal-head">
             <button class="cal-nav" id="prev" aria-label="Previous month">&#9664;</button>
@@ -389,15 +476,13 @@
         <div class="field">
           <label for="et">Event type <span class="req">*</span></label>
           <select id="et"><option value="">- Select -</option></select>
-          <label for="lma">Email address <span class="req">*</span></label>
-          <input type="email" id="lma" name="email" autocomplete="email" spellcheck="false" required>
         </div>
         <button class="btn" id="checkBtn" style="margin-top:18px">Check availability</button>
         <div class="msg" id="homeMsg" role="status" aria-live="polite"></div>
       </div>
       <div>
         <h2>Manage booking</h2>
-        <p>To view your booking details, please enter your Booking ID Number and the surname of the person who submitted the booking form.</p>
+        <p>Already booked? Enter your Booking ID and the last name on the booking.</p>
         <div class="field">
           <label for="mId">Booking ID number</label>
           <input type="text" id="mId" name="booking-id" inputmode="numeric" autocomplete="off">
@@ -416,126 +501,144 @@
     </div>
   </section>
 
-  <!-- ================= BOOKING FORM ================= -->
+  <!-- ================= BOOKING FORM: four short steps with a running total ================= -->
   <section id="v-book" class="hidden">
-    <div class="banner">Success: We have the following services available for your date.</div>
-    <div class="datebar">You are placing a booking for the <b id="bDate"></b> <button type="button" class="linkbtn" id="changeDate">Change date</button></div>
+    <div class="datebar"><span>Booking for <b id="bDate"></b><span id="bType"></span></span> <button type="button" class="linkbtn" id="changeDate">Change date</button></div>
+    <ol class="stepper" id="stepper" aria-label="Booking steps">
+      <li data-step="1"><button type="button"><span class="n">1</span><span class="l">Package</span></button></li>
+      <li data-step="2"><button type="button"><span class="n">2</span><span class="l">Extras</span></button></li>
+      <li data-step="3"><button type="button"><span class="n">3</span><span class="l">Your event</span></button></li>
+      <li data-step="4"><button type="button"><span class="n">4</span><span class="l">Review and pay</span></button></li>
+    </ol>
 
-    <h2 class="section-title">Choose a service <span class="req">*</span></h2>
-    <div class="service" id="svc"><img src="/booking/img/booth.png" alt="Mirror Me Booth" width="280" height="280"><div class="tick" id="svcTick" aria-hidden="true">&#10003;</div><div class="cap">Mirror Me Booth</div></div>
-
-    <div class="warnbar" id="pkgWarn" role="status" aria-live="polite">You have selected 1 services and 0 Packages. You must choose one package for every selected service.</div>
-    <h2 class="section-title">Choose a package <span class="req">*</span></h2>
-    <div class="pkgs" id="pkgs"></div>
-
-    <h2 class="section-title">Choose extras</h2>
-    <div class="xgroup hidden" id="printGroup">
-      <h3>Design print-out <span class="req">*</span></h3>
-      <p>Choose your design print-out preference:</p>
-      <div class="xrow" id="printRow"></div>
-      <div class="err" id="printErr" role="status" aria-live="polite">Please choose a print-out to continue.</div>
-    </div>
-    <div class="xgroup">
-      <h3>Additional rental time</h3>
-      <p>Not sure you've booked enough time for all of those selfies? Add additional time below:</p>
-      <div class="xrow" id="timeRow"></div>
-    </div>
-
-    <div class="fs" style="margin-top:20px">
-      <h3 class="kicker">Account details</h3>
-      <div class="cols2">
-        <div><label for="email">Email <span class="req">*</span></label><input type="email" id="email" name="email" autocomplete="email" spellcheck="false" required data-req>
-          <div class="help">Please enter your email address and check spelling. If you enter the wrong email address here, you will not receive your booking confirmation.</div></div>
-        <div><label for="phone">Mobile phone number <span class="req">*</span></label><input type="tel" id="phone" name="tel" autocomplete="tel" required data-req>
-          <div class="help">We use this number to reach you about your booking.</div></div>
+    <div class="bkgrid">
+    <div class="bkmain">
+      <!-- step 1 -->
+      <div class="step" data-step="1">
+        <h2 class="step-title" tabindex="-1">Choose your package</h2>
+        <div class="pkgs" id="pkgs" role="radiogroup" aria-label="Packages"></div>
+        <div class="allinc"><p class="kicker">Every package includes</p><ul id="allInc"></ul></div>
       </div>
-    </div>
 
-    <div class="cols3">
-      <div class="fs">
-        <h3 class="kicker">Tell us about your event</h3>
-        <label for="evName">Event name <span class="req">*</span></label><input type="text" id="evName" name="event-name" autocomplete="off" required data-req>
-        <div class="help">e.g. Adam and Eve's wedding</div>
-        <p class="q">What time would you like us to be there?</p>
-        <div class="help" style="margin-top:0">If you are booking multiple services, please specify the time information in the additional notes.</div>
-        <div class="times">
-          <div><label for="tStart">Start time <span class="req">*</span></label><select id="tStart" name="start-time" required data-req></select></div>
-          <div><label for="tEnd">End time</label><select id="tEnd" name="end-time"></select></div>
+      <!-- step 2 -->
+      <div class="step hidden" data-step="2">
+        <h2 class="step-title" tabindex="-1">Add your extras</h2>
+        <h3>Print design <span class="req">*</span></h3>
+        <p class="sub">How would you like your photo prints designed?</p>
+        <div class="opts" id="printRow" role="radiogroup" aria-label="Print design"></div>
+        <div class="field-err hidden" id="printErr" role="status" aria-live="polite">Please choose a print design to continue.</div>
+        <h3 style="margin-top:36px">Extra time</h3>
+        <p class="sub">Want the booth to stay longer? Add time to your package.</p>
+        <div class="opts opts-time" id="timeRow"></div>
+      </div>
+
+      <!-- step 3 -->
+      <div class="step hidden" data-step="3">
+        <h2 class="step-title" tabindex="-1">Tell us about your event</h2>
+        <div class="fs">
+          <h3 class="kicker">Your event</h3>
+          <label for="evName">Event name <span class="req">*</span></label><input type="text" id="evName" name="event-name" autocomplete="off" required data-req placeholder="e.g. Adam and Eve's wedding">
+          <div class="cols2">
+            <div><label for="tStart">Start time <span class="req">*</span></label><select id="tStart" name="start-time" required data-req></select></div>
+            <div><label for="tEnd">End time</label><select id="tEnd" name="end-time"></select></div>
+          </div>
         </div>
-      </div>
-      <div class="fs">
-        <h3 class="kicker">Tell us about your venue</h3>
-        <label for="vName">Venue name <span class="req">*</span></label><input type="text" id="vName" name="venue-name" placeholder="e.g. The Langham, Boston…" autocomplete="off" required data-req>
-        <label for="vAddr">Venue address <span class="req">*</span></label><input type="text" id="vAddr" name="venue-address" autocomplete="off" required data-req>
-        <label for="vZip">Venue postcode <span class="req">*</span></label><input type="text" id="vZip" name="venue-postcode" inputmode="numeric" autocomplete="off" required data-req>
-        <div class="help">Magic Mirror Rental Services offers free travel for up to 20 miles, and $.85 for each additional mile.</div>
-        <label for="vMiles">Round-trip miles (if known)</label><input type="text" id="vMiles" name="miles" inputmode="decimal" autocomplete="off" placeholder="e.g. 30…">
-        <label for="vFee">Travel fee</label><div class="fee">$ <input type="text" id="vFee" value="0.00" readonly></div>
-      </div>
-      <div class="fs">
-        <h3 class="kicker">Tell us about you</h3>
-        <div class="cols2" style="gap:8px">
-          <div><label for="fn">First name <span class="req">*</span></label><input type="text" id="fn" name="given-name" autocomplete="given-name" required data-req></div>
-          <div><label for="ln">Last name <span class="req">*</span></label><input type="text" id="ln" name="family-name" autocomplete="family-name" required data-req></div>
+        <div class="fs">
+          <h3 class="kicker">Your venue</h3>
+          <label for="vName">Venue name <span class="req">*</span></label><input type="text" id="vName" name="venue-name" placeholder="e.g. The Langham, Boston" autocomplete="off" required data-req>
+          <label for="vAddr">Venue address <span class="req">*</span></label><input type="text" id="vAddr" name="venue-address" autocomplete="off" required data-req>
+          <div class="cols2">
+            <div><label for="vZip">Venue ZIP code <span class="req">*</span></label><input type="text" id="vZip" name="venue-postcode" inputmode="numeric" autocomplete="off" required data-req></div>
+            <div><label for="vMiles">Round-trip miles (if known)</label><input type="text" id="vMiles" name="miles" inputmode="decimal" autocomplete="off" placeholder="e.g. 30"></div>
+          </div>
+          <div class="help">Travel is free for the first 20 miles, then $0.85 a mile. Travel fee: <b id="vFeeTxt">$0.00</b><input type="hidden" id="vFee" value="0.00"></div>
         </div>
-        <label for="street">Street address</label><input type="text" id="street" name="street-address" autocomplete="street-address">
-        <label for="zip">Postcode</label><input type="text" id="zip" name="postal-code" inputmode="numeric" autocomplete="postal-code">
+        <div class="fs">
+          <h3 class="kicker">About you</h3>
+          <div class="cols2">
+            <div><label for="fn">First name <span class="req">*</span></label><input type="text" id="fn" name="given-name" autocomplete="given-name" required data-req></div>
+            <div><label for="ln">Last name <span class="req">*</span></label><input type="text" id="ln" name="family-name" autocomplete="family-name" required data-req></div>
+          </div>
+          <div class="cols2">
+            <div><label for="email">Email <span class="req">*</span></label><input type="email" id="email" name="email" autocomplete="email" spellcheck="false" required data-req>
+              <div class="help">Your confirmation goes here, so please check the spelling.</div></div>
+            <div><label for="phone">Mobile phone <span class="req">*</span></label><input type="tel" id="phone" name="tel" autocomplete="tel" required data-req>
+              <div class="help">So we can reach you about your booking.</div></div>
+          </div>
+        </div>
+        <details class="fs more">
+          <summary>Add more details (optional)</summary>
+          <div class="cols2">
+            <div><label for="street">Your street address</label><input type="text" id="street" name="street-address" autocomplete="street-address"></div>
+            <div><label for="zip">Your ZIP code</label><input type="text" id="zip" name="postal-code" inputmode="numeric" autocomplete="postal-code"></div>
+          </div>
+          <label for="ref">Who referred you?</label><input type="text" id="ref" name="referral" autocomplete="off" placeholder="e.g. Jane Doe">
+          <label for="flyer">Event flyer or invitation</label>
+          <input type="file" id="flyer" name="flyer" accept=".jpg,.jpeg,.png,.pdf,.psd">
+          <div class="help">JPG, PNG, PDF or PSD under 2 MB. For bigger files, email inquiries@magicmirrorrentalservices.com.</div>
+        </details>
       </div>
+
+      <!-- step 4 -->
+      <div class="step hidden" data-step="4">
+        <h2 class="step-title" tabindex="-1">Review and pay</h2>
+        <div class="fs review" id="review"></div>
+        <div class="fs">
+          <label for="coupon" style="margin-top:0">Promo code</label>
+          <div class="promo-row"><input type="text" id="coupon" name="coupon" autocomplete="off" spellcheck="false" autocapitalize="characters" maxlength="30" aria-describedby="promoMsg"><button type="button" class="btn" id="promoBtn">Apply</button></div>
+          <div class="help" id="promoMsg" role="status" aria-live="polite">Have a promo code? Enter it and press Apply.</div>
+        </div>
+        <fieldset class="payfs"><legend>How would you like to pay?</legend>
+          <div class="paychoice" id="pay"></div></fieldset>
+        <div class="check"><input type="checkbox" id="terms" name="terms" required><label for="terms">I accept the <a href="/terms/" target="_blank" rel="noopener">terms &amp; conditions</a> (opens in a new tab) <span class="req">*</span></label></div>
+        <div class="ts-box" id="tsBook" data-ts-lazy style="margin:12px 0"></div>
+        <button class="btn bigbtn" id="bookBtn">Book now</button>
+      </div>
+
+      <div class="stepnav" id="stepnav">
+        <button type="button" class="linkbtn backbtn" id="backBtn">Back</button>
+        <button type="button" class="btn" id="nextStepBtn">Continue</button>
+      </div>
+      <div class="warnbar hidden" id="bottomWarn" role="status" aria-live="polite"></div>
     </div>
 
-    <div class="check"><input type="checkbox" id="terms" name="terms" required><label for="terms" style="font-weight:400;margin:0">I accept the <a href="/terms/" target="_blank" rel="noopener">terms &amp; conditions</a> (opens in a new tab) <span class="req">*</span></label></div>
-
-    <div class="fs">
-      <h3 class="kicker">Additional details</h3>
-      <label for="ref">Service referral</label><input type="text" id="ref" name="referral" autocomplete="off">
-      <div class="help">Were you referred to our service by a specific individual? If so, please list their name and phone number in the field above. (Ex. Jane Doe - 1234567890)</div>
-      <h3 class="kicker" style="margin-top:26px">Event flyer or invitation</h3>
-      <div style="font-size:13px">Please attach the flyer or invitation for your event! For bigger files, please email us at inquiries@magicmirrorrentalservices.com</div>
-      <label for="flyer" style="font-weight:400">Add a new file</label>
-      <input type="file" id="flyer" name="flyer" accept=".jpg,.jpeg,.png,.pdf,.psd">
-      <div class="help">Files must be less than <b>2&nbsp;MB</b>.<br>Allowed file types: <b>jpg jpeg png pdf psd</b>.</div>
+    <!-- running total: a side card on desktop, a bar along the bottom on phones -->
+    <aside class="sumcard" id="sumcard" aria-label="Your order">
+      <p class="kicker">Your order</p>
+      <table class="summary"><tbody id="sumBody"></tbody></table>
+      <div class="sumtot"><span>Total</span><b id="stickyTotal">$0.00</b></div>
+      <p class="help" id="sumDep"></p>
+    </aside>
     </div>
-
-    <label for="coupon" style="margin-top:20px">Promo code</label>
-    <div class="promo-row"><input type="text" id="coupon" name="coupon" autocomplete="off" spellcheck="false" autocapitalize="characters" maxlength="30" aria-describedby="promoMsg"><button type="button" class="btn" id="promoBtn">Apply</button></div>
-    <div class="help" id="promoMsg" role="status" aria-live="polite">Have a promo code? Enter it and press Apply.</div>
-
-    <fieldset class="payfs"><legend>Payment options</legend>
-    <div class="pay" id="pay"></div></fieldset>
-    <div class="help" style="margin:16px 0">Please choose whether to pay the deposit or the full balance now in order to secure your booking. Please check your details before continuing to the next step.</div>
-
-    <div id="sumWrap" class="hidden">
-      <table class="summary"><thead><tr><th>Item</th><th>Subtotal</th></tr></thead><tbody id="sumBody"></tbody></table>
-      <div class="ts-box" id="tsBook" data-ts-lazy style="margin:12px 0"></div>
-      <button class="btn bigbtn" id="bookBtn">Book now</button>
-    </div>
-    <button class="btn bigbtn" id="sumBtn">View summary</button>
-    <div class="warnbar" id="bottomWarn" role="status" aria-live="polite"></div>
+    <div class="totbar" id="totbar"><div><small>Total</small><b id="barTotal">$0.00</b></div><button type="button" class="btn" id="barNext">Continue</button></div>
   </section>
 
   <!-- ================= PORTAL ================= -->
   <section id="v-portal" class="hidden">
-    <div class="banner" id="thanks">Thank you for booking. Please find your details below.</div>
+    <div class="banner" id="thanks">Thank you for booking! Your booking is saved, and a confirmation is on its way to your email.</div>
+    <div class="phead" id="phead"></div>
+    <div class="todo" id="todo"></div>
     <div class="tabs" id="tabs" role="tablist" aria-label="Your booking"></div>
-    <div class="nextstep hidden" id="nextStep"><span id="nextText"></span><button type="button" class="btn" id="nextBtn"></button></div>
 
     <div class="pane" id="pane-bookings" role="tabpanel" aria-labelledby="tab-bookings">
       <div class="grid2">
-        <div class="card"><h3>Order details</h3><div id="pOrder"></div></div>
+        <div class="card"><h3>Your event</h3><div id="pOrder"></div></div>
         <div class="card"><h3>Your details</h3><div id="pYou"></div></div>
       </div>
-      <div class="card" style="margin-top:20px">
-        <h3>Payment summary</h3>
-        <table class="summary" style="margin-top:0"><thead><tr><th>Description</th><th>Amount</th></tr></thead><tbody id="pLines"></tbody></table>
-        <div style="max-width:340px;margin:30px 0 0 auto" id="pTotals"></div>
-      </div>
-      <div class="card" style="margin-top:20px;text-align:center">
-        <h3>Make a payment</h3>
-        <div>Enter the amount you would like to pay off your booking below:</div>
-        <div class="paytiles" id="payTiles"></div>
-        <div>$ <label for="payAmt" class="visually-hidden">Payment amount</label><input type="text" id="payAmt" name="amount" inputmode="decimal" autocomplete="off" style="width:120px"></div>
-        <button class="btn" style="margin-top:16px" id="payBtn">Make payment</button>
-        <div class="note" id="payNote" role="status" aria-live="polite"></div>
+      <div class="grid2">
+        <div class="card">
+          <h3>Payment summary</h3>
+          <table class="summary" style="margin-top:0"><tbody id="pLines"></tbody></table>
+          <div id="pTotals"></div>
+        </div>
+        <div class="card" id="payCard">
+          <h3>Make a payment</h3>
+          <p class="sub">Choose an amount, or type your own.</p>
+          <div class="paytiles" id="payTiles"></div>
+          <div class="payamt"><label for="payAmt">Amount</label><span>$</span><input type="text" id="payAmt" name="amount" inputmode="decimal" autocomplete="off"></div>
+          <button class="btn" style="margin-top:16px;width:100%" id="payBtn">Make payment</button>
+          <div class="note" id="payNote" role="status" aria-live="polite"></div>
+        </div>
       </div>
     </div>
 
@@ -636,7 +739,6 @@
   </section>
 
   </div>
-<div class="sticky hidden" id="sticky" aria-live="polite"><span aria-hidden="true">&#128722;</span><span class="visually-hidden">Total</span> <b id="stickyTotal">$0.00</b></div>
 </main>
 <footer class="site-footer">
   <div class="wrap foot-top">
@@ -649,6 +751,6 @@
 </footer>
 <script src="/assets/js/main.js?v=speed1" defer></script>
 <script src="/assets/js/turnstile.js?v=1" defer></script>
-<script src="/booking/booking.js?v=7" defer></script>
+<script src="/booking/booking.js?v=10" defer></script>
 </body>
 </html>

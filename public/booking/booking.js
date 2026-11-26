@@ -8,13 +8,13 @@ const CFG = {
   deposit: 250, freeMiles: 20, perMile: 0.85,
   eventTypes: ["Baby Shower","Corporate Event","Family Event","Graduation","Holiday & Theme Party","Other","Restaurant, Nightclub or Bar Event","University or Member Event","Wedding"],
   packages: [
-    {id:"bronze",name:"Bronze Package",hours:3,price:650,lines:["Three hours of runtime","Unlimited participation - 3 printouts per session","High-quality 4x6 printouts","Text and email sharing","Professional DSLR camera and lighting","2 friendly on-site event attendants","Creative props and accessories","Private online photo gallery"],extras:[]},
-    {id:"silver",name:"Silver Package",hours:4,price:850,lines:["Four hours of runtime","Unlimited participation & printouts per session","High-quality 4x6 printouts","Text and email sharing","Professional DSLR camera and lighting","2 friendly on-site event attendants","Creative props and accessories","Private online photo gallery"],extras:["1 custom overlay design","USB drive of all event photos"]},
-    {id:"gold",name:"Gold Package",hours:5,price:1100,lines:["Five hours of runtime","Unlimited participation & printouts per session","High-quality 4x6 printouts","Text and email sharing","Professional DSLR camera and lighting","2 friendly on-site event attendants","Creative props and accessories","Private online photo gallery"],extras:["3 custom overlay designs","Professional photo booth backdrop","USB drive of all event photos"]}
+    {id:"bronze",name:"Bronze Package",hours:3,price:650,lines:["Three hours of runtime","Unlimited sessions, 2 prints per session","High-quality 4x6 prints","Text and email sharing","Professional DSLR camera and lighting","2 friendly on-site attendants","Creative props and accessories","Private online photo gallery"],extras:[]},
+    {id:"silver",name:"Silver Package",hours:4,price:850,lines:["Four hours of runtime","Unlimited sessions and prints","High-quality 4x6 prints","Text and email sharing","Professional DSLR camera and lighting","2 friendly on-site attendants","Creative props and accessories","Private online photo gallery"],extras:["1 custom print design","USB drive of all event photos"]},
+    {id:"gold",name:"Gold Package",hours:5,price:1100,lines:["Five hours of runtime","Unlimited sessions and prints","High-quality 4x6 prints","Text and email sharing","Professional DSLR camera and lighting","2 friendly on-site attendants","Creative props and accessories","Private online photo gallery"],extras:["3 custom print designs","Professional photo booth backdrop","USB drive of all event photos"]}
   ],
   prints: [
-    {id:"tpl",name:"Template Design Print-out",desc:"Choose from over 100 FREE professionally developed templates!",price:0,img:"/booking/img/print-template.png"},
-    {id:"cus",name:"Custom Design Print-out",desc:"We'll design a custom template print-out for your event!",price:75,img:"/booking/img/print-custom.png"}
+    {id:"tpl",name:"Template Design Print-out",desc:"Pick from our collection of professionally designed templates.",price:0,img:"/booking/img/print-template.png"},
+    {id:"cus",name:"Custom Design Print-out",desc:"We'll design a one-of-a-kind print just for your event.",price:75,img:"/booking/img/print-custom.png"}
   ],
   times: [
     {id:"t30",name:"Additional Time (30 minutes)",desc:"Add an additional half-hour of time to your rental period.",price:75,img:"/booking/img/time-30.png"},
@@ -45,10 +45,10 @@ const keys = {
 const auth=()=>({ id:S.cur.id, key:S.cur.key||"", ln:S.cur.ln });
 let takenDates = new Set();
 const HEAD={ home:["Book now","Pick your date, package and extras below. A $250 deposit holds your date. Already booked? Look up your booking with your Booking ID and last name."],
-  book:["Book now","Choose your package and extras, then tell us about your event. You'll see the full price before you book."],
-  portal:["Your booking","Your invoice, contract, print template and messages, all in one place."] };
+  book:["Book now","Four quick steps. Your total updates as you go, and nothing is charged until you choose to pay."],
+  portal:["Your booking","Everything for your event in one place: payments, contract, print design and messages."] };
 function show(view){ ["home","book","portal"].forEach(v=>$("v-"+v).classList.toggle("hidden",v!==view));
-  $("pageTitle").textContent=HEAD[view][0]; $("pageLede").textContent=HEAD[view][1]; $("sticky").classList.toggle("hidden",view!=="book"); window.scrollTo(0,0); }
+  $("pageTitle").textContent=HEAD[view][0]; $("pageLede").textContent=HEAD[view][1]; window.scrollTo(0,0); }
 
 /* ===== State ===== */
 const today = new Date(); today.setHours(0,0,0,0);
@@ -108,10 +108,10 @@ function isBooked(d){
 }
 $("checkBtn").onclick=()=>{
   const msg=$("homeMsg");
-  if(!$("et").value || !/^\S+@\S+\.\S+$/.test($("lma").value)){ msg.textContent="Please choose an event type and enter a valid email."; return; }
+  if(!$("et").value){ msg.textContent="Please choose an event type."; $("et").focus(); return; }
   if(isBooked(S.date)){ msg.textContent="Sorry, we're fully booked on that date. Please choose another."; return; }
-  msg.textContent=""; S.eventType=$("et").value; $("email").value=$("lma").value;
-  $("bDate").textContent=LONGDATE.format(S.date); show("book"); refresh();
+  msg.textContent=""; S.eventType=$("et").value;
+  $("bDate").textContent=LONGDATE.format(S.date); $("bType").textContent=" · "+S.eventType; show("book"); goStep(1,true); refresh();
 };
 $("changeDate").onclick=()=>show("home");
 
@@ -155,32 +155,41 @@ $("codeBtn").onclick=async()=>{
   $("codeBtn").disabled=false;
 };
 
-/* ===== Packages & extras ===== */
-function cartBtn(on,onclick,name){ const w=document.createElement("div"); w.className="cart"+(on?" on":""); const b=document.createElement("button"); b.type="button"; b.textContent=on?"Added":"Add to cart"; b.setAttribute("aria-label",(on?"Remove ":"Add ")+name); b.setAttribute("aria-pressed",on?"true":"false"); b.onclick=onclick; w.append(b,document.createElement("span")); return w; }
+/* ===== Packages & extras =====
+   Package cards show only what differs; what every package includes is listed once underneath. */
+const COMMON=CFG.packages[0].lines.filter(l=>CFG.packages.every(p=>p.lines.includes(l)));
+$("allInc").innerHTML=COMMON.map(l=>`<li>${esc(l)}</li>`).join("");
+function radioKeys(box){ // arrow keys move between options in a radiogroup
+  box.onkeydown=e=>{ const els=[...box.querySelectorAll('[role="radio"]')]; let k=els.indexOf(document.activeElement); if(k<0) return;
+    if(["ArrowRight","ArrowDown"].includes(e.key)) k=(k+1)%els.length; else if(["ArrowLeft","ArrowUp"].includes(e.key)) k=(k-1+els.length)%els.length; else return;
+    e.preventDefault(); els[k].click(); box.querySelectorAll('[role="radio"]')[k].focus(); };
+}
 function drawPkgs(){
   const box=$("pkgs"); box.innerHTML="";
-  CFG.packages.forEach(p=>{
-    const el=document.createElement("div"); el.className="pkg";
-    el.innerHTML=`<div class="tag">Mirror Me Booth</div><div class="title">${p.name}</div>
-      <div class="body"><strong>${p.hours} hours</strong>${p.lines.join("<br>")}</div>
-      <div class="extras"><em>Included Extras:</em>${p.extras.map(x=>`<b>${x}</b>`).join("<br>")}</div>
-      <div class="foot"><div class="price"><small>$</small>${p.price.toFixed(2)}</div></div>`;
-    el.querySelector(".foot").appendChild(cartBtn(S.pkg===p.id,()=>{ S.pkg = S.pkg===p.id?null:p.id; refresh(); },p.name));
+  CFG.packages.forEach((p,i)=>{
+    const on=S.pkg===p.id, own=p.lines.slice(1).filter(l=>!COMMON.includes(l)).concat(p.extras);
+    const el=document.createElement("button"); el.type="button"; el.className="pkg"+(p.id==="gold"?" gold":"");
+    el.setAttribute("role","radio"); el.setAttribute("aria-checked",on); el.tabIndex=(on||(!S.pkg&&i===0))?0:-1;
+    el.innerHTML=`<span class="pname">${esc(p.name.replace(" Package",""))}</span><span class="pprice">${money(p.price).replace(".00","")}</span><span class="phours">${p.hours} hours of runtime</span>
+      <ul>${own.map(l=>`<li>${esc(l.replace(" - ",", "))}</li>`).join("")}</ul><span class="pick">${on?"Selected":"Select "+esc(p.name.replace(" Package",""))}</span>`;
+    el.onclick=()=>{ S.pkg=p.id; clearStepErr(); refresh(); };
     box.appendChild(el);
   });
-}
-function xcard(x,on,onclick){
-  const el=document.createElement("div"); el.className="xcard";
-  el.innerHTML=`<img src="${x.img}" alt="" width="280" height="280" loading="lazy"><div class="t">${x.name}</div><div class="d">${x.desc}</div><div class="row"><div class="price">${x.price?`<small>$</small>${x.price.toFixed(2)}`:""}</div></div>`;
-  el.querySelector(".row").appendChild(cartBtn(on,onclick,x.name)); return el;
+  radioKeys(box);
 }
 function drawExtras(){
-  $("printGroup").classList.toggle("hidden",!S.pkg);
   const pr=$("printRow"); pr.innerHTML="";
-  CFG.prints.forEach(x=>pr.appendChild(xcard(x,S.print===x.id,()=>{ S.print = S.print===x.id?null:x.id; refresh(); })));
-  $("printErr").classList.toggle("hidden",!!S.print);
+  CFG.prints.forEach((x,i)=>{ const on=S.print===x.id, b=document.createElement("button"); b.type="button"; b.className="opt";
+    b.setAttribute("role","radio"); b.setAttribute("aria-checked",on); b.tabIndex=(on||(!S.print&&i===0))?0:-1;
+    b.innerHTML=`<b><span>${esc(x.name.replace(" Print-out",""))}</span> <i>${x.price?"+"+money(x.price).replace(".00",""):"Free"}</i></b><small>${esc(x.desc)}</small>`;
+    b.onclick=()=>{ S.print=x.id; $("printErr").classList.add("hidden"); refresh(); }; pr.appendChild(b); });
+  radioKeys(pr);
   const tr=$("timeRow"); tr.innerHTML="";
-  CFG.times.forEach(x=>tr.appendChild(xcard(x,S.times.has(x.id),()=>{ S.times.has(x.id)?S.times.delete(x.id):S.times.add(x.id); refresh(); })));
+  CFG.times.forEach(x=>{ const on=S.times.has(x.id), b=document.createElement("button"); b.type="button"; b.className="opt"; b.setAttribute("aria-pressed",on);
+    const short=x.id==="t30"?"+30 min":x.id==="t60"?"+1 hour":"+2 hours";
+    b.innerHTML=`<b><span>${short}</span> <i>${money(x.price).replace(".00","")}</i></b><small>${esc(x.desc)}</small>`;
+    b.setAttribute("aria-label",`${x.name}, ${money(x.price)}`);
+    b.onclick=()=>{ S.times.has(x.id)?S.times.delete(x.id):S.times.add(x.id); refresh(); }; tr.appendChild(b); });
 }
 
 /* ===== Times ===== */
@@ -191,13 +200,13 @@ function drawExtras(){
 
 /* ===== Travel fee ===== */
 function travelFee(){ const mi=parseFloat($("vMiles").value); if(!(mi>0)) return 0; return Math.max(0,mi-CFG.freeMiles)*CFG.perMile; }
-$("vMiles").oninput=()=>{ $("vFee").value=travelFee().toFixed(2); drawPay(); };
+$("vMiles").oninput=()=>{ $("vFee").value=travelFee().toFixed(2); $("vFeeTxt").textContent=money(travelFee()); drawPay(); refreshLight(); };
 
 /* ===== Totals ===== */
 function lineItems(){
   const items=[];
-  if(S.print){ const x=CFG.prints.find(p=>p.id===S.print); items.push([x.name,x.price]); }
   if(S.pkg){ const p=CFG.packages.find(p=>p.id===S.pkg); items.push(["Mirror Me Booth - "+p.name,p.price]); }
+  if(S.print){ const x=CFG.prints.find(p=>p.id===S.print); items.push([x.name,x.price]); }
   CFG.times.filter(t=>S.times.has(t.id)).forEach(t=>items.push([t.name,t.price]));
   const off=promoOff(items.reduce((s,i)=>s+i[1],0));
   if(off>0) items.push([S.promo.label,-off]);
@@ -232,49 +241,89 @@ $("coupon").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefaul
 $("coupon").addEventListener("input",()=>{ if(S.promo&&normCode($("coupon").value)!==S.promo.code){ S.promo=null; promoMsg("Press Apply to use this code."); refresh(); } });
 const total=()=>lineItems().reduce((s,i)=>s+i[1],0);
 function drawPay(){
-  const t=total(), opts=[["later","Pay later"],["deposit",`${money(Math.min(CFG.deposit,t))} (pay deposit only)`],["full",`${money(t)} (pay full balance)`]];
-  $("pay").innerHTML=opts.map(([v,l])=>`<label class="${S.payOpt===v?"on":""}"><input type="radio" name="pay" value="${v}" ${S.payOpt===v?"checked":""}>${l}</label>`).join("");
+  const t=total(), dep=Math.min(CFG.deposit,t);
+  const opts=[["later","Pay later","Pay from your booking page any time"],["deposit",money(dep),"Deposit now, holds your date"],["full",money(t),"Pay in full now"]];
+  $("pay").innerHTML=opts.map(([v,big,l])=>`<label class="${S.payOpt===v?"on":""}"><input type="radio" name="pay" value="${v}" ${S.payOpt===v?"checked":""}><span>${big}</span><small>${l}</small></label>`).join("");
   $("pay").querySelectorAll("input").forEach(r=>r.onchange=()=>{ S.payOpt=r.value; drawPay(); });
 }
-function missing(){
-  const m=[];
-  if(!S.pkg) m.push("pkg"); if(!S.print) m.push("print");
-  document.querySelectorAll("#v-book [data-req]").forEach(el=>{ if(!el.value.trim()) m.push(el.id); });
-  if(!$("terms").checked) m.push("terms");
+const STEP_REQ={1:["pkg"],2:["print"],3:[...document.querySelectorAll("#v-book [data-req]")].map(e=>e.id),4:["terms"]};
+function missing(step){
+  const m=[], steps=step?[step]:[1,2,3,4];
+  steps.forEach(n=>STEP_REQ[n].forEach(id=>{
+    if(id==="pkg"){ if(!S.pkg) m.push(id); } else if(id==="print"){ if(!S.print) m.push(id); }
+    else if(id==="terms"){ if(!$("terms").checked) m.push(id); }
+    else if(!$(id).value.trim() || (id==="email" && !/^\S+@\S+\.\S+$/.test($(id).value.trim()))) m.push(id); }));
   return m;
 }
+const shortName=n=>String(n).replace("Mirror Me Booth - ","").replace(" Print-out"," print").replace(/^Additional Time \((.+?)\)$/,(m,t)=>"Extra time, "+t.replace("2 hour","2 hours")).replace(/^Travel$/,"Travel fee");
 function refresh(){ drawPkgs(); drawExtras(); drawPay(); refreshLight(); }
-// cheap update while typing: totals and warnings only, no card redraw
+// cheap update while typing: totals and checks only, no card redraw
 function refreshLight(){
-  const warn = S.pkg ? "" : "You have selected 1 service and 0 packages. Please choose a package to continue.";
-  $("pkgWarn").textContent=warn; $("pkgWarn").classList.toggle("hidden",!!S.pkg);
   document.querySelectorAll("#v-book [data-req]").forEach(el=>{ if(el.value.trim()) clearErr(el); });
   if($("terms").checked) clearErr($("terms"));
-  $("stickyTotal").textContent=money(total());
-  if(S.summaryShown){
-    $("sumBody").innerHTML=lineItems().map(([n,p])=>`<tr><td>${n}</td><td>${money(p)}</td></tr>`).join("")+`<tr class="total"><td></td><td>${money(total())}</td></tr>`;
-  }
-  const m=missing();
-  $("bottomWarn").textContent = !S.pkg ? warn : (S.tried && m.length ? `Please complete the ${m.length} highlighted field${m.length>1?"s":""} to book.` : "");
-  $("bottomWarn").classList.toggle("hidden",!$("bottomWarn").textContent);
+  const items=lineItems().filter(i=>i[0]!=="Travel"||i[1]>0), t=total();
+  $("sumBody").innerHTML = S.pkg||items.length ? items.map(([n,p])=>`<tr${p<0?' class="off"':""}><td>${esc(shortName(n))}</td><td>${p<0?"−"+money(-p):money(p)}</td></tr>`).join("") : '<tr><td class="empty">Pick a package to start.</td><td></td></tr>';
+  $("stickyTotal").textContent=$("barTotal").textContent=money(t);
+  $("sumDep").textContent = t>0 ? `A ${money(Math.min(CFG.deposit,t))} deposit holds your date.` : "";
+  if(S.step===4) drawReview();
 }
 document.querySelectorAll("#v-book [data-req], #v-book #terms").forEach(el=>el.addEventListener(el.type==="checkbox"?"change":"input",refreshLight));
 function setErr(el,msg){ el.setAttribute("aria-invalid","true"); let e=$(el.id+"-err"); if(!e){ e=document.createElement("div"); e.id=el.id+"-err"; e.className="field-err"; (el.type==="checkbox"?el.parentElement:el).insertAdjacentElement("afterend",e); el.setAttribute("aria-describedby",e.id); } e.textContent=msg; }
 function clearErr(el){ el.removeAttribute("aria-invalid"); const e=$(el.id+"-err"); if(e) e.remove(); }
+function clearStepErr(){ $("bottomWarn").classList.add("hidden"); }
 $("flyer").onchange=e=>{ const f=e.target.files[0]; if(f && f.size>2*1024*1024){ e.target.value=""; $("bottomWarn").textContent="That file is over 2 MB. Please email it to us instead."; $("bottomWarn").classList.remove("hidden"); } };
 
-$("sumBtn").onclick=()=>{
-  S.summaryShown=true; $("sumWrap").classList.remove("hidden"); if(API_URL) mmTS.render($("tsBook")); $("sumBtn").classList.add("hidden"); refresh();
-  $("sumWrap").scrollIntoView({behavior:SMOOTH,block:"center"});
-};
+/* ===== Steps ===== */
+S.step=1;
+function goStep(n,quiet){
+  S.step=n;
+  document.querySelectorAll("#v-book .step").forEach(el=>el.classList.toggle("hidden",+el.dataset.step!==n));
+  document.querySelectorAll("#stepper li").forEach(li=>{ const k=+li.dataset.step, b=li.querySelector("button");
+    li.classList.toggle("cur",k===n); li.classList.toggle("done",k<n);
+    if(k===n) b.setAttribute("aria-current","step"); else b.removeAttribute("aria-current");
+    b.disabled=!(k<n); });
+  $("backBtn").hidden = n===1;
+  $("nextStepBtn").textContent = $("barNext").textContent = n===4 ? "Book now" : "Continue";
+  $("nextStepBtn").classList.toggle("hidden",n===4);
+  clearStepErr();
+  if(n===4){ drawReview(); if(API_URL) mmTS.render($("tsBook")); }
+  if(!quiet){ $("v-book").scrollIntoView({behavior:SMOOTH,block:"start"}); const h=document.querySelector(`#v-book .step[data-step="${n}"] .step-title`); if(h) h.focus({preventScroll:true}); }
+}
+function showMissing(m){
+  S.tried=true;
+  m.forEach(id=>{ const el=$(id); if(el && id!=="pkg" && id!=="print") setErr(el, id==="terms" ? "Please accept the terms to book." : id==="email"&&el.value.trim() ? "Please enter a valid email address." : "This field is required."); });
+  if(m.includes("print")) $("printErr").classList.remove("hidden");
+  const w=$("bottomWarn");
+  w.textContent = m[0]==="pkg" ? "Please choose a package to continue." : m[0]==="print" ? "Please choose a print design to continue." : `Please complete the ${m.length} highlighted field${m.length>1?"s":""}.`;
+  w.classList.remove("hidden");
+  const first = m[0]==="pkg" ? document.querySelector("#pkgs .pkg") : m[0]==="print" ? document.querySelector("#printRow .opt") : $(m[0]);
+  if(first){ first.scrollIntoView({behavior:SMOOTH,block:"center"}); first.focus({preventScroll:true}); }
+}
+function nextStep(){
+  if(S.step===4){ $("bookBtn").click(); return; }
+  const m=missing(S.step); if(m.length){ showMissing(m); return; }
+  goStep(S.step+1);
+}
+$("nextStepBtn").onclick=$("barNext").onclick=nextStep;
+$("backBtn").onclick=()=>goStep(Math.max(1,S.step-1));
+document.querySelectorAll("#stepper li").forEach(li=>li.querySelector("button").onclick=()=>{ const k=+li.dataset.step; if(k<S.step) goStep(k); });
+function drawReview(){
+  const kv=(k,v)=>v?`<div class="kv"><b>${k}</b><span>${esc(v)}</span></div>`:"";
+  const pk=CFG.packages.find(p=>p.id===S.pkg), pr=CFG.prints.find(p=>p.id===S.print);
+  const time=$("tStart").value+($("tEnd").value?" – "+$("tEnd").value:"");
+  $("review").innerHTML=`<h3 class="kicker">Your booking <button type="button" class="linkbtn" data-go="3">Edit</button></h3>`
+    +kv("Date",LONGDATE.format(S.date))+kv("Time",time)+kv("Event",$("evName").value)+kv("Venue",[$("vName").value,$("vAddr").value,$("vZip").value].filter(Boolean).join(", "))
+    +kv("Package",pk&&`${pk.name}, ${pk.hours} hours`)+kv("Print design",pr&&pr.name.replace(" Print-out",""))
+    +kv("Name",`${$("fn").value} ${$("ln").value}`.trim())+kv("Email",$("email").value)+kv("Mobile",$("phone").value);
+  $("review").querySelector("[data-go]").onclick=()=>goStep(3);
+}
+
 $("bookBtn").onclick=async()=>{
   const m=missing();
   if(m.length){
-    S.tried=true; refresh();
-    m.forEach(id=>{ const el=$(id); if(el && id!=="pkg" && id!=="print") setErr(el, id==="terms" ? "Please accept the terms to book." : "This field is required."); });
-    const first = m[0]==="pkg" ? document.querySelector("#pkgs .cart button") : m[0]==="print" ? document.querySelector("#printRow .cart button") : $(m[0]);
-    if(first){ first.scrollIntoView({behavior:SMOOTH,block:"center"}); first.focus({preventScroll:true}); }
-    return;
+    const st=[1,2,3,4].find(n=>missing(n).length);
+    if(st!==S.step) goStep(st,true);
+    showMissing(missing(st)); return;
   }
   // a typed code that wasn't applied yet: apply it first, and stop if it isn't valid
   if(normCode($("coupon").value)&&!S.promo&&API_URL){ if(!(await applyPromo())){ $("coupon").scrollIntoView({behavior:SMOOTH,block:"center"}); $("coupon").focus({preventScroll:true}); return; } }
@@ -288,7 +337,7 @@ $("bookBtn").onclick=async()=>{
     fn:$("fn").value, ln:$("ln").value, email:$("email").value, phone:$("phone").value,
     items:lineItems().filter(i=>i[0]!=="Travel"||i[1]>0), total:total(), paid:0, payOpt:S.payOpt };
   if(API_URL){
-    const btn=$("bookBtn"); btn.disabled=true; btn.textContent="Booking…";
+    const btn=$("bookBtn"); btn.disabled=true; btn.textContent="Booking…"; $("barNext").disabled=true;
     const payload={ action:"book", date:b.date, eventType:b.eventType, pkg:S.pkg, print:S.print, times:[...S.times],
       miles:$("vMiles").value, email:b.email, phone:b.phone, evName:b.evName, start:b.start, end:b.end,
       arrive:b.arrive, depart:b.depart, vName:b.vName, vAddr:b.vAddr, vZip:b.vZip, fn:b.fn, ln:b.ln,
@@ -310,7 +359,7 @@ $("bookBtn").onclick=async()=>{
       $("bottomWarn").textContent="We couldn't reach the booking system. Please try again or email inquiries@magicmirrorrentalservices.com.";
       $("bottomWarn").classList.remove("hidden");
     }
-    btn.disabled=false; btn.textContent="Book now";
+    btn.disabled=false; btn.textContent="Book now"; $("barNext").disabled=false;
     return;
   }
   memBookings.push(b); store.set(memBookings);
@@ -318,59 +367,69 @@ $("bookBtn").onclick=async()=>{
 };
 
 /* ===== Portal ===== */
-const ICONS={
-  cal:'<svg width="30" height="30" viewBox="0 0 24 24" fill="#8E5BB8"><rect x="3" y="5" width="18" height="16" rx="2"/><rect x="3" y="5" width="18" height="4" fill="#662D91"/><g fill="#fff"><rect x="6" y="11" width="2.5" height="2.5"/><rect x="10.7" y="11" width="2.5" height="2.5"/><rect x="15.5" y="11" width="2.5" height="2.5"/><rect x="6" y="15.5" width="2.5" height="2.5"/><rect x="10.7" y="15.5" width="2.5" height="2.5"/></g></svg>',
-  inv:'<svg width="26" height="30" viewBox="0 0 20 24" fill="#A98CC4"><path d="M2 0h11l7 7v17H2z"/><rect x="5" y="11" width="10" height="5" fill="#662D91"/><rect x="5" y="18" width="10" height="1.5" fill="#662D91"/></svg>',
-  con:'<svg width="30" height="30" viewBox="0 0 24 24"><path d="M3 2h10l5 5v15H3z" fill="#C9B3DD"/><path d="M9 18l9-9 3 3-9 9H9z" fill="#662D91"/><path d="M5 16c2-3 3 1 5-2" stroke="#662D91" fill="none"/></svg>',
-  tpl:'<svg width="30" height="26" viewBox="0 0 24 20"><rect width="24" height="20" rx="2" fill="#662D91"/><circle cx="7" cy="6" r="2" fill="#fff"/><path d="M3 17l6-6 4 4 3-3 5 5z" fill="#fff"/></svg>',
-  msg:'<svg width="32" height="28" viewBox="0 0 26 22"><ellipse cx="10" cy="8" rx="10" ry="7" fill="#C9B3DD"/><ellipse cx="17" cy="13" rx="8" ry="6" fill="#662D91"/></svg>',
-  ok:'<svg width="30" height="30" viewBox="0 0 24 24"><circle cx="12" cy="12" r="11" fill="#F6DD8E"/><path d="M7 12l3 3 7-7" stroke="#E8B923" stroke-width="2.5" fill="none"/></svg>'
-};
+// Booking dates arrive as 06/14/2027 (sheet) or 2027-06-14; read both as local dates so the day never shifts.
+function parseDay(v){ const t=String(v||"").trim(); let m;
+  if((m=t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return new Date(+m[3],+m[1]-1,+m[2]);
+  if((m=t.match(/^(\d{4})-(\d{2})-(\d{2})/))) return new Date(+m[1],+m[2]-1,+m[3]);
+  const d=new Date(t); return isNaN(d)?null:d; }
+const NICEDATE=new Intl.DateTimeFormat("en-US",{weekday:"short",month:"long",day:"numeric",year:"numeric"});
+const niceDate=v=>{ const d=parseDay(v); return d?NICEDATE.format(d):String(v||""); };
+const kvRows=rows=>rows.filter(([,v])=>v!=null&&String(v).trim()!=="").map(([k,v,c])=>`<div class="kv${c?" "+c:""}"><b>${k}</b><span>${esc(v)}</span></div>`).join("");
 function renderPortal(b,isNew){
   $("thanks").classList.toggle("hidden",!isNew);
-  const kv=(k,v)=>`<div class="kv"><b>${k}</b><span>${esc(v||"")}</span></div>`;
-  $("pOrder").innerHTML=kv("Booking ID",b.id)+kv("Event Date",b.date)+kv("Event Time",b.start+(b.end?" - "+b.end:""))+kv("Arrival Time",b.arrive)+kv("Departure Time",b.depart)+kv("Event Name",b.evName)+kv("Venue Name",b.vName)+kv("Venue Address",b.vAddr)+kv("Venue Postcode",b.vZip)+kv("Status",b.status);
-  $("pYou").innerHTML=kv("First Name",b.fn)+kv("Last Name",b.ln)+kv("Company","")+kv("E-mail",b.email)+kv("Telephone","")+kv("Mobile Phone",b.phone)+kv("Additional Notes","");
-  $("pLines").innerHTML=b.items.map(([n,p])=>`<tr><td><b>${esc(n)}</b></td><td>${money(p)}</td></tr>`).join("");
-  const due=b.total-b.paid;
-  $("pTotals").innerHTML=kv("Sub Total",money(b.total))+kv("Order Total",money(b.total))+kv("Balance Due",money(due));
-  const tiles=[["Deposit",Math.min(CFG.deposit,due)],["Half the balance",due/2],["Full balance",due]];
-  $("payTiles").innerHTML=tiles.map(([l,v],i)=>`<button type="button" class="paytile${i===2?" on":""}" data-v="${v}" aria-pressed="${i===2}"><small>${l}</small><span>${money(v)}</span></button>`).join("");
-  $("payAmt").value=due.toFixed(2);
+  const time=b.start+(b.end?" – "+b.end:"");
+  $("pOrder").innerHTML=kvRows([["Date",niceDate(b.date)],["Event time",time],["We arrive",b.arrive],["We leave",b.depart],["Event",b.evName],["Venue",b.vName],["Address",[b.vAddr,b.vZip].filter(Boolean).join(" ")]]);
+  $("pYou").innerHTML=kvRows([["Name",`${b.fn||""} ${b.ln||""}`.trim()],["Email",b.email],["Mobile",b.phone],["Booking ID",b.id]]);
+  $("pLines").innerHTML=b.items.map(([n,p])=>`<tr${p<0?' class="off"':""}><td>${esc(shortName(n))}</td><td>${p<0?"−"+money(-p):money(p)}</td></tr>`).join("");
+  const due=Math.max(0,b.total-b.paid);
+  $("pTotals").innerHTML=kvRows([["Total",money(b.total)],["Paid",money(b.paid)],["Balance due",money(due),"big"]]);
+  const tiles=[["Deposit",Math.min(CFG.deposit,due)],["Half",due/2],["Full balance",due]].filter((t,i)=>i===2||b.paid<CFG.deposit||i===1);
+  const def=b.paid<Math.min(CFG.deposit,b.total)?0:tiles.length-1;
+  $("payTiles").innerHTML=tiles.map(([l,v],i)=>`<button type="button" class="paytile${i===def?" on":""}" data-v="${v}" aria-pressed="${i===def}"><small>${l}</small><span>${money(v)}</span></button>`).join("");
+  $("payAmt").value=(+tiles[def][1]).toFixed(2);
   $("payTiles").querySelectorAll(".paytile").forEach(t=>t.onclick=()=>{ $("payTiles").querySelectorAll(".paytile").forEach(x=>{ x.classList.remove("on"); x.setAttribute("aria-pressed","false"); }); t.classList.add("on"); t.setAttribute("aria-pressed","true"); $("payAmt").value=(+t.dataset.v).toFixed(2); });
   $("payNote").textContent="";
   $("payBtn").onclick=()=>startPay($("payAmt").value,$("payBtn"));
-  $("payBtn").disabled=!(due>0.005); if(!(due>0.005)) $("payNote").textContent="Your booking is paid in full. Thank you!";
-  S.cur=b;
+  $("payBtn").disabled=!(due>0.005); $("payCard").classList.toggle("paid",!(due>0.005));
+  if(!(due>0.005)) $("payNote").textContent="Your booking is paid in full. Thank you!";
+  const ok=/^(booked|confirmed|paid)/i.test(b.status||"");
+  $("phead").innerHTML=`<div><h2>${esc(b.evName||"Your event")}</h2><p>${esc(niceDate(b.date))}${b.start?" · "+esc(time):""}${b.vName?" · "+esc(b.vName):""}</p></div><span class="pill${ok?" ok":""}">${esc(b.status||"")}</span>`;
+  S.cur=b; S.tab="bookings";
   renderTabs(); selectTab("bookings"); show("portal");
 }
 
-/* ===== Portal tabs ===== */
-const TABS=[["bookings","cal","Bookings"],["invoice","inv","Invoice"],["contract","con","Contract"],["template","tpl","Choose Template"],["messages","msg","Send Message"],["details","ok","Confirm Details"]];
+/* ===== Portal: to-do list + simple tabs ===== */
+const TABS=[["bookings","Overview"],["contract","Contract"],["template","Print design"],["details","Event details"],["invoice","Invoice"],["messages","Messages"]];
 const live=()=>!!API_URL && S.cur && (S.cur.key||S.cur.ln) && S.cur.status!=="Cancelled";
-function tabState(t){
-  const b=S.cur;
-  if(t==="contract") return b.signedAt?["✓","signed"]:["!","needs signature"];
-  if(t==="template") return b.template?["✓","chosen"]:["!","not chosen yet"];
-  if(t==="details") return b.detailsAt?["✓","confirmed"]:["!","needs confirming"];
-  if(t==="messages" && S.msgCount) return [String(S.msgCount), S.msgCount+" message"+(S.msgCount>1?"s":"")];
-  return null;
+function todos(){
+  const b=S.cur, due=Math.max(0,b.total-b.paid), depOk=b.paid>=Math.min(CFG.deposit,b.total)-0.005;
+  return [
+    ["pay", depOk?(due>0.005?"Deposit paid":"Paid in full"):"Pay your deposit", depOk?(due>0.005?`${money(due)} left, due 14 days before`:"Thank you!"):`${money(Math.min(CFG.deposit,due))} holds your date`, depOk, depOk?(due>0.005?"Pay balance":"View"):"Pay deposit"],
+    ["contract", "Sign your contract", b.signedAt?"Signed":"Takes about 2 minutes", !!b.signedAt, b.signedAt?"View":"Sign"],
+    ["template", "Choose your print design", b.template?String(b.template):"Pick from our designs", !!b.template, b.template?"Change":"Choose"],
+    ["details", "Confirm event details", b.detailsAt?"Confirmed":"Who to contact on the day", !!b.detailsAt, b.detailsAt?"Edit":"Confirm"]
+  ];
 }
 function renderTabs(){
   const cur=S.tab||"bookings";
-  $("tabs").innerHTML=TABS.map(([id,ic,label])=>{
-    const st=tabState(id), done=st&&st[0]==="✓", cnt=st&&/^\d+$/.test(st[0]);
-    return `<button type="button" role="tab" class="tab${done?" done":""}" id="tab-${id}" data-tab="${id}" aria-controls="pane-${id}" aria-selected="${id===cur}" tabindex="${id===cur?0:-1}" aria-label="${label}${st?", "+st[1]:""}">${st?`<div class="badge${cnt?" cnt":""}" aria-hidden="true">${st[0]}</div>`:""}<div class="ic">${ICONS[ic]}</div>${label}</button>`;
+  $("tabs").innerHTML=TABS.map(([id,label])=>{
+    const cnt=id==="messages"&&S.msgCount?`<span class="cnt" aria-hidden="true">${S.msgCount}</span>`:"";
+    return `<button type="button" role="tab" class="tab" id="tab-${id}" data-tab="${id}" aria-controls="pane-${id}" aria-selected="${id===cur}" tabindex="${id===cur?0:-1}" aria-label="${label}${cnt?", "+S.msgCount+" messages":""}">${label}${cnt}</button>`;
   }).join("");
   $("tabs").querySelectorAll(".tab").forEach(t=>t.onclick=()=>selectTab(t.dataset.tab));
   $("tabs").onkeydown=e=>{ const ids=TABS.map(t=>t[0]); let k=ids.indexOf(S.tab);
     if(e.key==="ArrowRight") k=(k+1)%ids.length; else if(e.key==="ArrowLeft") k=(k-1+ids.length)%ids.length; else return;
     e.preventDefault(); selectTab(ids[k]); $("tab-"+ids[k]).focus(); };
-  const next = !live() ? null : !S.cur.signedAt ? ["contract","Next step: review and sign your contract to secure your date.","Sign contract"]
-    : !S.cur.template ? ["template","Next step: choose the design for your photo prints.","Choose template"]
-    : !S.cur.detailsAt ? ["details","Next step: confirm your event details and on-site contact.","Confirm details"] : null;
-  $("nextStep").classList.toggle("hidden",!next);
-  if(next){ $("nextText").textContent=next[1]; $("nextBtn").textContent=next[2]; $("nextBtn").onclick=()=>selectTab(next[0]); }
+  if(S.cur.status==="Cancelled"){ $("todo").classList.add("hidden"); return; }
+  const list=todos(), done=list.filter(t=>t[3]).length;
+  $("todo").classList.remove("hidden");
+  $("todo").innerHTML=`<div class="todo-head"><h3>${done===list.length?"You're all set":"Your to-do list"}</h3><span>${done} of ${list.length} done</span></div>
+    <div class="todo-bar" aria-hidden="true"><i style="width:${done/list.length*100}%"></i></div>
+    <ol>${list.map(([id,t,sub,ok,btn],i)=>`<li class="${ok?"done":""}"><span class="ti"><span class="dot" aria-hidden="true">${ok?"✓":i+1}</span>${esc(t)}<span class="visually-hidden">${ok?", done":", to do"}</span></span><small>${esc(sub)}</small><button type="button" class="btn" data-todo="${id}">${btn}</button></li>`).join("")}</ol>`;
+  $("todo").querySelectorAll("[data-todo]").forEach(bt=>bt.onclick=()=>{
+    const id=bt.dataset.todo;
+    if(id==="pay"){ selectTab("bookings"); $("payCard").scrollIntoView({behavior:SMOOTH,block:"center"}); $("payBtn").focus({preventScroll:true}); return; }
+    selectTab(id); $("tabs").scrollIntoView({behavior:SMOOTH,block:"start"}); });
 }
 function selectTab(id){
   S.tab=id;
@@ -385,7 +444,7 @@ const needLive=(el)=>{ if(live()) return true; $(el).innerHTML='<p class="intro"
 
 /* Invoice */
 function drawInvoice(){
-  const b=S.cur, due=b.total-b.paid, ev=new Date(b.date), dueBy=new Date(ev); dueBy.setDate(dueBy.getDate()-14);
+  const b=S.cur, due=b.total-b.paid, ev=parseDay(b.date)||new Date(NaN), dueBy=new Date(ev); dueBy.setDate(dueBy.getDate()-14);
   const kv=(k,v,c)=>`<div class="kv${c?" "+c:""}"><b>${k}</b><span>${v}</span></div>`;
   $("invoiceDoc").innerHTML=`<div class="inv-head"><div><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services" width="116" height="71"><p style="margin:10px 0 0">Magic Mirror Rental Services<br>inquiries@magicmirrorrentalservices.com</p></div>
     <div class="inv-meta"><h3 style="color:var(--paper-ink)">Invoice</h3><div>Invoice <b>#${b.id}</b></div><div>Issued <b>${esc(b.created||LONGDATE.format(new Date()))}</b></div><div>Status <b>${esc(b.status)}</b></div></div></div>
@@ -594,7 +653,7 @@ $("msgSend").onclick=async()=>{
 /* Confirm details */
 function fillDetails(){
   const b=S.cur, kv=(k,v)=>`<div class="kv"><b>${k}</b><span>${esc(v||"")}</span></div>`;
-  $("detailsSummary").innerHTML=kv("Event",b.evName)+kv("Date",b.date)+kv("Time",b.start+(b.end?" – "+b.end:""))+kv("Venue",b.vName)+kv("Address",(b.vAddr||"")+" "+(b.vZip||""));
+  $("detailsSummary").innerHTML=kv("Event",b.evName)+kv("Date",niceDate(b.date))+kv("Time",b.start+(b.end?" – "+b.end:""))+kv("Venue",b.vName)+kv("Address",(b.vAddr||"")+" "+(b.vZip||""));
   $("dName").value=b.onsiteName||$("dName").value||`${b.fn} ${b.ln}`; $("dPhone").value=b.onsitePhone||$("dPhone").value||b.phone||"";
   $("dGuests").value=b.guests||$("dGuests").value; $("dNotes").value=b.setupNotes||$("dNotes").value;
   $("dMsg").classList.remove("err"); $("dMsg").textContent=b.detailsAt?`Confirmed on ${b.detailsAt}. You can update and confirm again any time.`:"";
@@ -725,6 +784,6 @@ async function startPay(amount,btn){
    to the booking system. Never runs on the live domain. ===== */
 if(/\.pages\.dev$|^localhost$|^127\./.test(location.hostname) && new URLSearchParams(location.search).get("demo")){
   S.demo=true;
-  renderPortal({id:"DEMO",key:"demo",date:"2027-06-14",start:"6:00 PM",end:"10:00 PM",arrive:"5:00 PM",depart:"10:30 PM",evName:"Sample wedding",vName:"Sample venue",vAddr:"Boston, MA",vZip:"",status:"Booked",fn:"Sample",ln:"Client",email:"",phone:"",items:[["Silver Package",850]],total:850,paid:250,signedAt:"demo"},false);
+  renderPortal({id:"DEMO",key:"demo",date:"06/14/2027",start:"6:00 PM",end:"10:00 PM",arrive:"5:00 PM",depart:"10:30 PM",evName:"Sample wedding",vName:"Sample venue",vAddr:"Boston, MA",vZip:"",status:"Booked",fn:"Sample",ln:"Client",email:"",phone:"",items:[["Silver Package",850]],total:850,paid:250,signedAt:"demo"},false);
   const t=new URLSearchParams(location.search).get("demo"); if(TABS.some(x=>x[0]===t)) selectTab(t);
 }
