@@ -286,8 +286,6 @@ def main():
     if build_brochure(events, "--pdf" in args):
         report.append("brochure PDF rebuilt")
     print("; ".join(report))
-    print("Canva brochure (manual): if the 6 newest prints changed, swap them into page 5 of the Canva design, "
-          "using the photos in brochure/prints/ and the captions in brochure/brochure.html.")
 
 
 if __name__ == "__main__":

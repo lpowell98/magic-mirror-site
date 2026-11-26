@@ -30,7 +30,7 @@ and point the page at `/images/<folder>/<name>.webp`. The script needs Pillow (`
 
 To run it yourself: `python3 scripts/build-events.py` (needs Pillow; the PDF also needs Node with Playwright).
 
-Still manual after a new event: the Canva brochure (design DAFIasy8epA, page 5 "Prints from the mirror"). Swap in the photos from `brochure/prints/` with the captions in `brochure/brochure.html`.
+The Canva brochure (design DAFIasy8epA, page 5 "Prints from the mirror") is synced by a daily Claude scheduled task (7:47 PM Eastern) that copies the prints and captions from `brochure/brochure.html` once the new images are live.
 
 ## Deploying
 
