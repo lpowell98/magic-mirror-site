@@ -8,15 +8,17 @@ Every design is 4x6 at 300 dpi and every photo window is landscape.
 Every design has an obvious spot for the client's logo. The previews show a sample "YOUR LOGO" lockup there.
 The "bare" mode renders the same print with the logo spot left empty (finish.py saves it as -overlay-nologo.png),
 so a client's own logo can be dropped in.
-Each design is grounded in a real object from corporate events: a conference lanyard badge, a split-flap
-departure board, a step-and-repeat press wall, a neon sign on brick, a leather folio, a brass award plaque,
-a felt letter board, a restaurant matchbook and a paint chip strip. Annual Report is the type-only design."""
+Each design is grounded in a real object from corporate events: a conference lanyard badge, dimensional
+lobby letters on travertine, a step-and-repeat press wall, a velvet rope and stanchions, a leather folio,
+a brass award plaque, a felt letter board, a letterpress dinner menu and a paint chip strip.
+Annual Report is the type-only design. (Lans replaced the first round's Split-Flap, Matchbook and Neon Sign.)"""
 import json, math, os, random
 
 import build
 from build import paper, windows, box, k
 from birthday import _clear, grow, text_core
 import graduation
+import babyshower
 from babyshower import crinkle, spread, uri
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -26,8 +28,8 @@ FONTS = build.FONTS
 # ---------- style guide: graphite, stone and bone, with cobalt, teal, vermilion and copper as accents ----------
 C = dict(ink="#15171A", graphite="#2A2D31", slate="#4B5159", steel="#8A9099", concrete="#C9C5BE", stone="#DDD8D0",
          bone="#EEEAE3", paper="#F7F5F0", white="#FFFFFF",
-         cobalt="#2742C4", cobalt_dk="#1A2E8F", cobalt_lt="#B9C4F0", teal="#0F4A50", teal_dk="#0A3438",
-         vermilion="#E1502A", copper="#B06A43", walnut="#4A2F1F", oak="#C69A66", neon="#FF4F8B")
+         cobalt="#2742C4", cobalt_dk="#1A2E8F", cobalt_lt="#B9C4F0", oxblood="#7D1828", travertine="#D9CDB8",
+         vermilion="#E1502A", copper="#B06A43", walnut="#4A2F1F", oak="#C69A66")
 COPPER = "linear-gradient(100deg,#7a4528 0%,#e2a47c 30%,#a7613c 50%,#f2c6a3 68%,#87502f 100%)"
 BRASS = "linear-gradient(100deg,#8a6a2e 0%,#dcc07c 28%,#a9873f 48%,#efd99c 68%,#94742f 100%)"
 CHROME = "linear-gradient(180deg,#f4f5f6 0%,#b9bec4 45%,#eceef0 55%,#8e959c 100%)"
@@ -36,7 +38,6 @@ foil = graduation.foil
 FONT_CSS = graduation.FONT_CSS + "".join(
     f"@font-face{{font-family:'{n}';src:url('{FONTS}/{f}');font-style:{s};font-weight:{w};font-stretch:{st}}}"
     for n, f, s, w, st in [("Archivo", "Archivo.ttf", "normal", "100 900", "62% 125%"),
-                           ("Neon", "TiltNeon.ttf", "normal", "400", "100%"),
                            ("Plex", "IBMPlexMono-Regular.ttf", "normal", "400", "100%"),
                            ("Plex", "IBMPlexMono-Medium.ttf", "normal", "500", "100%"),
                            ("Plex", "IBMPlexMono-SemiBold.ttf", "normal", "600", "100%"),
@@ -134,48 +135,12 @@ def brushed(W, H, seed=8, op=.35):
             turb(W, H, ".002 .7", seed + 1, (0, 0, 0), 1.6, -.75, op * .8, 2))
 
 
-def bricks(W, H, seed=11):
-    """A painted brick wall in near-black, each brick a little different, the mortar set back."""
-    rnd = random.Random(seed)
-    bw, bh, m = 168, 56, 8
-    out = [f'<rect width="{W}" height="{H}" fill="#121213"/>']
-    for j in range(int(H / bh) + 2):
-        off = (bw / 2) * (j % 2)
-        for i in range(-1, int(W / bw) + 2):
-            v = rnd.randint(30, 44)
-            col = f"rgb({v+3},{v},{v-2})"
-            out.append(f'<rect x="{i*bw - off + m/2:.0f}" y="{j*bh + m/2:.0f}" width="{bw-m}" height="{bh-m}" rx="3" fill="{col}"/>')
-    return svg(W, H, "".join(out)) + crinkle(W, H, seed, .55, ".08", 3) + turb(W, H, ".9", seed + 3, (0, 0, 0), 1.5, -.55, .35, 2)
-
-
 def shadow_css(d=10, b=26, a=.35):
     return f"box-shadow:0 {d}px {b}px rgba(0,0,0,{a})"
 
 
 # ---------- ornaments, all drawn in code ----------
-def flap(ch, w, h, fs, col="#F2EEE4"):
-    """One split-flap module: two dark flaps hinged at the middle, the letter split across them."""
-    return (f'<div class="flap" style="width:{w}px;height:{h}px;font-size:{fs}px;line-height:{h}px;color:{col}">'
-            f'<b>{ch if ch != " " else "&nbsp;"}</b><i></i><u style="left:-3px"></u><u style="right:-3px"></u></div>')
-
-
-FLAP_CSS = """.flap{position:relative;flex:none;text-align:center;border-radius:6px;font-family:Archivo;font-weight:600;font-stretch:78%;
-background:linear-gradient(180deg,#2e2f33 0%,#242528 49.2%,#0a0a0b 49.2%,#0a0a0b 50.8%,#1d1e21 50.8%,#17181a 100%);
-box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -2px 3px rgba(0,0,0,.6),0 2px 3px rgba(0,0,0,.6)}
-.flap b{display:block;font-weight:600;text-shadow:0 1px 0 rgba(0,0,0,.5)}
-.flap i{position:absolute;left:0;right:0;top:calc(50% - 1.5px);height:3px;background:#070708;box-shadow:0 1.5px 0 rgba(255,255,255,.07)}
-.flap u{position:absolute;top:calc(50% - 9px);width:7px;height:18px;border-radius:2px;background:linear-gradient(90deg,#3a3b3f,#6b6e73,#3a3b3f)}
-.frow{display:flex;gap:7px;justify-content:center}
-.board{display:inline-flex;flex-direction:column;gap:12px;padding:16px 18px;background:#0c0c0d;border-radius:10px;
-box-shadow:inset 0 0 0 2px #1f2023,inset 0 2px 6px rgba(0,0,0,.8),0 8px 22px rgba(0,0,0,.5)}
-.lb span{display:inline-block;width:.62em;text-align:center}"""
-
-
-def flap_row(text, cells, w, h, fs, col="#F2EEE4"):
-    t = text.upper()
-    pad = cells - len(t)
-    t = " " * (pad // 2) + t + " " * (pad - pad // 2)
-    return f'<div class="frow">{"".join(flap(c, w, h, fs, col) for c in t)}</div>'
+LB_CSS = """.lb span{display:inline-block;width:.62em;text-align:center}"""
 
 
 def screw(x, y, r):
@@ -203,34 +168,6 @@ ENGRAVE = "color:#3b2a0e;text-shadow:0 1.5px 0 rgba(255,244,205,.6),0 -1px 0 rgb
 ENGRAVE_F = "filter:drop-shadow(0 1.5px 0 rgba(255,244,205,.6))"
 DEBOSS = "color:#161719;text-shadow:0 1.5px 0 rgba(255,255,255,.13),0 -1.5px 1px rgba(0,0,0,.7)"
 DEBOSS_F = "filter:drop-shadow(0 1.5px 0 rgba(255,255,255,.13)) drop-shadow(0 -1.5px 1px rgba(0,0,0,.7))"
-
-
-def matchbook(w, h, mode, rot=-6):
-    """A restaurant matchbook, closed: a teal cover with the logo, the front flap tucked up over a striker strip and a staple."""
-    fh = h * .2
-    cover = (f'<rect x="0" y="0" width="{w}" height="{h}" rx="10" fill="{C["teal"]}"/>'
-             f'<rect x="16" y="16" width="{w-32}" height="{h-fh-28:.0f}" rx="4" fill="none" stroke="{C["bone"]}" stroke-width="2" opacity=".7"/>'
-             f'<rect x="22" y="22" width="{w-44}" height="{h-fh-40:.0f}" rx="2" fill="none" stroke="{C["bone"]}" stroke-width="1" opacity=".45"/>')
-    flap_ = (f'<path d="M0 {h-fh:.1f} L{w} {h-fh:.1f} L{w} {h-10} Q{w} {h} {w-10} {h} L10 {h} Q0 {h} 0 {h-10}Z" fill="{C["teal_dk"]}"/>'
-             f'<rect x="0" y="{h-fh-3:.1f}" width="{w}" height="4" fill="#06282b" opacity=".7"/>'
-             f'<rect x="14" y="{h-fh*.62:.1f}" width="{w-28}" height="{fh*.36:.1f}" rx="3" fill="#4d3b2f" filter="url(#grit)"/>'
-             f'<rect x="{w/2-26:.1f}" y="{h-fh*.82:.1f}" width="52" height="7" rx="3" fill="url(#stp)"/>')
-    defs = ('<defs><linearGradient id="stp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f2f3f4"/><stop offset=".5" stop-color="#a3a8ad"/><stop offset="1" stop-color="#5e6368"/></linearGradient></defs>')
-    tex = (f'<foreignObject x="0" y="0" width="{w}" height="{h}" style="border-radius:10px;overflow:hidden">'
-           f'<div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:{w}px;height:{h}px;border-radius:10px;overflow:hidden">{paper(.18, .1)}</div></foreignObject>')
-    words = (f'<div class="tb" style="left:0;top:0;width:{w}px;height:{h-fh:.0f}px;gap:{h*.05:.0f}px">'
-             f'{logo(w*.11, C["bone"], mode, True)}'
-             f'<div style="width:{w*.3:.0f}px;height:1.5px;background:{C["bone"]};opacity:.6"></div>'
-             f'{ar("Est. 2027", w*.045, C["bone"], 110, 600, ".3em", "opacity:.85")}</div>')
-    return (f'<div style="position:relative;width:{w}px;height:{h}px;transform:rotate({rot}deg);filter:drop-shadow(0 12px 14px rgba(0,0,0,.35)) drop-shadow(0 2px 2px rgba(0,0,0,.3))">'
-            f'<svg width="{w}" height="{h}" style="position:absolute;inset:0;overflow:visible">{defs}{cover}{tex}{flap_}</svg>{words}</div>')
-
-
-def paper_match(L_, rot):
-    """A single paper match: a flat card stem and a round red head."""
-    return (f'<div style="position:absolute;width:{L_}px;height:14px;transform:rotate({rot}deg);filter:drop-shadow(0 4px 3px rgba(0,0,0,.3))">'
-            f'<div style="position:absolute;left:0;top:2px;width:{L_-30}px;height:10px;background:#efe6d4;border-radius:1px"></div>'
-            f'<div style="position:absolute;right:0;top:-3px;width:40px;height:20px;border-radius:50% 60% 60% 50%;background:radial-gradient(circle at 60% 35%,#e3634f,#9d2a1f 70%)"></div></div>')
 
 
 def paint_strip(w, h, mode, horiz=False, shades=("#1A2E8F", "#2742C4", "#7085E2", "#BCC6F2"), names=("Midnight", "Cobalt 2027", "Signal", "Mist")):
@@ -327,26 +264,6 @@ def lanyard_badge(n, mode):  # conferences, summits, university events
                 windows(lay["wins"], win_mode(mode), [(3, f"border:1.5px solid {C['concrete']}")]))
 
 
-def split_flap(n, mode):  # conferences, brand activations, hotel and travel events
-    lay = LAYOUTS["band"]["n"][n]; W, H = L
-    tx, ty, tw, th = lay["text"]
-    if n == 2:
-        board = (f'<div class="board">{flap_row("Welcome to", 14, 52, 74, 50)}{flap_row(E["summit"], 14, 84, 120, 86)}</div>')
-        inner = (logo(56, "#E9E5DC", mode, extra="margin-bottom:26px") + board +
-                 mono(f'{E["dates"]} &nbsp;·&nbsp; {E["city"]} &nbsp;·&nbsp; Gate A', 22, "#A9ADB3", 500, ".24em", "margin-top:26px"))
-        txt = box(lay["text"], inner)
-    else:
-        big = k(n, (72, 108, 78), None, (64, 96, 70))
-        board = (f'<div class="board">{flap_row("Welcome to", 13, big[0]*.62, big[1]*.6, big[2]*.6)}{flap_row(E["summit"], 13, *big)}</div>')
-        side = 300
-        left = f'<div style="width:{side}px;display:flex;justify-content:center">{logo(k(n,50,0,46), "#E9E5DC", mode, True)}</div>'
-        right = (f'<div style="width:{side}px;display:flex;flex-direction:column;align-items:center;gap:8px">'
-                 f'{mono("Departs", 18, "#8C9097", 500, ".3em")}{mono("Mar 18", 40, "#F2C14E", 600, ".08em")}{mono(E["city"], 18, "#A9ADB3", 500, ".3em")}</div>')
-        txt = f'<div class="tb" style="left:{tx}px;top:{ty}px;width:{tw}px;height:{th}px;flex-direction:row;gap:10px">{left}{board}{right}</div>'
-    return dict(bg="#18191B", body=paper(.12, .06) + turb(W, H, ".8", 51, (1, 1, 1), 1.2, -.5, .08, 2) +
-                windows(lay["wins"], win_mode(mode), [(10, "border:10px solid #0b0b0c;box-shadow:inset 0 0 0 1.5px #2c2d31,0 6px 16px rgba(0,0,0,.6)")]) + txt)
-
-
 def step_repeat(n, mode):  # brand activations, galas, premieres, launches
     lay = LAYOUTS["band"]["n"][n]; W, H = L
     cw, rh = 400, 150
@@ -371,30 +288,6 @@ def step_repeat(n, mode):  # brand activations, galas, premieres, launches
               f'{mono(f"{E["date"]} &nbsp;·&nbsp; New York", 20 * s, C["slate"], 500, ".24em", f"margin-top:{12*s:.0f}px")}</div>')
     return dict(bg=C["paper"], body=wall + windows(lay["wins"], win_mode(mode), mat=(14, f"background:{C['white']};box-shadow:0 0 0 2px {C['ink']},0 10px 24px rgba(0,0,0,.22)")) +
                 box(lay["text"], plaque))
-
-
-def neon_sign(n, mode):  # bars, after-parties, holiday parties, brand activations
-    lay = LAYOUTS["band"]["n"][n]; W, H = L
-    tx, ty, tw, th = lay["text"]
-    fs = k(n, 172, 230, 196)
-    glow = (f"color:#FFE3EC;text-shadow:0 0 4px #fff,0 0 10px {C['neon']},0 0 22px {C['neon']},0 0 46px {C['neon']},0 0 90px #ff2a6d,0 0 140px #ff2a6d")
-    sign = f'<div style="font:400 {fs}px/1 Neon;{glow};padding:0 30px;white-space:nowrap">Cheers!</div>'
-    acrylic = (f'<div style="position:relative;padding:{fs*.12:.0f}px {fs*.22:.0f}px {fs*.2:.0f}px;border-radius:22px;background:rgba(255,255,255,.035);'
-               f'box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.16),0 0 0 1px rgba(0,0,0,.4)">{sign}'
-               + "".join(f'<i style="position:absolute;{a}:16px;{b}:16px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#9aa0a6 60%,#4b4f54)"></i>'
-                         for a in ("left", "right") for b in ("top", "bottom")) + '</div>')
-    lb = k(n, 210, 250, 220)
-    lightbox = (f'<div style="width:{lb}px;height:{lb}px;border-radius:50%;flex:none;background:radial-gradient(circle,#fffdf6 0%,#fbf4e6 60%,#e8dcc6 100%);'
-                f'box-shadow:0 0 0 10px #0d0d0e,0 0 0 12px #2b2c2f,0 0 40px 14px rgba(255,240,215,.25),0 10px 20px rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center">'
-                f'{logo(lb*.19, C["ink"], mode, True)}</div>')
-    paint = f"color:#ECE8E0;opacity:.88;filter:url(#stamp)"
-    stencil = (f'<div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:{lb+40}px">'
-               f'{ar("After party", k(n,26,30,26), "#ECE8E0", 110, 700, ".3em", "opacity:.85;filter:url(#stamp)")}'
-               f'{ar(E["short"], k(n,54,62,54), "#ECE8E0", 110, 800, ".08em", "opacity:.88;filter:url(#stamp)")}</div>')
-    wash = f'<div class="fr" style="left:{tx}px;top:{ty-160}px;width:{tw}px;height:{th+260}px;background:radial-gradient(40% 50% at 50% 55%,rgba(255,60,120,.30),transparent 70%)"></div>'
-    txt = f'<div class="tb" style="left:{tx}px;top:{ty}px;width:{tw}px;height:{th}px;flex-direction:row;gap:{k(n,60,80,60)}px">{lightbox}{acrylic}{stencil}</div>'
-    return dict(bg="#121213", body=bricks(W, H) + wash +
-                windows(lay["wins"], win_mode(mode), [(12, "border:12px solid #0a0a0b;box-shadow:inset 0 0 0 1.5px #34353a,0 10px 24px rgba(0,0,0,.7)")]) + txt)
 
 
 def leather_folio(n, mode):  # leadership summits, executive dinners, galas
@@ -459,36 +352,6 @@ def letter_board(n, mode):  # company holiday parties, office parties, restauran
                 windows(lay["wins"], win_mode(mode), [(10, f"border:10px solid {C['ink']};box-shadow:0 10px 22px rgba(40,30,20,.3)")]))
 
 
-def matchbook_design(n, mode):  # restaurants, bars, hotel and private dinners
-    lay = LAYOUTS["panel"]["n"][n]; W, H = L
-    px, py, pw, ph = lay["panel"]
-    if n == 3:
-        mw, mh = 250, 340
-        mb = f'<div class="fr" style="left:{px+80}px;top:{py+90}px">{matchbook(mw, mh, mode, -7)}</div>'
-        mt = f'<div class="fr" style="left:{px+330}px;top:{py+410}px;width:0;height:0">{paper_match(200, -18)}</div>'
-        wb = [px + 380, py + 40, pw - 410, ph - 120]
-        sc = .74
-    else:
-        mw, mh = k(n, 330, 420, 0), k(n, 450, 570, 0)
-        top = k(n, 150, 120, 0)
-        mb = f'<div class="fr" style="left:{px + (pw-mw)/2:.0f}px;top:{py+top}px">{matchbook(mw, mh, mode, -6)}</div>'
-        mt = f'<div class="fr" style="left:{px + pw/2 + mw*.25:.0f}px;top:{py+top+mh+20:.0f}px;width:0;height:0">{paper_match(k(n,190,230,0), -24)}</div>'
-        wb = [px, py + top + mh + 90, pw, ph - (top + mh + 90) - 60]
-        sc = k(n, .82, 1, 0)
-    words = (f'<div style="font:italic 400 {96*sc:.0f}px/1.05 Fraunces;color:{C["teal_dk"]}">{E["dinner"]}</div>' +
-             caps2(f'{E["date"]}', 22 * sc, C["slate"], f"margin-top:{18*sc:.0f}px") +
-             caps2("Table for everyone", 18 * sc, C["copper"], f"margin-top:{10*sc:.0f}px"))
-    panel = (f'<div class="fr" style="left:{px}px;top:{py}px;width:{pw}px;height:{ph}px;background:{C["paper"]};overflow:hidden">'
-             f'{paper(.12, .06)}{turb(pw, ph, ".02 .9", 81, (.4, .35, .3), 1.2, -.5, .25, 2)}{turb(pw, ph, ".9 .02", 82, (.4, .35, .3), 1.2, -.5, .2, 2)}</div>')
-    return dict(bg=f"radial-gradient(120% 100% at 60% 40%,#14555b,{C['teal']} 55%,{C['teal_dk']})",
-                body=paper(.12, .08) + panel + mb + mt +
-                windows(lay["wins"], win_mode(mode), [(10, f"border:2px solid {C['bone']};opacity:.8")]) + box(wb, words))
-
-
-def caps2(t, size, color, extra=""):
-    return f'<div style="font:600 {size:.0f}px/1.2 Montserrat;letter-spacing:.34em;padding-left:.34em;text-transform:uppercase;color:{color};{extra}">{t}</div>'
-
-
 def color_chip(n, mode):  # brand activations, product launches, agencies
     lay = LAYOUTS["panel"]["n"][n]; W, H = L
     px, py, pw, ph = lay["panel"]
@@ -528,12 +391,139 @@ def annual_report(n, mode):  # typographic; kickoffs, all-hands, conferences
     return dict(bg=C["paper"], body=paper(.10, .05) + panel + windows(lay["wins"], win_mode(mode), [(0, f"box-shadow:0 0 0 2px {ink}")]))
 
 
+# ---------- round 2: lobby sign, dinner menu, velvet rope ----------
+STEEL = "linear-gradient(180deg,#e3e6e9 0%,#959ba2 38%,#4c5258 54%,#aab0b6 74%,#596067 100%)"
+STANDOFF = "filter:drop-shadow(1.5px 2px 0 rgba(70,55,40,.45)) drop-shadow(9px 14px 7px rgba(70,55,40,.32))"
+
+
+def travertine(W, H, seed=13, joints=600):
+    """Travertine: warm cream stone with long horizontal veins, small pits, and the joints between the slabs."""
+    lines = "".join(f'<line x1="0" x2="{W}" y1="{y}" y2="{y}" stroke="#9c8c74" stroke-width="2.5" opacity=".55"/>'
+                    f'<line x1="0" x2="{W}" y1="{y+2}" y2="{y+2}" stroke="#fff" stroke-width="1.2" opacity=".5"/>' for y in range(joints, H, joints))
+    lines += "".join(f'<line y1="{a}" y2="{min(a + joints, H)}" x1="{x}" x2="{x}" stroke="#9c8c74" stroke-width="2.5" opacity=".55"/>'
+                     for i, a in enumerate(range(0, H, joints)) for x in range(joints // 2 + (i % 2) * joints // 2, W, joints * 3 // 2))
+    return (turb(W, H, ".0016 .018", seed, (.55, .44, .32), 2.2, -.95, .28, 4) +
+            turb(W, H, ".003 .05", seed + 1, (.99, .96, .9), 2.0, -.95, .25, 3) +
+            turb(W, H, ".05 .22", seed + 2, (.42, .35, .27), 7, -5.0, .8, 2) + paper(.12, .14) + svg(W, H, lines))
+
+
+def lobby_sign(n, mode):  # conferences, offices and headquarters, galas
+    lay = LAYOUTS["band"]["n"][n]; W, H = L
+    s = k(n, 1, 1.3, 1.05)
+    steel = f"background:{STEEL};-webkit-background-clip:text;background-clip:text;color:transparent"
+    txt = (f'<div style="{STANDOFF}">{logo(48 * s, "#1d1e20", mode)}</div>' +
+           f'<div style="{STANDOFF};margin-top:{20*s:.0f}px"><div style="font:700 {124*s:.0f}px/1 Archivo;font-stretch:112%;letter-spacing:.06em;padding-left:.06em;{steel}">{E["summit"].upper()}</div></div>' +
+           f'<div style="{STANDOFF};margin-top:{16*s:.0f}px"><div style="font:600 {26*s:.0f}px/1 Archivo;font-stretch:118%;letter-spacing:.42em;padding-left:.42em;color:#1d1e20">{E["dates"].upper()} &nbsp;·&nbsp; {E["city"].upper()}</div></div>')
+    frames = [(10, f"border:10px solid transparent;border-image:{STEEL.replace('180deg', '135deg')} 1;box-shadow:9px 14px 16px rgba(70,55,40,.35)")]
+    return dict(bg="#D9CDB8", body=travertine(W, H) + '<div class="tex" style="background:radial-gradient(70% 60% at 50% 0%,rgba(255,250,235,.35),transparent 70%),linear-gradient(180deg,transparent 60%,rgba(80,60,40,.12))"></div>' +
+                windows(lay["wins"], win_mode(mode), frames) + box(lay["text"], txt))
+
+
+def menu_card(w, h, mode, wide=False):
+    """A letterpress dinner menu on thick cotton paper with a torn deckle edge: the logo, the dinner, and the evening's program."""
+    sc = w / 480 if not wide else h / 470
+    prog = [("Cocktails", "7 pm"), ("Dinner", "8 pm"), ("Toasts", "9 pm"), ("Dancing", "10 pm")]
+    rows = "".join(f'<div style="display:flex;align-items:baseline;gap:12px;width:100%;font:600 {21*sc:.0f}px/1 Montserrat;letter-spacing:.2em;text-transform:uppercase;color:{C["ink"]};margin-top:{20*sc:.0f}px">'
+                   f'<span>{a}</span><span style="flex:1;border-bottom:2px dotted {C["steel"]};transform:translateY(-4px)"></span>'
+                   f'<span style="font:italic 400 {30*sc:.0f}px/1 Fraunces;letter-spacing:0;text-transform:none;color:{C["copper"]}">{b}</span></div>' for a, b in prog)
+    head = (f'{logo(36 * sc, C["ink"], mode, True)}'
+            f'<div style="width:{60*sc:.0f}px;height:2px;background:{C["copper"]};margin:{26*sc:.0f}px 0 {22*sc:.0f}px"></div>'
+            f'<div style="font:italic 400 {72*sc:.0f}px/1.05 Fraunces;color:{C["ink"]}">{E["dinner"]}</div>'
+            f'<div style="font:600 {18*sc:.0f}px/1 Montserrat;letter-spacing:.34em;padding-left:.36em;text-transform:uppercase;color:{C["slate"]};margin-top:{16*sc:.0f}px">{E["date"]}</div>')
+    if wide:
+        inner = (f'<div style="display:flex;align-items:center;gap:{50*sc:.0f}px;width:100%;padding:0 {50*sc:.0f}px">'
+                 f'<div style="display:flex;flex-direction:column;align-items:center;flex:1">{head}</div>'
+                 f'<div style="width:1.5px;align-self:stretch;margin:{30*sc:.0f}px 0;background:{C["concrete"]}"></div>'
+                 f'<div style="display:flex;flex-direction:column;flex:1;margin-top:-{20*sc:.0f}px">{rows}</div></div>')
+    else:
+        inner = (f'{head}<div style="font:600 {14*sc:.0f}px/1 Montserrat;letter-spacing:.5em;padding-left:.5em;color:{C["copper"]};margin:{40*sc:.0f}px 0 {6*sc:.0f}px">· · ·</div>'
+                 f'<div style="width:100%;padding:0 {34*sc:.0f}px">{rows}</div>'
+                 f'<div style="font:italic 400 {26*sc:.0f}px/1 Fraunces;color:{C["slate"]};margin-top:{44*sc:.0f}px">{E["city"]}</div>')
+    return (f'<div style="position:relative;width:{w}px;height:{h}px">'
+            f'<div style="position:absolute;inset:0;background:#FAF7F0;filter:url(#deckle) drop-shadow(0 14px 18px rgba(0,0,0,.5)) drop-shadow(0 2px 2px rgba(0,0,0,.35))"></div>'
+            f'<div style="position:absolute;inset:8px;overflow:hidden;filter:url(#deckle)">{paper(.16, .07)}{turb(w, h, ".02 .9", 81, (.4, .35, .3), 1.2, -.5, .18, 2)}</div>'
+            f'<div class="tb" style="inset:0;padding:{36*sc:.0f}px 0">{inner}</div></div>')
+
+
+def dinner_menu(n, mode):  # restaurants, private dinners, client dinners, galas
+    lay = LAYOUTS["panel"]["n"][n]; W, H = L
+    px, py, pw, ph = lay["panel"]
+    if n == 3:
+        cw, ch = pw - 10, ph - 10
+        card = menu_card(cw, ch, mode, True)
+    else:
+        cw, ch = k(n, 470, 690, 0), k(n, 1080, 1090, 0)
+        card = menu_card(cw, ch, mode)
+    at = (px + (pw - cw) / 2, py + (ph - ch) / 2)
+    slate = (turb(W, H, ".0025 .012", 101, (.6, .62, .64), 2.0, -.9, .22, 4) + turb(W, H, ".7", 102, (0, 0, 0), 1.4, -.5, .3, 2) + paper(.08, .06))
+    return dict(bg="radial-gradient(110% 90% at 40% 35%,#34383c,#24272a 60%,#1b1d1f)", body=slate +
+                f'<div class="fr" style="left:{at[0]:.0f}px;top:{at[1]:.0f}px;transform:rotate({k(n,-1,-1,-.6)}deg)">{card}</div>' +
+                windows(lay["wins"], win_mode(mode), [(10, f"border:2px solid {C['bone']};opacity:.75")]))
+
+
+def drape(W, H, seed=17, base="#1E1A1C"):
+    """A velvet drape: deep vertical pleats of uneven width, each catching the light down its middle."""
+    rnd = random.Random(seed); x = -20; out = []
+    i = 0
+    while x < W:
+        w = rnd.uniform(70, 130)
+        out.append(f'<linearGradient id="pl{i}" x1="0" x2="1"><stop offset="0" stop-color="#000" stop-opacity=".55"/>'
+                   f'<stop offset="{rnd.uniform(.35, .6):.2f}" stop-color="#fff" stop-opacity="{rnd.uniform(.07, .14):.2f}"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient>'
+                   f'<rect x="{x:.1f}" y="0" width="{w+1:.1f}" height="{H}" fill="url(#pl{i})"/>')
+        x += w; i += 1
+    return (svg(W, H, f'<rect width="{W}" height="{H}" fill="{base}"/>' + "".join(out)) +
+            turb(W, H, ".9 .05", seed + 1, (1, .9, .9), 1.4, -.55, .10, 2) +
+            '<div class="tex" style="background:linear-gradient(180deg,rgba(255,255,255,.05),transparent 30%,rgba(0,0,0,.35))"></div>')
+
+
+def stanchion(x, top, bottom, uid):
+    """A polished brass post with a ball finial."""
+    return (f'<rect x="{x-17}" y="{top}" width="34" height="{bottom-top}" fill="url(#{uid}p)"/>'
+            f'<circle cx="{x}" cy="{top-6}" r="26" fill="url(#{uid}b)"/>'
+            f'<rect x="{x-24}" y="{top+6}" width="48" height="14" rx="4" fill="url(#{uid}p)"/>')
+
+
+def rope(x1, y1, x2, y2, sag, uid):
+    """A velvet rope: an oxblood swag with a twisted nap, a sheen along its top, and brass hooks at each end."""
+    d = f"M{x1} {y1} Q{(x1+x2)/2:.0f} {max(y1, y2) + sag:.0f} {x2} {y2}"
+    hook = lambda x, y: f'<rect x="{x-18}" y="{y-14}" width="36" height="28" rx="9" fill="url(#{uid}p)"/>'
+    return (f'<path d="{d}" fill="none" stroke="#4a0c16" stroke-width="30" stroke-linecap="round"/>'
+            f'<path d="{d}" fill="none" stroke="#7d1828" stroke-width="24" stroke-linecap="round"/>'
+            f'<path d="{d}" fill="none" stroke="#a3283b" stroke-width="20" stroke-dasharray="5 9" opacity=".7"/>'
+            f'<path d="{d}" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width="5" transform="translate(0 -7)"/>' + hook(x1, y1) + hook(x2, y2))
+
+
+def velvet_rope(n, mode):  # galas, VIP receptions, brand activations, premieres
+    lay = LAYOUTS["band"]["n"][n]; W, H = L
+    tx, ty, tw, th = lay["text"]
+    sw, sh = k(n, 600, 700, 620), k(n, 200, 270, 220)
+    sx, sy = (W - sw) / 2, ty + k(n, 30, 50, 40)
+    pt = ty + k(n, 120, 210, 160)  # top of the side posts
+    att = sy + sh + 40
+    uid = f"vr{n}"
+    defs = (f'<defs><linearGradient id="{uid}p" x1="0" x2="1"><stop offset="0" stop-color="#6d5321"/><stop offset=".3" stop-color="#efd99c"/>'
+            f'<stop offset=".55" stop-color="#b08c42"/><stop offset="1" stop-color="#5e4519"/></linearGradient>'
+            f'<radialGradient id="{uid}b" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#fff3c8"/><stop offset=".45" stop-color="#c9a453"/><stop offset="1" stop-color="#5e4519"/></radialGradient></defs>')
+    posts = stanchion(150, pt, H + 10, uid) + stanchion(W - 150, pt, H + 10, uid) + stanchion(W / 2, sy + sh, H + 10, uid)
+    ropes = rope(150 + 20, pt + 40, W / 2 - 20, att, k(n, 70, 90, 80), uid) + rope(W / 2 + 20, att, W - 150 - 20, pt + 40, k(n, 70, 90, 80), uid)
+    art = (f'<svg class="tex" width="{W}" height="{H}" style="filter:drop-shadow(0 14px 12px rgba(0,0,0,.6))">{defs}{posts}{ropes}</svg>')
+    s = k(n, 1, 1.25, 1.05)
+    sign = (f'<div class="fr" style="left:{sx:.0f}px;top:{sy:.0f}px;width:{sw}px;height:{sh}px;padding:12px;background:{BRASS};border-radius:4px;'
+            f'box-shadow:0 12px 20px rgba(0,0,0,.6),inset 0 0 0 1.5px rgba(255,240,200,.6)">'
+            f'<div style="width:100%;height:100%;background:#0d0d0e;box-shadow:inset 0 2px 6px rgba(0,0,0,.9);display:flex;flex-direction:column;align-items:center;justify-content:center">'
+            f'{logo(34 * s, C["bone"], mode)}'
+            f'<div style="font:400 {58*s:.0f}px/1 Cinzel;letter-spacing:.08em;padding-left:.08em;color:{C["bone"]};margin-top:{18*s:.0f}px">VIP Reception</div>'
+            f'<div style="font:600 {16*s:.0f}px/1 Montserrat;letter-spacing:.42em;padding-left:.42em;text-transform:uppercase;color:#d9bf86;margin-top:{14*s:.0f}px">{E["date"]}</div></div></div>')
+    return dict(bg="#1E1A1C", body=drape(W, H) + paper(.08, .05) +
+                windows(lay["wins"], win_mode(mode), [(10, f"border:10px solid transparent;border-image:{BRASS} 1;box-shadow:0 12px 24px rgba(0,0,0,.6)")]) + art + sign)
+
+
 DESIGNS = [  # id, name, base layout, builder
-    ("split-flap", "Split-Flap", "band", split_flap),
+    ("lobby-sign", "Lobby Sign", "band", lobby_sign),
     ("step-and-repeat", "Step and Repeat", "band", step_repeat),
-    ("neon-sign", "Neon Sign", "band", neon_sign),
+    ("velvet-rope", "Velvet Rope", "band", velvet_rope),
     ("letter-board", "Letter Board", "panel", letter_board),
-    ("matchbook", "Matchbook", "panel", matchbook_design),
+    ("dinner-menu", "Dinner Menu", "panel", dinner_menu),
     ("color-chip", "Color Chip", "panel", color_chip),
     ("annual-report", "Annual Report", "panel", annual_report),
     ("lanyard-badge", "Lanyard Badge", "badge", lanyard_badge),
@@ -541,17 +531,14 @@ DESIGNS = [  # id, name, base layout, builder
     ("brass-plaque", "Brass Plaque", "card", brass_plaque),
 ]
 
-FILTERS = graduation.FILTERS + (
-    '<filter id="grit" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="4" result="n"/>'
-    '<feColorMatrix in="n" values="0 0 0 0 .1 0 0 0 0 .08 0 0 0 0 .06 0 0 0 1.4 -.4" result="d"/>'
-    '<feComposite in="d" in2="SourceGraphic" operator="in" result="g"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="g"/></feMerge></filter>')
+FILTERS = babyshower.FILTERS  # chalk, stamp, felt, deckle, torn paper, wax
 
 
 def page(d, n, mode):
     did, name, base, fn = d
     W, H = LAYOUTS[base]["size"]
     r = fn(n, mode)
-    return (f'<!doctype html><meta charset="utf-8"><style>{FONT_CSS}{build.BASE_CSS}{FLAP_CSS}body{{width:{W}px;height:{H}px;background:{r["bg"]}}}</style>'
+    return (f'<!doctype html><meta charset="utf-8"><style>{FONT_CSS}{build.BASE_CSS}{LB_CSS}body{{width:{W}px;height:{H}px;background:{r["bg"]}}}</style>'
             f'<svg width="0" height="0" style="position:absolute">{build.gold_defs()}<defs>{FILTERS}</defs></svg><body>{r["body"]}</body>')
 
 
