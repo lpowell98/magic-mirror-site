@@ -1,0 +1,39 @@
+/* Event gallery: real prints scattered on a dark table (see /assets/js/gallery-table.js).
+   Each print's tilt and nudge are set inline (--r, --dx, --dy, --z) so the layout needs no script. */
+.print-table { position: relative; margin: 0 auto var(--gap-section); max-width: 1440px; padding: clamp(40px, 6vw, 80px) clamp(12px, 4vw, 64px) 40px;
+  background:
+    radial-gradient(ellipse 70% 40% at 50% 12%, rgba(136, 76, 158, .22), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #16101b, #0b080d);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, .8); overflow: hidden; }
+.print-table .grid-sec + .grid-sec { margin-top: clamp(32px, 4vw, 56px); }
+.table-top { --pw: 172px; list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; }
+.table-land .print { width: calc(var(--pw) * 1.5); }
+.print { width: var(--pw); margin: -10px -14px; position: relative; z-index: var(--z); transform: translate(var(--dx), var(--dy)) rotate(var(--r)); transition: transform .45s var(--ease), z-index 0s .45s; }
+.print a { display: block; cursor: zoom-in; -webkit-tap-highlight-color: transparent; position: relative; }
+.print a::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(125deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, 0) 38%); }
+.print img { display: block; width: 100%; height: auto; background: var(--surface); box-shadow: 0 2px 3px rgba(0, 0, 0, .5), 0 14px 28px rgba(0, 0, 0, .55); transition: box-shadow .45s var(--ease); }
+.table-land img { aspect-ratio: 3 / 2; object-fit: cover; }
+.table-port img { aspect-ratio: 2 / 3; object-fit: cover; }
+.print a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* Picked up: straight, bigger, on top */
+.print.is-up { z-index: 40; transform: translate(calc(var(--dx) + var(--nx, 0px)), calc(var(--dy) - 8px)) rotate(0deg) scale(var(--up, 1.45)); transition: transform .45s var(--ease), z-index 0s; }
+.print.is-up img { box-shadow: 0 4px 6px rgba(0, 0, 0, .4), 0 30px 60px rgba(0, 0, 0, .7); }
+@media (hover: hover) {
+  .print:hover, .print:focus-within { z-index: 40; transform: translate(var(--dx), calc(var(--dy) - 8px)) rotate(0deg) scale(1.45); transition: transform .45s var(--ease), z-index 0s; }
+  .print:hover img, .print:focus-within img { box-shadow: 0 4px 6px rgba(0, 0, 0, .4), 0 30px 60px rgba(0, 0, 0, .7); }
+}
+
+.table-hint { text-align: center; color: var(--muted); font-size: 14px; margin: 48px 0 0; }
+.hint-touch { display: none; }
+@media (hover: none) { .hint-hover { display: none; } .hint-touch { display: inline; } }
+
+@media (max-width: 900px) { .table-top { --pw: 140px; } }
+@media (max-width: 640px) {
+  .print-table { padding: 28px 8px 24px; }
+  .table-top { --pw: 30vw; }
+  .table-land .print { width: 46vw; }
+  .print { margin: -6px -2vw; --up: 1.35; }
+}
+@media (prefers-reduced-motion: reduce) { .print, .print img { transition: none; } }
