@@ -24,6 +24,8 @@ const CONFIG = {
   FREE_MILES: 20,
   PER_MILE: 0.85,
   TZ: 'America/New_York',
+  // Where the "Leave a Google review" button goes. Paste your Google Business Profile's "Ask for reviews" link here.
+  REVIEW_URL: '',
   PACKAGES: { bronze: ['Bronze Package', 650], silver: ['Silver Package', 850], gold: ['Gold Package', 1100] },
   PRINTS:   { tpl: ['Template Design Print-out', 0], cus: ['Custom Design Print-out', 75] },
   STAFF:    [{ name: 'Lans', email: 'lanspowelljr@gmail.com' }, { name: 'Jonah Simon', email: '' }],  // add Jonah's email
@@ -432,10 +434,11 @@ function eAmount_(label, n, note) {
       ${note ? `<div style="font-size:14px;color:#ffffff">${note}</div>` : ''}</td></tr></table>`;
 }
 
-// A one-time code, spaced out and easy to read.
-function eCode_(code) {
+// A one-time code, spaced out and easy to read. small: for longer codes such as promo codes.
+function eCode_(code, small) {
+  const size = small ? 'padding:12px 20px;font-size:24px;letter-spacing:3px' : 'padding:14px 26px;font-size:36px;letter-spacing:10px';
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:4px 0 24px">
-    <tr><td style="border:2px solid ${BRAND.gold};background:#fffaf0;padding:14px 26px;font-size:36px;font-weight:800;letter-spacing:10px;color:${EM.ink};${EF}">${esc_(code)}</td></tr></table>`;
+    <tr><td style="border:2px solid ${BRAND.gold};background:#fffaf0;${size};font-weight:800;color:${EM.ink};${EF}">${esc_(code)}</td></tr></table>`;
 }
 
 // Short coloured tag, e.g. "Unconfirmed".
@@ -1366,8 +1369,70 @@ const AUTOMATIONS = {
   payment14: true,          // client: balance owed, 14 days before the event
   payment7: true,           // client: balance owed, 7 days before
   paymentOverdue: true,     // client: balance still owed 5 days after the event
-  ownerHeadsUp: true        // you: event reminders 8 and 2 days before
+  ownerHeadsUp: true,       // you: event reminders 8 and 2 days before
+  reviewRequest: true,      // client: thank-you + 15% code for next time + review request, 2 days after a Completed event
+  reviewFollowUp: true      // client: one gentle reminder 7 business days after the review request
 };
+
+/* ---------------- Thank-you codes and review requests ----------------
+   Two days after an event marked Completed, the client gets a thank-you email with their own 15% off code
+   for their next event (one use, expires exactly one year after it is made) and a request for a Google review.
+   The code is a thank-you to every client and never depends on leaving a review: Google, Yelp and the FTC
+   don't allow rewards for reviews. Seven business days later, one follow-up reminder goes out. */
+const THANKS = { percent: 15, note: id => `Thank-you code, booking #${id}` };
+const reviewUrl_ = () => CONFIG.REVIEW_URL || 'https://www.google.com/search?q=' + encodeURIComponent(CONFIG.BUSINESS + ' reviews');
+
+// The client's thank-you code, made the first time it is needed. Returns { code, expires (MM/dd/yyyy) }.
+// Runs inside runAutomations, which already holds the script lock.
+function thanksCode_(id) {
+  const note = THANKS.note(id), have = promos_().find(p => p.note === note);
+  if (have) return { code: have.code, expires: have.expires };
+  const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   // no 0/O or 1/I/L, so codes are easy to type
+  let code;
+  do { code = 'THANKS-' + Array.from({ length: 5 }, () => abc[Math.floor(Math.random() * abc.length)]).join(''); } while (findPromo_(code));
+  const exp = new Date(); exp.setFullYear(exp.getFullYear() + 1);   // the same date next year
+  const expires = Utilities.formatDate(exp, CONFIG.TZ, 'MM/dd/yyyy');
+  const sh = promoSheet_(), row = sh.getLastRow() + 1;
+  sh.getRange(row, 1).setNumberFormat('@');
+  sh.getRange(row, 1, 1, PROMO_HEAD.length).setValues([[code, 'percent', THANKS.percent, expires, 1, 0, true, note, new Date()]]);
+  return { code, expires };
+}
+
+// Mon to Fri between two day numbers (after a, up to and including b).
+function businessDays_(a, b) {
+  let n = 0;
+  for (let d = a + 1; d <= b; d++) { const w = (d + 4) % 7; if (w !== 0 && w !== 6) n++; }   // day 0 (1 Jan 1970) was a Thursday
+  return n;
+}
+
+// The two client emails. {{CODE}} and {{EXPIRES}} are filled in when the email is sent.
+function reviewEmail_(r) {
+  const fn = esc_(r[COL.FN - 1]), ev = esc_(r[COL.EVNAME - 1] || 'your event'), date = esc_(longDate_(r[COL.DATE - 1]));
+  return eHead_('Thank you', `Thank you for having us, ${fn}!`,
+      `We hope you and your guests loved the Magic Mirror at ${ev} on ${date}. It was a pleasure to be part of it.`) +
+    eSub_('A thank-you for next time') +
+    eP_(`Here is ${THANKS.percent}% off your next event with us. It's our thank-you for choosing Magic Mirror, and it's yours to keep.`) +
+    eCode_('{{CODE}}', true) +
+    eFacts_([['Discount', `${THANKS.percent}% off the package, prints and extra time`], ['Expires', '{{EXPIRES}}'], ['How', 'Enter the code on the booking page']]) +
+    emailButton_(esc_(CONFIG.PORTAL_URL), 'Book your next event') +
+    eSub_('How did we do?') +
+    eP_('If you have a minute, we would love to hear about your experience. A Google review helps other hosts and planners find us, and honest feedback of any kind helps us get better.') +
+    emailButton_(esc_(reviewUrl_()), 'Leave a Google review') +
+    eSmall_(`Your code works whether or not you leave a review. If anything wasn't right, reply to this email and we'll make it right.`) +
+    `<p style="margin:28px 0 0">Thanks again,<br><b>The Magic Mirror team</b></p>`;
+}
+function reviewFollowUpEmail_(r) {
+  const fn = esc_(r[COL.FN - 1]), ev = esc_(r[COL.EVNAME - 1] || 'your event');
+  return eHead_('A quick reminder', `${fn}, how did we do?`,
+      `We hope everyone is still smiling about ${ev}. If you haven't had a chance yet, we would really value a few words about your experience.`) +
+    emailButton_(esc_(reviewUrl_()), 'Leave a Google review') +
+    eSub_('Your thank-you code') +
+    eP_(`In case it got buried, here is your ${THANKS.percent}% off code for your next event again. It's yours either way.`) +
+    eCode_('{{CODE}}', true) +
+    eSmall_('Expires {{EXPIRES}}. Enter it on the booking page when you book.') +
+    eSmall_(`Already left a review? Thank you so much. You can ignore this email.`) +
+    `<p style="margin:28px 0 0">Thanks again,<br><b>The Magic Mirror team</b></p>`;
+}
 
 function autoLog_() {
   const ss = SpreadsheetApp.getActive();
@@ -1386,13 +1451,14 @@ function dayNum_(v) {   // whole days since epoch in the business time zone
 function dueReminders_() {
   const today = dayNum_(new Date());
   const logSh = autoLog_(), ln = logSh.getLastRow();
-  const sent = {};
-  if (ln > 1) logSh.getRange(2, 1, ln - 1, 2).getValues().forEach(r => sent[r[0] + '|' + r[1]] = true);
+  const sent = {};   // 'id|kind' -> day number it was sent
+  if (ln > 1) logSh.getRange(2, 1, ln - 1, 3).getValues().forEach(r => sent[r[0] + '|' + r[1]] = dayNum_(r[2]) || 0);
   const out = [];
-  const add = (r, kind, to, subject, body) => {
-    if (sent[r[0] + '|' + kind] || !to) return;
-    out.push({ id: r[0], kind, to, subject: `${subject} (booking #${r[0]})`, html: body,
-      pre: `${r[COL.EVNAME - 1]} · ${longDate_(r[COL.DATE - 1])}` });
+  const add = (r, kind, to, subject, body, o) => {
+    if ((r[0] + '|' + kind) in sent || !to) return;
+    o = o || {};
+    out.push({ id: r[0], kind, to, subject: o.plainSubject ? subject : `${subject} (booking #${r[0]})`, html: body,
+      pre: o.pre || `${r[COL.EVNAME - 1]} · ${longDate_(r[COL.DATE - 1])}`, code: !!o.code });
   };
   rows_().forEach(r => {
     const id = r[0], status = String(r[COL.STATUS - 1]);
@@ -1426,6 +1492,18 @@ function dueReminders_() {
       add(r, 'overdue', client, 'Your balance is overdue',
         eHead_('Balance overdue', `Thank you for having us, ${fn}.`, 'Our records show a remaining balance from your event. Please pay it at your earliest convenience, or reply if you think this is a mistake.') +
         eAmount_('Balance overdue', bal) + tail('Pay your balance'));
+    // Thank-you + review request: 2 days after the event, once it is marked Completed (up to a week late, in case
+    // it was marked Completed after the fact). The follow-up goes 7 business days after the first one.
+    if (AUTOMATIONS.reviewRequest && status === 'Completed' && until <= -2 && until >= -9)
+      add(r, 'review', client, `Thank you, ${r[COL.FN - 1]}! A little something for next time`, reviewEmail_(r),
+        { plainSubject: true, code: true, pre: `${THANKS.percent}% off your next event, plus a quick favor if you have a minute.` });
+    const asked = sent[id + '|review'];
+    if (AUTOMATIONS.reviewFollowUp && asked && status === 'Completed') {
+      const bd = businessDays_(asked, today);
+      if (bd >= 7 && bd <= 12)
+        add(r, 'review2', client, `${r[COL.FN - 1]}, how did we do?`, reviewFollowUpEmail_(r),
+          { plainSubject: true, code: true, pre: 'A few words about your event would mean a lot to us.' });
+    }
     if (AUTOMATIONS.ownerHeadsUp && status !== 'Completed' && (until === 8 || until === 2)) {
       const flags = [status === 'Unconfirmed' ? 'Not confirmed' : '', !r[COL.SIGNED_AT - 1] && !imported ? 'Contract unsigned' : '',
         bal > 0.005 ? `${money_(bal)} owed` : '', !r[COL.STAFF - 1] ? 'No staff assigned' : '', !r[COL.DETAILS_AT - 1] && !imported ? 'Details not confirmed' : ''].filter(String);
@@ -1449,6 +1527,10 @@ function runAutomations() {
     const log = autoLog_();
     dueReminders_().forEach(m => {
       const isOwner = m.to === CONFIG.NOTIFY;
+      if (m.code) {   // fill in the client's thank-you code, making it the first time
+        const t = thanksCode_(m.id);
+        m.html = m.html.split('{{CODE}}').join(esc_(t.code)).split('{{EXPIRES}}').join(esc_(longDate_(t.expires)));
+      }
       sendMail_(Object.assign({ to: m.to, subject: m.subject, htmlBody: m.html, preheader: m.pre, name: CONFIG.BUSINESS },
         isOwner ? {} : { replyTo: CONFIG.REPLY_TO }));
       log.appendRow([m.id, m.kind, new Date(), m.to]);
