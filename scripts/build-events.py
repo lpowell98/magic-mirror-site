@@ -12,7 +12,7 @@ What it updates:
 - public/links/            "Latest Events" (4 newest) and the header wall
 - brochure/ + public/brochure/magic-mirror-brochure.pdf   page 5 "Prints from the mirror" (6 newest)
 - public/index.html        "Your event, on paper": the 5 newest prints of each event type, on every run
-- public/index.html + magic-mirror/   "They print" step (newest), Magic Mirror page print (2nd), review photo (3rd), every run
+- public/index.html + magic-mirror/   "They print" step (newest) and Magic Mirror page print (2nd), every run
 - cta-collage.webp         "Ready to save your date?" collage of the 5 newest, every COLLAGE_EVERY events (--collage forces)
 - og-gallery/og-image/og-template-gallery.png   link-share images, every SHARE_EVERY events (--share forces)
 - public/index.html        print wall and its rotating pool, plus the /links header wall that copies it, only once
@@ -239,19 +239,17 @@ def due(events, mark, every, force):
 
 # ---------- single prints that always show the newest events ----------
 def build_featured(events):
-    """Home "They print" step (newest), Magic Mirror page print (2nd newest), home review photo (3rd newest)."""
+    """Home "They print" step (newest) and Magic Mirror page print (2nd newest).
+    The home review photo stays with its review (BU ASO), so it is not changed here."""
     named = [e for e in shown(events) if e["name"]]
     g = "/images/gallery/"
-    step, mm, voice = named[0], named[1], named[2]
+    step, mm = named[0], named[1]
     a = replace_block(ROOT / "public" / "index.html", "home-step-print",
         f'<li><img src="{g}{step["stem"]}.webp" srcset="{g}{step["stem"]}-sm.webp 480w, {g}{step["stem"]}-thumb.webp 800w, {g}{step["stem"]}.webp 1600w" '
         f'sizes="(max-width: 900px) 38vw, 33vw" width="{step["fw"]}" height="{step["fh"]}" alt="A 4x6 print from {esc(label(step))}" loading="lazy"><h3>They print</h3>')
-    b = replace_block(ROOT / "public" / "index.html", "home-voice-print",
-        f'<figure class="voice-print reveal"><img src="{g}{voice["stem"]}.webp" srcset="{g}{voice["stem"]}-thumb.webp 800w, {g}{voice["stem"]}.webp 1600w" '
-        f'sizes="(max-width: 900px) 100vw, 50vw" width="{voice["fw"]}" height="{voice["fh"]}" alt="Print from {esc(label(voice))}" loading="lazy"></figure>')
     c = replace_block(ROOT / "public" / "magic-mirror" / "index.html", "mm-print",
         f'<figure class="print"><img src="{g}{mm["stem"]}.webp" width="{mm["fw"]}" height="{mm["fh"]}" alt="A finished print from {esc(label(mm))}" loading="lazy"></figure>')
-    return a or b or c
+    return a or c
 
 
 # ---------- images made from several prints ----------
@@ -409,7 +407,7 @@ def main():
     if build_picker(events):
         report.append('home "Your event, on paper" updated')
     if build_featured(events):
-        report.append("home print step, review photo and Magic Mirror page print updated")
+        report.append("home print step and Magic Mirror page print updated")
     ok, new = due(events, COLLAGE_MARK, COLLAGE_EVERY, "--collage" in args)
     if ok:
         build_collage(events)
