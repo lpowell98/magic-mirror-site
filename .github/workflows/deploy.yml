@@ -40,6 +40,7 @@ jobs:
 
       - name: Rebuild brochure PDF
         if: steps.events.outputs.pdf == '1'
+        continue-on-error: true   # a PDF problem never blocks the site update
         run: |
           npm install --no-save --no-package-lock playwright@1.49.1
           npx playwright install --with-deps chromium
