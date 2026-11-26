@@ -22,76 +22,58 @@
 <link rel="preload" href="/assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/css/style.css?v=speed3">
 <style>
-  body.lib { min-height: 100vh; background: radial-gradient(120% 60% at 50% 0%, var(--purple-deep) 0%, var(--bg) 62%) var(--bg); }
-  .lib-wrap { width: 100%; max-width: 480px; margin: 0 auto; padding: 40px 16px 48px; }
-  .lib-head { text-align: center; margin-bottom: 28px; }
-  .lib-head img { width: 168px; height: auto; margin: 0 auto 14px; }
-  .lib-head h1 { font-size: 20px; letter-spacing: 0; line-height: 1.25; }
-  .lib-head p { margin: 8px 0 0; color: var(--muted); font-size: var(--t-small); }
-  .lib-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-  .lib-list a { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 58px; padding: 0 20px; background: var(--surface); border: 1px solid rgba(251, 169, 36, .28); color: var(--ink); text-decoration: none; font: 600 16px/1.25 var(--body); transition: border-color .2s, background-color .2s, transform .2s var(--ease); }
-  .lib-list a::after { content: "→"; color: var(--accent); flex: none; transition: transform .2s var(--ease); }
-  .lib-list a:hover { border-color: var(--accent); background: #221a29; transform: translateY(-2px); }
-  .lib-list a:hover::after { transform: translateX(3px); }
-  .lib-list small { display: block; margin-top: 3px; color: var(--muted); font: 500 13px/1.3 var(--body); }
-  .lib-list .lib-main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-  .lib-list .lib-main::after { color: var(--accent-ink); }
-  .lib-list .lib-main small { color: #3a2a12; }
-  .lib-list .lib-main:hover { background: #f4ca3e; }
-  .lib-prints { margin-top: 36px; }
-  .lib-prints h2 { font-size: 18px; font-weight: 700; letter-spacing: 0; color: var(--accent); margin-bottom: 12px; }
-  .lib-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .lib-grid a { display: block; overflow: hidden; }
-  .lib-grid img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; transition: transform .4s var(--ease); }
-  .lib-grid a:hover img { transform: scale(1.04); }
-  .lib-more { display: inline-block; margin-top: 14px; font-size: var(--t-small); }
-  .lib-foot { margin-top: 36px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, .12); text-align: center; }
-  .lib-social { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; }
-  .lib-social a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid rgba(255, 255, 255, .2); color: var(--ink); text-decoration: none; font: 600 15px var(--body); transition: border-color .2s, color .2s; }
-  .lib-social a:hover { border-color: var(--accent); color: var(--accent); }
-  .lib-social svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .lib-foot p { margin: 0; color: var(--muted); font-size: 13px; }
-  .lib-foot p a { color: var(--ink); }
+  .lib { max-width: 560px; padding-bottom: var(--gap-section); }
+  .lib .page-head { padding-inline: 0; }
+  .lib-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid rgba(255, 255, 255, .14); }
+  .lib-list li { border-bottom: 1px solid rgba(255, 255, 255, .14); }
+  .lib-list a { display: flex; justify-content: space-between; align-items: center; min-height: 64px; color: var(--ink); text-decoration: none; font: 600 18px/1.3 var(--body); transition: color .2s; }
+  .lib-list a::after { content: "→"; color: var(--accent); transition: transform .2s var(--ease); }
+  .lib-list a:hover { color: var(--accent); }
+  .lib-list a:hover::after { transform: translateX(4px); }
+  .lib .btn { width: 100%; margin-bottom: 28px; }
 </style>
 </head>
-<body class="lib">
-<main class="lib-wrap">
-  <header class="lib-head">
-    <a href="/"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services, home" width="320" height="196"></a>
-    <h1>Magic Mirror photo booth rentals</h1>
-    <p>Providing the magic for your next event in the Greater Boston Area.</p>
-  </header>
-
-  <ul class="lib-list">
-    <li><a class="lib-main" href="/booking/"><span>Check availability and book<small>Pick a package and reserve your date</small></span></a></li>
-    <li><a href="/pricing/"><span>Packages and prices</span></a></li>
-    <li><a href="/template-gallery/"><span>Print templates<small>Choose the design for your prints</small></span></a></li>
-    <li><a href="/gallery/"><span>Event gallery</span></a></li>
-    <li><a href="/magic-mirror/"><span>Meet the Magic Mirror</span></a></li>
-    <li><a href="/brochure/magic-mirror-brochure.pdf"><span>Brochure<small>PDF, 6 pages</small></span></a></li>
-    <li><a href="https://www.youtube.com/watch?v=jWZG7pJJiY4" target="_blank" rel="noopener"><span>Watch the mirror in action<small>Video on YouTube</small></span></a></li>
-    <li><a href="/faq/"><span>Questions and answers</span></a></li>
-    <li><a href="/contact-us/"><span>Send us a message</span></a></li>
-  </ul>
-
-  <section class="lib-prints" aria-labelledby="prints-h">
-    <h2 id="prints-h">Latest prints</h2>
-    <div class="lib-grid">
-      <a href="/gallery/"><img src="/images/gallery/1788655192435-sm.webp" width="480" height="320" alt="Magic Mirror photo booth print from a Winnie the Pooh baby shower, September 2026" loading="lazy"></a>
-      <a href="/gallery/"><img src="/images/gallery/1779667313735-sm.webp" width="480" height="320" alt="Magic Mirror photo booth print from Alla and Ibrahim’s wedding, May 2026" loading="lazy"></a>
-      <a href="/gallery/"><img src="/images/gallery/1775354153323-sm.webp" width="480" height="320" alt="Magic Mirror photo booth print from NBSA’s Evening of Elegance, 50 Years in Black, April 2026" loading="lazy"></a>
-      <a href="/gallery/"><img src="/images/gallery/1774571504860-sm.webp" width="480" height="320" alt="Magic Mirror photo booth print from Junior Tassel, March 2026" loading="lazy"></a>
-    </div>
-    <a class="link lib-more" href="/gallery/">See every event</a>
-  </section>
-
-  <footer class="lib-foot">
-    <div class="lib-social">
-      <a href="mailto:inquiries@magicmirrorrentalservices.com"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>Email us</a>
-      <a href="https://www.instagram.com/magicmirrorrentalservices/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/></svg>Instagram</a>
-    </div>
-    <p>inquiries@magicmirrorrentalservices.com · <a href="/">magicmirrorrentalservices.com</a></p>
-  </footer>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="logo" href="/"><img src="/images/brand/logo-sm.webp" alt="Magic Mirror Rental Services, home" width="116" height="71"></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">Menu</button>
+    <nav class="main-nav" id="site-nav" aria-label="Main">
+      <ul>
+<li><a href="/">Home</a></li>
+<li><a href="/about-us/">About</a></li>
+<li class="has-sub"><button type="button" class="sub-toggle" aria-expanded="false">The Mirror</button><ul class="sub"><li><a href="/magic-mirror/">Magic Mirror</a></li><li><a href="/template-gallery/">Print Templates</a></li></ul></li>
+<li><a href="/pricing/">Pricing</a></li>
+<li><a href="/gallery/">Gallery</a></li>
+<li><a href="/faq/">FAQ</a></li>
+<li><a href="/contact-us/">Contact</a></li>
+<li class="mobile-only"><a href="/booking/">Check availability</a></li>
+      </ul>
+    </nav>
+    <a class="btn" href="/booking/">Check availability</a>
+  </div>
+</header>
+<main id="main" class="wrap lib">
+<header class="page-head"><h1>Links</h1><p>Providing the magic for your next event.</p></header>
+<a class="btn" href="/booking/">Check availability</a>
+<ul class="lib-list">
+  <li><a href="/pricing/">Packages and prices</a></li>
+  <li><a href="/template-gallery/">Print templates</a></li>
+  <li><a href="/gallery/">Event gallery</a></li>
+  <li><a href="/brochure/magic-mirror-brochure.pdf">Brochure (PDF)</a></li>
+  <li><a href="/contact-us/">Contact us</a></li>
+</ul>
 </main>
+<footer class="site-footer">
+  <div class="wrap foot-top">
+    <div class="foot-brand"><img src="/images/brand/logo.webp" alt="Magic Mirror Rental Services" width="320" height="196" loading="lazy"><p>Providing the magic for your next event.</p></div>
+    <div><p class="foot-label">Explore</p><ul><li><a href="/magic-mirror/">The Magic Mirror</a></li><li><a href="/pricing/">Packages and prices</a></li><li><a href="/template-gallery/">Print Templates</a></li><li><a href="/gallery/">Event gallery</a></li><li><a href="/faq/">FAQ</a></li></ul></div>
+    <div><p class="foot-label">Book</p><ul><li><a href="/booking/">Check availability</a></li><li><a href="/contact-us/">Send a message</a></li></ul></div>
+    <div class="foot-contact"><p class="foot-label">Contact</p><ul><li><a class="foot-email" href="mailto:inquiries@magicmirrorrentalservices.com"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>Email us</a></li><li><a class="foot-ig" href="https://www.instagram.com/magicmirrorrentalservices/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8"/></svg>Instagram</a></li><li>Proudly serving the Greater Boston Area</li><li>Free travel within Boston</li></ul></div>
+  </div>
+  <div class="wrap legal"><p>© <span data-year>2026</span> Magic Mirror Rental Services. Established 2019. <a href="/privacy/">Privacy</a> · <a href="/terms/">Terms</a></p><p>Photo booth rentals for weddings, birthdays, graduations, campus and corporate events.</p></div>
+</footer>
+<script src="/assets/js/main.js?v=speed1" defer></script>
 </body>
 </html>
