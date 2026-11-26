@@ -40,18 +40,20 @@
     <p class="mirror-count"></p>
     <h2 class="mirror-name"></h2>
     <p class="mirror-meta"></p>
-    <div class="mirror-toggle" role="group" aria-label="Show"><button type="button" data-v="plain" aria-pressed="true">Template</button><button type="button" data-v="sample" aria-pressed="false">With photos</button></div>
+    <div class="mirror-toggle" role="group" aria-label="Show"><button type="button" data-v="plain" aria-pressed="false">Template</button><button type="button" data-v="sample" aria-pressed="true">With photos</button></div>
     <p class="mirror-note">This is how guests see the design on the mirror before it prints. You choose yours in your booking portal once you book.</p>
   </div>
   <ul class="mirror-strip" aria-label="All designs"></ul>`;
   const screen = stage.querySelector('.mirror-screen');
   const strip = stage.querySelector('.mirror-strip');
-  let list = visible(), i = 0, mode = 'plain';
+  let list = visible(), i = 0, mode = 'sample';
   const draw = (dir = 0) => {
     const x = list[i];
     const img = el(`<img class="${dir ? 'in-' + (dir > 0 ? 'r' : 'l') : ''}${x.land ? ' is-land' : ''}" src="${mode === 'sample' ? x.sample : x.full}" alt="${x.alt}" decoding="async">`);
-    const old = screen.querySelector('img');
-    if (old && !reduce && dir) { old.classList.add('out-' + (dir > 0 ? 'l' : 'r')); setTimeout(() => old.remove(), 450); } else if (old) old.remove();
+    // Only one design on the glass: anything already leaving goes now, the current one slides out
+    screen.querySelectorAll('img').forEach((old) => {
+      if (!reduce && dir && !old.classList.contains('leaving')) { old.classList.add('leaving', 'out-' + (dir > 0 ? 'l' : 'r')); setTimeout(() => old.remove(), 450); } else old.remove();
+    });
     screen.append(img);
     stage.querySelector('.mirror-count').textContent = `${i + 1} of ${list.length}`;
     stage.querySelector('.mirror-name').textContent = x.name;
