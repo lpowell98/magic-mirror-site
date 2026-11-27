@@ -286,7 +286,16 @@ p { margin: 0 0 1em; }
 .faq summary::-webkit-details-marker { display: none; }
 .faq summary::after { content: ""; flex: none; width: 10px; height: 10px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(45deg); transition: transform .25s var(--ease); margin-right: 4px; }
 .faq details[open] summary::after { transform: rotate(-135deg); }
-.faq .q { display: none; }
+.faq .q { display: inline-grid; place-items: center; flex: none; width: 34px; height: 34px; border: 1.5px solid var(--accent); color: var(--accent); font: 800 15px/1 var(--head); }
+.faq summary { justify-content: flex-start; }
+.faq summary .qt { flex: 1; transition: color .2s; }
+.faq summary:hover .qt, .faq details[open] summary .qt { color: var(--accent); }
+.faq details[open] .q { background: var(--accent); color: var(--accent-ink); }
+.faq details { border-bottom: 1px solid rgba(251, 169, 36, .28); }
+.faq details:first-of-type { border-top: 1px solid rgba(251, 169, 36, .28); }
+.faq .a { padding-left: 54px; }
+.link-gold { color: var(--accent); }
+@media (max-width: 560px) { .faq .a { padding-left: 0; } .faq summary { font-size: 18px; gap: 14px; } }
 .faq .a { color: var(--muted); padding-top: 10px; max-width: 64ch; }
 
 /* contact */
@@ -563,3 +572,4 @@ p { margin: 0 0 1em; }
 .tpl-how li strong { color: var(--ink); }
 .tpl-how p a { color: var(--ink); }
 .split .prose a:not(.btn) { color: var(--ink); }
+.faq-more { margin-top: 32px; }
