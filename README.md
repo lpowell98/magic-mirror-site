@@ -28,6 +28,7 @@ and point the page at `/images/<folder>/<name>.webp`. The script needs Pillow (`
    - the hosted brochure PDF, page 5 (6 newest), from `brochure/brochure.html`
    - the home page "Your event, on paper" (5 newest prints of each event type)
    - the home page "They print" step and the Magic Mirror page print (newest prints, every event); the review photo stays with its review
+   - orientation: portrait prints go in the gallery's portrait section and can be the Magic Mirror page print; everything else uses landscape prints only
    - the event-type pages (`/wedding-photo-booth/`, `/corporate-photo-booth/`, `/prom-and-campus-photo-booth/`): 6 newest prints of their event types
    - the "Ready to save your date?" collage, every 5 new events (`--collage` forces it)
    - the link-share images og-gallery, og-image and og-template-gallery, every 3 new events (`--share` forces it)

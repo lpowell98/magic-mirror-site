@@ -486,6 +486,8 @@ p { margin: 0 0 1em; }
 .mm-step-list figure.print { display: grid; place-items: center; padding: 18px; background: linear-gradient(160deg, var(--purple-deep), var(--surface)); }
 .mm-step-list figure.print img { height: auto; object-fit: contain; box-shadow: 0 14px 30px rgba(0, 0, 0, .5); transform: rotate(-3deg); } /* taste-skill-ignore: print lifted off the field */
 .mm-step-list li:hover figure.print img { transform: rotate(0) scale(1.03); }
+.mm-step-list figure.print.port { display: flex; justify-content: center; align-items: center; }
+.mm-step-list figure.print.port img { width: auto; max-width: 100%; height: 100%; }
 .mm-step-list .num { display: block; font: 800 15px/1 var(--head); color: var(--accent); letter-spacing: .1em; margin-bottom: 10px; }
 .mm-step-list h3 { font-size: 24px; margin-bottom: 8px; }
 .mm-step-list p { color: var(--muted); font-size: 16px; margin: 0; }
