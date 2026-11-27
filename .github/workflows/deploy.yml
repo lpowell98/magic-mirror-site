@@ -37,6 +37,7 @@ jobs:
         run: |
           pip install --quiet pillow
           python3 scripts/build-events.py
+          python3 scripts/build-sitemap.py
 
       - name: Rebuild brochure PDF
         if: steps.events.outputs.pdf == '1'

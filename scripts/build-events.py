@@ -226,6 +226,29 @@ def build_picker(events):
     return replace_block(path, "home-picker", picker)
 
 
+# ---------- event-type landing pages ----------
+EVENT_PAGES = {
+    "wedding": ("wedding-photo-booth", ["Weddings"]),
+    "corporate": ("corporate-photo-booth", ["Corporate", "Galas & balls"]),
+    "campus": ("prom-and-campus-photo-booth", ["Graduations & proms", "Campus nights"]),
+}
+EVENT_PICKS = 6
+
+
+def build_event_pages(events):
+    """The newest prints of each event type on its landing page (/wedding-photo-booth/ and so on)."""
+    changed = False
+    g = "/images/gallery/"
+    for key, (slug, types) in EVENT_PAGES.items():
+        picks = [e for e in shown(events) if e["type"] in types][:EVENT_PICKS]
+        rows = "\n".join(
+            f'<li><a href="{g}{e["stem"]}.webp" data-lightbox><img width="{e["tw"]}" height="{e["th"]}" src="{g}{e["stem"]}-thumb.webp" '
+            f'srcset="{g}{e["stem"]}-sm.webp 480w, {g}{e["stem"]}-thumb.webp 800w" sizes="(max-width: 640px) 92vw, 33vw" '
+            f'alt="{esc(alt(e))}" loading="lazy"></a></li>' for e in picks)
+        changed |= replace_block(ROOT / "public" / slug / "index.html", f"page-{key}", rows)
+    return changed
+
+
 def due(events, mark, every, force):
     """True once `every` new events sit above the one recorded in `mark` (then records the newest)."""
     last = mark.read_text().strip() if mark.exists() else ""
@@ -408,6 +431,8 @@ def main():
         report.append('home "Your event, on paper" updated')
     if build_featured(events):
         report.append("home print step and Magic Mirror page print updated")
+    if build_event_pages(events):
+        report.append("event-type pages updated")
     ok, new = due(events, COLLAGE_MARK, COLLAGE_EVERY, "--collage" in args)
     if ok:
         build_collage(events)
