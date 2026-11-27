@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="/assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=speed3">
+<link rel="stylesheet" href="/assets/css/style.css?v=score2">
 <style>
 /* Booking flow, styled with the site's tokens (assets/css/style.css) */
 .bk{padding-bottom:var(--gap-section)}
@@ -75,22 +75,45 @@
 .bk .day.taken{text-decoration:line-through}
 .bk .day.sel{background:var(--accent);color:var(--accent-ink)}
 
-/* white panels for the two forms (matches the site's .booking-card) */
-.bk .home>div{background:#fff;color:var(--paper-ink)}
-.bk .home h2{color:var(--paper-ink)}
-.bk .home p,.bk .home .help{color:var(--paper-muted)}
-.bk .home input,.bk .home select{background:var(--paper);color:var(--paper-ink);color-scheme:light}
-.bk .home .msg{color:var(--purple)}
-.bk .home .cal-nav{background:var(--paper);color:var(--paper-ink)}
-.bk .home .cal-nav:hover:not(:disabled){color:var(--purple)}
-.bk .home .dow{color:var(--paper-muted)}
-.bk .home .day{background:var(--paper);color:var(--paper-ink)}
+/* dark panels for the two forms, same height, gold top rule (matches the site's info cards) */
+.bk .home{align-items:stretch;row-gap:24px}
+.bk .home>div{background:var(--surface);color:var(--ink);border-top:3px solid var(--accent)}
+.bk .home h2{color:var(--ink)}
+.bk .home p,.bk .home .help,.bk .home .dow{color:var(--muted)}
+.bk .home input,.bk .home select{background:var(--bg);color:var(--ink);color-scheme:dark}
+.bk .home .field-err{color:#ff8a8f}
+.bk .home .msg{color:var(--ink)}
+.bk .home .cal-nav{background:var(--bg);color:var(--ink)}
+.bk .home .cal-nav:hover:not(:disabled){color:var(--accent)}
+.bk .home .day{background:var(--bg);color:var(--ink)}
 .bk .home .day:hover{background:var(--purple-light);color:#fff}
-.bk .home .day.past{background:transparent;color:rgba(23,18,27,.28)}
+.bk .home .day.past{background:transparent;color:rgba(196,186,203,.35)}
 .bk .home .day.sel{background:var(--accent);color:var(--accent-ink)}
 /* center each panel's content: headings, text and buttons centered; field labels stay left over their inputs */
 .bk .home>div{display:flex;flex-direction:column;align-items:center;text-align:center}
 .bk .home .cal,.bk .home .field{width:100%;max-width:300px;text-align:left}
+
+/* manage booking: help under the Search button */
+.bk .home .mg-info{width:100%;max-width:300px;text-align:left;margin-top:28px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12)}
+.bk .home .mg-info p{font-size:14px;margin:0 0 12px}
+.bk .home .mg-info strong{color:var(--ink)}
+.bk .home .mg-info .mg-h{margin-bottom:6px}
+.bk .home .mg-info ul{margin:0;padding-left:1.1em;color:var(--muted);font-size:14px;line-height:1.7}
+.bk .home .mg-info li::marker{color:var(--accent)}
+
+/* after you book: full-width panel under both forms, four steps side by side */
+.bk .home>div.bk-after{grid-column:1/-1;align-items:stretch;text-align:left}
+.bk .home .bk-after h2{font-size:clamp(20px,1.7vw,24px);margin-bottom:18px}
+.bk .home .bk-after ol{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;counter-reset:s;color:var(--muted);font-size:15px;line-height:1.5}
+.bk .home .bk-after li{counter-increment:s}
+.bk .home .bk-after li::before{content:counter(s);display:block;font:800 26px/1 var(--head);color:var(--accent);margin-bottom:10px}
+.bk .home .bk-after li strong{display:block;color:var(--ink)}
+.bk .home .bk-after p{color:var(--muted);max-width:none;margin:0}
+.bk .home .bk-after a{color:var(--ink)}
+.bk .bk-quote{max-width:908px;margin:56px auto 0;text-align:center}
+.bk .bk-quote p{font:400 clamp(20px,2vw,26px)/1.35 var(--head);color:var(--ink);margin:0 auto 14px;max-width:44ch}
+.bk .bk-quote footer{color:var(--muted);font-size:15px}
+@media (max-width:760px){.bk .home .bk-after ol{grid-template-columns:1fr 1fr}.bk .bk-quote{margin-top:40px}}
 
 /* ===== booking form: four steps, styled like the pricing page (site tokens only) ===== */
 .bk .datebar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:var(--muted);margin:0 0 20px}
@@ -498,8 +521,30 @@
           <button class="btn" id="codeBtn" style="margin-top:16px">Open my booking</button>
         </div>
         <div class="msg" id="manageMsg" role="status" aria-live="polite"></div>
+        <div class="mg-info">
+          <p><strong>Where's my Booking ID?</strong> It's in your confirmation email. The button in that email also opens your booking directly.</p>
+          <p class="mg-h"><strong>In your booking you can:</strong></p>
+          <ul>
+            <li>Pay your balance</li>
+            <li>Sign your contract</li>
+            <li>Choose your print design</li>
+            <li>Confirm your event details</li>
+            <li>Send us a message</li>
+          </ul>
+        </div>
+      </div>
+      <div class="bk-after">
+        <h2>After you book</h2>
+        <ol>
+          <li><strong>Pay the $250 deposit online</strong> to hold your date.</li>
+          <li><strong>We design your print</strong> from a template, or with your theme and logo.</li>
+          <li><strong>Pay the balance</strong> 14 days before the event.</li>
+          <li><strong>We arrive up to an hour early</strong> with two attendants.</li>
+        </ol>
+        <p>Questions? <a href="mailto:inquiries@magicmirrorrentalservices.com">Email us</a> or read the <a href="/faq/">FAQ</a>.</p>
       </div>
     </div>
+    <blockquote class="bk-quote"><p>“The Magic Mirror was the highlight of our guests’ night. It aligned perfectly with the ambiance of our event as well! The service was exceptional, we highly recommend!”</p><footer>NuWave Collective</footer></blockquote>
   </section>
 
   <!-- ================= BOOKING FORM: four short steps with a running total ================= -->

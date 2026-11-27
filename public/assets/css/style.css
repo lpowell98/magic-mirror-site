@@ -219,6 +219,7 @@ p { margin: 0 0 1em; }
 .about-split { padding-top: clamp(40px, 5vw, 72px); }
 .about-split .page-head { padding-top: 0; }
 .split-img img { width: 100%; max-height: 60svh; object-fit: contain; }
+@media (min-width: 901px) { .about-split .split-img { position: sticky; top: calc(var(--header-h) + 32px); } }
 .lead { font: 400 var(--t-statement)/1.3 var(--head); letter-spacing: -.01em; }
 
 /* features as a plain two-column list */
@@ -251,6 +252,11 @@ p { margin: 0 0 1em; }
 .notes > div { background: var(--surface); border-top: 3px solid var(--accent); padding: 28px 28px 24px; }
 .notes h2 { font: 800 clamp(20px, 1.7vw, 24px)/1.2 var(--head); letter-spacing: -.01em; margin-bottom: 12px; }
 .notes p { color: var(--muted); margin: 0; }
+.notes h3 { font: 800 clamp(20px, 1.7vw, 24px)/1.2 var(--head); letter-spacing: -.01em; margin-bottom: 12px; }
+.extras h2 { font-size: var(--t-head); margin-bottom: 8px; }
+.extras .extras-lede { color: var(--muted); margin: 0 0 24px; }
+.extras .notes { padding-bottom: 48px; }
+.notes .x-price { color: var(--accent); white-space: nowrap; }
 
 /* galleries */
 .gallery-grid, .template-grid { list-style: none; margin: 0 0 var(--gap-section); padding: 0; display: grid; gap: 12px; }
@@ -556,4 +562,4 @@ p { margin: 0 0 1em; }
 .tpl-how li { margin-bottom: 12px; color: var(--muted); }
 .tpl-how li strong { color: var(--ink); }
 .tpl-how p a { color: var(--ink); }
-.split .prose a { color: var(--ink); }
+.split .prose a:not(.btn) { color: var(--ink); }
