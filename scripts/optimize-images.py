@@ -58,6 +58,7 @@ def main():
             outs.append((OUT / rel.with_name(rel.stem + "-sm.webp"), SMALL_W))
         if src.name == "logo.png":
             outs.append((OUT / rel.with_name("logo-sm.webp"), 240))  # header logo, shown 116px wide
+            outs.append((OUT / rel.with_name("logo-md.webp"), 280))  # footer logo, shown 132px wide
         for dest, w in outs:
             save(im, dest, w)
             after += dest.stat().st_size

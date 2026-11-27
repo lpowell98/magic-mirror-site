@@ -150,10 +150,12 @@ def build_gallery(events):
         rows = []
         for n, e in enumerate(x for x in events if x["port"] == port):
             g, st = "/images/gallery/", e["stem"]
+            # the first landscape prints are on screen at load: fetch them right away so the page paints sooner
+            load = 'loading="lazy"' if port or n >= 4 else ('fetchpriority="high"' if n == 0 else 'loading="eager"')
             rows.append(f'<li class="print" style="{tilt(st, n, old)}"><a href="{g}{st}.webp" data-lightbox>'
                         f'<img width="{e["tw"]}" height="{e["th"]}" src="{g}{st}-thumb.webp" '
                         f'srcset="{g}{st}-sm.webp 480w, {g}{st}-thumb.webp 800w" sizes="(max-width: 640px) 46vw, 260px" '
-                        f'alt="{esc(alt(e))}" loading="lazy"></a></li>')
+                        f'alt="{esc(alt(e))}" {load}></a></li>')
         changed |= replace_block(path, name, "\n".join(rows))
     return changed
 
