@@ -22,7 +22,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" href="/assets/fonts/montserrat-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/css/style.css?v=speed3">
+<link rel="stylesheet" href="/assets/css/style.css?v=score1">
 <style>
 /* Booking flow, styled with the site's tokens (assets/css/style.css) */
 .bk{padding-bottom:var(--gap-section)}
@@ -91,6 +91,19 @@
 /* center each panel's content: headings, text and buttons centered; field labels stay left over their inputs */
 .bk .home>div{display:flex;flex-direction:column;align-items:center;text-align:center}
 .bk .home .cal,.bk .home .field{width:100%;max-width:300px;text-align:left}
+
+/* what happens after you book: dark band under the two panels, same width */
+.bk .bk-next{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:48px;align-items:center;max-width:908px;margin:56px auto 0}
+.bk .bk-next h2{font-size:clamp(22px,2vw,26px);margin-bottom:16px}
+.bk .bk-next ol{margin:0 0 16px;padding-left:1.3em;color:var(--muted)}
+.bk .bk-next li{margin-bottom:10px}
+.bk .bk-next li strong{color:var(--ink)}
+.bk .bk-next p{color:var(--muted);margin:0}
+.bk .bk-next a{color:var(--ink);overflow-wrap:anywhere}
+.bk .bk-next blockquote{margin:0;border-top:3px solid var(--accent);background:var(--surface);padding:24px 28px}
+.bk .bk-next blockquote p{color:var(--ink);font-size:17px;line-height:1.5;margin-bottom:12px}
+.bk .bk-next blockquote footer{color:var(--muted);font-size:15px}
+@media (max-width:760px){.bk .bk-next{grid-template-columns:1fr;gap:28px;margin-top:40px}}
 
 /* ===== booking form: four steps, styled like the pricing page (site tokens only) ===== */
 .bk .datebar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:var(--muted);margin:0 0 20px}
@@ -499,6 +512,19 @@
         </div>
         <div class="msg" id="manageMsg" role="status" aria-live="polite"></div>
       </div>
+    </div>
+    <div class="bk-next">
+      <div>
+        <h2>What happens after you book</h2>
+        <ol>
+          <li><strong>Pay the $250 deposit online.</strong> Your date is held as soon as it goes through.</li>
+          <li><strong>We design your print.</strong> Pick a template, or send your theme and logo and we design it with you.</li>
+          <li><strong>Pay the balance 14 days before the event.</strong></li>
+          <li><strong>We arrive up to an hour early.</strong> Two attendants set up and run the booth for your whole event.</li>
+        </ol>
+        <p>Questions first? <a href="mailto:inquiries@magicmirrorrentalservices.com">Email us</a> or read the <a href="/faq/">FAQ</a>.</p>
+      </div>
+      <blockquote><p>“The Magic Mirror was the highlight of our guests’ night. It aligned perfectly with the ambiance of our event as well! The service was exceptional, we highly recommend!”</p><footer>NuWave Collective</footer></blockquote>
     </div>
   </section>
 
