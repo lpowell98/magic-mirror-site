@@ -287,6 +287,7 @@ p { margin: 0 0 1em; }
 .faq summary::after { content: ""; flex: none; width: 10px; height: 10px; border-right: 2px solid var(--accent); border-bottom: 2px solid var(--accent); transform: rotate(45deg); transition: transform .25s var(--ease); margin-right: 4px; }
 .faq details[open] summary::after { transform: rotate(-135deg); }
 .faq .q { display: none; }
+.link-gold { color: var(--accent); }
 .faq .a { color: var(--muted); padding-top: 10px; max-width: 64ch; }
 
 /* contact */
@@ -563,3 +564,4 @@ p { margin: 0 0 1em; }
 .tpl-how li strong { color: var(--ink); }
 .tpl-how p a { color: var(--ink); }
 .split .prose a:not(.btn) { color: var(--ink); }
+.faq-more { margin-top: 32px; }
