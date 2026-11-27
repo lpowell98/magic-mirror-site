@@ -7,6 +7,8 @@
 # - Month and year: e.g. "May 2026". Optional.
 # - Event type: one of Weddings, Birthdays, Graduations & proms, Galas & balls, Campus nights,
 #   Corporate, Baby showers. Optional; it puts the print in that tab of "Your event, on paper".
+# - Orientation is read from the photo. Portrait prints go in the gallery's portrait section and
+#   can be the Magic Mirror page print; every other spot uses landscape prints only.
 # - Add "| hide" at the end to keep a print in the gallery but off the home page, /links and brochure.
 #
 # After any change, the site update (GitHub Actions) rebuilds: the gallery, the home page

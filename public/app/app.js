@@ -461,11 +461,11 @@ load();
 const EV_MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 EV_MONTHS.forEach(m=>$("evMonth").add(new Option(m,m)));
 function evFileName(){ return $("evFileWrap").style.display==="none" ? $("evPick").value : $("evFile").value.trim(); }
-function evThumb(){ const o=$("evPick").selectedOptions[0]; const t=$("evThumb"); if(o&&o.dataset.thumb&&$("evFileWrap").style.display==="none"){ t.src=o.dataset.thumb; t.style.display="block"; } else t.style.display="none"; }
+function evThumb(){ const o=$("evPick").selectedOptions[0]; const t=$("evThumb"); const n=$("evOrient"); if(o&&o.dataset.thumb&&$("evFileWrap").style.display==="none"){ t.src=o.dataset.thumb; t.style.display="block"; n.textContent=o.dataset.port?"Portrait print: it goes in the gallery's portrait section and can show on the Magic Mirror page. Everywhere else uses landscape prints only.":"Landscape print: it shows in the gallery and everywhere else on the site."; n.style.display="block"; } else { t.style.display="none"; n.style.display="none"; } }
 async function evLoad(){
   let items=[]; try{ const r=await fetch("/app/unlisted.json",{cache:"no-store"}); if(r.ok) items=await r.json(); }catch(err){}
   const sel=$("evPick"); sel.innerHTML="";
-  items.forEach(it=>{ const o=new Option(it.file,it.file); o.dataset.thumb=it.thumb; sel.add(o); });
+  items.forEach(it=>{ const o=new Option(it.file,it.file); o.dataset.thumb=it.thumb; o.dataset.port=it.port?"1":""; sel.add(o); });
   const none=!items.length;
   $("evPickWrap").style.display=none?"none":""; $("evNone").style.display=none?"block":"none"; $("evFileWrap").style.display=none?"":"none";
   evThumb(); evShow();

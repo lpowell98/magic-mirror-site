@@ -262,16 +262,18 @@ def due(events, mark, every, force):
 
 # ---------- single prints that always show the newest events ----------
 def build_featured(events):
-    """Home "They print" step (newest) and Magic Mirror page print (2nd newest).
+    """Home "They print" step (newest landscape print) and Magic Mirror page print
+    (2nd newest print, landscape or portrait, Lans 2026-11-27).
     The home review photo stays with its review (BU ASO), so it is not changed here."""
     named = [e for e in shown(events) if e["name"]]
     g = "/images/gallery/"
-    step, mm = named[0], named[1]
+    step = named[0]
+    mm = [e for e in events if not e["hide"] and e["name"]][1]
     a = replace_block(ROOT / "public" / "index.html", "home-step-print",
         f'<li><img src="{g}{step["stem"]}.webp" srcset="{g}{step["stem"]}-sm.webp 480w, {g}{step["stem"]}-thumb.webp 800w, {g}{step["stem"]}.webp 1600w" '
         f'sizes="(max-width: 900px) 38vw, 33vw" width="{step["fw"]}" height="{step["fh"]}" alt="A 4x6 print from {esc(label(step))}" loading="lazy"><h3>They print</h3>')
     c = replace_block(ROOT / "public" / "magic-mirror" / "index.html", "mm-print",
-        f'<figure class="print"><img src="{g}{mm["stem"]}.webp" width="{mm["fw"]}" height="{mm["fh"]}" alt="A finished print from {esc(label(mm))}" loading="lazy"></figure>')
+        f'<figure class="print{" port" if mm["port"] else ""}"><img src="{g}{mm["stem"]}.webp" width="{mm["fw"]}" height="{mm["fh"]}" alt="A finished print from {esc(label(mm))}" loading="lazy"></figure>')
     return a or c
 
 
@@ -411,7 +413,9 @@ def write_unlisted(events):
         if not thumb.exists():
             im = Image.open(p).convert("RGB")
             im.resize((480, round(im.height * 480 / im.width)), Image.LANCZOS).save(thumb, "WEBP", quality=78, method=6)
-        items.append({"file": p.name, "thumb": f"/images/gallery/{p.stem}-sm.webp"})
+        with Image.open(thumb) as t:
+            port = t.height > t.width
+        items.append({"file": p.name, "thumb": f"/images/gallery/{p.stem}-sm.webp", "port": port})
     text = json.dumps(items, indent=1) + "\n"
     if not UNLISTED_JSON.exists() or UNLISTED_JSON.read_text() != text:
         UNLISTED_JSON.write_text(text)
