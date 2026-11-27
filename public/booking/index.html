@@ -75,37 +75,37 @@
 .bk .day.taken{text-decoration:line-through}
 .bk .day.sel{background:var(--accent);color:var(--accent-ink)}
 
-/* white panels for the two forms (matches the site's .booking-card) */
-.bk .home>div{background:#fff;color:var(--paper-ink)}
-.bk .home h2{color:var(--paper-ink)}
-.bk .home p,.bk .home .help{color:var(--paper-muted)}
-.bk .home input,.bk .home select{background:var(--paper);color:var(--paper-ink);color-scheme:light}
-.bk .home .msg{color:var(--purple)}
-.bk .home .cal-nav{background:var(--paper);color:var(--paper-ink)}
-.bk .home .cal-nav:hover:not(:disabled){color:var(--purple)}
-.bk .home .dow{color:var(--paper-muted)}
-.bk .home .day{background:var(--paper);color:var(--paper-ink)}
+/* dark panels for the two forms, same height, gold top rule (matches the site's info cards) */
+.bk .home{align-items:stretch;row-gap:24px}
+.bk .home>div{background:var(--surface);color:var(--ink);border-top:3px solid var(--accent)}
+.bk .home h2{color:var(--ink)}
+.bk .home p,.bk .home .help,.bk .home .dow{color:var(--muted)}
+.bk .home input,.bk .home select{background:var(--bg);color:var(--ink);color-scheme:dark}
+.bk .home .field-err{color:#ff8a8f}
+.bk .home .msg{color:var(--ink)}
+.bk .home .cal-nav{background:var(--bg);color:var(--ink)}
+.bk .home .cal-nav:hover:not(:disabled){color:var(--accent)}
+.bk .home .day{background:var(--bg);color:var(--ink)}
 .bk .home .day:hover{background:var(--purple-light);color:#fff}
-.bk .home .day.past{background:transparent;color:rgba(23,18,27,.28)}
+.bk .home .day.past{background:transparent;color:rgba(196,186,203,.35)}
 .bk .home .day.sel{background:var(--accent);color:var(--accent-ink)}
 /* center each panel's content: headings, text and buttons centered; field labels stay left over their inputs */
 .bk .home>div{display:flex;flex-direction:column;align-items:center;text-align:center}
 .bk .home .cal,.bk .home .field{width:100%;max-width:300px;text-align:left}
 
-/* after you book: dark panel under Manage booking (fills the right column); quote spans both cards */
-.bk .home{row-gap:24px}
-.bk .home>div:first-child{grid-row:span 2}
-.bk .home>div.bk-after{background:var(--surface);color:var(--ink);border-top:3px solid var(--accent);align-items:stretch;text-align:left}
-.bk .home .bk-after h2{color:var(--ink);font-size:clamp(20px,1.7vw,24px);margin-bottom:14px}
-.bk .home .bk-after ol{margin:0 0 14px;padding-left:1.3em;color:var(--muted);font-size:15px;line-height:1.5}
-.bk .home .bk-after li{margin-bottom:8px}
-.bk .home .bk-after li strong{color:var(--ink)}
-.bk .home .bk-after p{color:var(--muted);max-width:none}
+/* after you book: full-width panel under both forms, four steps side by side */
+.bk .home>div.bk-after{grid-column:1/-1;align-items:stretch;text-align:left}
+.bk .home .bk-after h2{font-size:clamp(20px,1.7vw,24px);margin-bottom:18px}
+.bk .home .bk-after ol{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;counter-reset:s;color:var(--muted);font-size:15px;line-height:1.5}
+.bk .home .bk-after li{counter-increment:s}
+.bk .home .bk-after li::before{content:counter(s);display:block;font:800 26px/1 var(--head);color:var(--accent);margin-bottom:10px}
+.bk .home .bk-after li strong{display:block;color:var(--ink)}
+.bk .home .bk-after p{color:var(--muted);max-width:none;margin:0}
 .bk .home .bk-after a{color:var(--ink)}
 .bk .bk-quote{max-width:908px;margin:56px auto 0;text-align:center}
 .bk .bk-quote p{font:400 clamp(20px,2vw,26px)/1.35 var(--head);color:var(--ink);margin:0 auto 14px;max-width:44ch}
 .bk .bk-quote footer{color:var(--muted);font-size:15px}
-@media (max-width:760px){.bk .home>div:first-child{grid-row:auto}.bk .bk-quote{margin-top:40px}}
+@media (max-width:760px){.bk .home .bk-after ol{grid-template-columns:1fr 1fr}.bk .bk-quote{margin-top:40px}}
 
 /* ===== booking form: four steps, styled like the pricing page (site tokens only) ===== */
 .bk .datebar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;color:var(--muted);margin:0 0 20px}
